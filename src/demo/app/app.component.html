@@ -1,0 +1,50 @@
+<!--The content below is only a placeholder and can be replaced.-->
+<mat-toolbar fxLayout="row" fxLayoutAlign="start center" color="primary">
+  <h1>
+    Angular Monaco Editor library Demo
+  </h1>
+  <span fxFlex></span>
+  <h2 style="font-size: 15px;">made with <span [style.color]="'red'">&#10084;</span> by Materia Team</h2>
+  <img width="20" alt="Materia Designer Logo" src="https://getmateria.com/img/logo2.png" [style.margin.px]="10">
+</mat-toolbar>
+<div style="margin-top: 20px;" fxLayout="column" fxLayoutAlign="center center">
+  <h2 class="mat-h2">Monaco Editor Theme </h2>
+  <mat-form-field>
+      <mat-select (selectionChange)="setTheme($event.value)" placeholder="Theme" value="vs">
+          <mat-option *ngFor="let t of themes;" [value]="t">{{t}}</mat-option>
+        </mat-select>
+  </mat-form-field>
+</div>
+<mat-divider></mat-divider>
+<h2 class="mat-h2" [style.margin.px]="30">Basic Examples </h2>
+<div style="height: 300px; display: flex;">
+  <mat-card style="flex: 1; display: flex; flex-direction: column;">
+    <h3>Typescript</h3>
+    <ngx-monaco-editor code="export class Animals {
+  private name: string;
+  constructor(name) {
+    this.name = name;
+  }
+}" [options]="{language:'typescript'}">
+    </ngx-monaco-editor>
+  </mat-card>
+  <mat-card style="flex:1; display: flex; flex-direction: column;">
+    <h3>Simple text</h3>
+    <ngx-monaco-editor code="hello world!" [options]="options">
+    </ngx-monaco-editor>
+  </mat-card>
+  <mat-card style="flex: 1; display: flex; flex-direction: column;">
+    <h3>SQL</h3>
+    <ngx-monaco-editor language="SQL" code="SELECT * FROM user;" [options]="{language:'sql'}">
+    </ngx-monaco-editor>
+  </mat-card>
+</div>
+<mat-divider></mat-divider>
+<h2 class="mat-h2" [style.margin.px]="30">Diffs Editor Examples </h2>
+<div fxLayout="row" [style.height.px]="300">
+    <mat-card style="flex: 1; display: flex; flex-direction: column;">
+        <h3>SQL</h3>
+        <ngx-monaco-diff-editor [options]="{theme: theme,  language:'sql'}" original="SELECT * FROM user;" modified="SELECT * FROM user;
+        WHERE user.id = 1;" enableSplitViewResizing="false" inline="true"></ngx-monaco-diff-editor>
+    </mat-card>
+</div>
