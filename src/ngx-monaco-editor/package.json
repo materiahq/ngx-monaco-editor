@@ -2,10 +2,12 @@
   "name": "@materia-ui/ngx-monaco-editor",
   "version": "1.0.0",
   "peerDependencies": {
-    "@angular/common": "^6.0.0-rc.0 || ^6.0.0",
-    "@angular/core": "^6.0.0-rc.0 || ^6.0.0",
-    "css-element-queries": "^1.0.0 || ^1.9.0",
-    "monaco-editor": "^0.10.0 || ^0.19.0",
-    "rxjs": "^6.0.0-rc.0 || ^6.0.0"
+    "@angular/common": "6.x",
+    "@angular/core": "6.x",
+    "rxjs": "6.x"
+  },
+  "dependencies": {
+    "css-element-queries": "^1.0.2",
+    "monaco-editor": "^0.13.1"
   }
 }
