@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <title>@materia-ui/ngx-monaco-editor documentation</title>
+        <title>ngx-monaco-editor-demo documentation</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -14,7 +14,7 @@
     <body>
 
         <div class="navbar navbar-default navbar-fixed-top visible-xs">
-            <a href="./" class="navbar-brand">@materia-ui/ngx-monaco-editor documentation</a>
+            <a href="./" class="navbar-brand">ngx-monaco-editor-demo documentation</a>
             <button type="button" class="btn btn-default btn-menu fa fa-bars" id="btn-menu"></button>
         </div>
 
@@ -27,7 +27,7 @@
     <ul class="list">
 
         <li class="title">
-            <a href="index.html" data-type="index-link">@materia-ui/ngx-monaco-editor documentation</a>
+            <a href="index.html" data-type="index-link">ngx-monaco-editor-demo documentation</a>
         </li>
 
         <li class="divider"></li>
@@ -212,7 +212,7 @@
     <ul class="list">
 
         <li class="title">
-            <a href="index.html" data-type="index-link">@materia-ui/ngx-monaco-editor documentation</a>
+            <a href="index.html" data-type="index-link">ngx-monaco-editor-demo documentation</a>
         </li>
 
         <li class="divider"></li>
@@ -395,9 +395,12 @@
                <div class="content getting-started">
                    <div class="content-data">
 
+<h3 id="documentation">Documentation</h3>
+<p>Try it out on : <a href="https://geoastronaute.github.io/ngx-monaco-editor">live demo</a>.</p>
+<p>Api reference available on : <a href="https://geoastronaute.github.io/ngx-monaco-editor/api-reference">documentation</a>.</p>
 <h3 id="installation">Installation</h3>
 <p>Install from npm repository:</p>
-<div><pre class="line-numbers"><code class="language-none">npm install css-element-queries monaco-editor &#64;materia-ui/ngx-monaco-editor --save</code></pre></div><p>Add the glob to assets in angular.json (to make monaco-editor lib available to the app):</p>
+<div><pre class="line-numbers"><code class="language-none">npm install &#64;materia-ui/ngx-monaco-editor --save</code></pre></div><p>Add the glob to assets in angular.json (to make monaco-editor lib available to the app):</p>
 <div><pre class="line-numbers"><code class="language-typescript">{
     ...
     &quot;projects&quot;: {
@@ -455,11 +458,11 @@ export class AppComponent {
 }</code></pre></div><p>Include editor in html with options and ngModel bindings.(eg: app.component.html)</p>
 <div><pre class="line-numbers"><code class="language-html">&lt;ngx-monaco-editor [options]=&quot;editorOptions&quot; [(code)]=&quot;code&quot;&gt;&lt;/ngx-monaco-editor&gt;</code></pre></div><p>Include dif-editor in html with options and ngModel bindings.(eg: app.component.html)</p>
 <div><pre class="line-numbers"><code class="language-html">&lt;ngx-monaco-diff-editor [options]=&quot;editorOptions&quot; [original]=&quot;originalCode&quot; [modified]=&quot;code&quot;&gt;&lt;/ngx-monaco-diff-editor&gt;</code></pre></div><h3 id="motivations">Motivations</h3>
-<p>We wanted to use a monaco-editor library for angular in ou desktop application: Materia Designer.</p>
+<p>We wanted to use monaco-editor library with angular in our desktop application: <a href="https://getmateria.com">Materia Designer</a>.</p>
 <p>The current angular libraries did not cover all of our needs, notably:</p>
 <ul>
-<li>Works on Browser and Electron application</li>
-<li>Support flex-box container and correctly resize editor when container size changes</li>
+<li>Works on Browser and Electron application,</li>
+<li>Support flex-box container and correctly resize editor when container size changes.</li>
 </ul>
 
 
