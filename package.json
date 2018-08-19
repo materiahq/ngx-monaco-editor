@@ -1,5 +1,5 @@
 {
-  "name": "@materia-ui/ngx-monaco-editor",
+  "name": "ngx-monaco-editor-demo",
   "version": "1.0.0",
   "scripts": {
     "ng": "ng",
@@ -25,11 +25,8 @@
     "@angular/platform-browser": "^6.0.9",
     "@angular/platform-browser-dynamic": "^6.0.9",
     "@angular/router": "^6.0.9",
+    "@materia-ui/ngx-monaco-editor": "^1.1.0",
     "core-js": "^2.5.4",
-    "css-element-queries": "^1.0.2",
-    "monaco-editor": "^0.13.1",
-    "ngx-monaco": "^0.8.0",
-    "ngx-monaco-editor": "^6.0.0",
     "rxjs": "^6.0.0",
     "zone.js": "^0.8.26"
   },
