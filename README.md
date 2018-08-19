@@ -1,8 +1,14 @@
+### Documentation
+
+Try it out on : [live demo](https://geoastronaute.github.io/ngx-monaco-editor).
+
+Api reference available on : [documentation](https://geoastronaute.github.io/ngx-monaco-editor/api-reference).
+
 ### Installation
 
 Install from npm repository:
 ```
-npm install css-element-queries monaco-editor @materia-ui/ngx-monaco-editor --save
+npm install @materia-ui/ngx-monaco-editor --save
  ```
  
 Add the glob to assets in angular.json (to make monaco-editor lib available to the app):
@@ -92,8 +98,8 @@ Include dif-editor in html with options and ngModel bindings.(eg: app.component.
 
 ### Motivations
 
-We wanted to use a monaco-editor library for angular in ou desktop application: Materia Designer.
+We wanted to use monaco-editor library with angular in our desktop application: [Materia Designer](https://getmateria.com).
 
 The current angular libraries did not cover all of our needs, notably:
-- Works on Browser and Electron application
-- Support flex-box container and correctly resize editor when container size changes
+- Works on Browser and Electron application,
+- Support flex-box container and correctly resize editor when container size changes.
