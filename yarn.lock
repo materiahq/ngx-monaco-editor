@@ -255,8 +255,9 @@
     is-absolute "^1.0.0"
     is-negated-glob "^1.0.0"
 
-"@materia-ui/ngx-monaco-editor@./dist/ngx-monaco-editor/":
-  version "1.0.0"
+"@materia-ui/ngx-monaco-editor@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@materia-ui/ngx-monaco-editor/-/ngx-monaco-editor-1.1.1.tgz#319f991cc08329b997bf7bc1c538c3f8d13ab34a"
   dependencies:
     css-element-queries "^1.0.2"
     monaco-editor "^0.13.1"
