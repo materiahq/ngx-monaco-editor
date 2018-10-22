@@ -14,7 +14,6 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 import { RGBA } from '../../../base/common/color.js';
 import { hash } from '../../../base/common/hash.js';
 import { dispose } from '../../../base/common/lifecycle.js';
-import { TPromise } from '../../../base/common/winjs.base.js';
 import { registerEditorContribution } from '../../browser/editorExtensions.js';
 import { Range } from '../../common/core/range.js';
 import { ColorProviderRegistry } from '../../common/modes.js';
@@ -22,6 +21,8 @@ import { ICodeEditorService } from '../../browser/services/codeEditorService.js'
 import { getColors } from './color.js';
 import { IConfigurationService } from '../../../platform/configuration/common/configuration.js';
 import { ModelDecorationOptions } from '../../common/model/textModel.js';
+import { TimeoutTimer, createCancelablePromise } from '../../../base/common/async.js';
+import { onUnexpectedError } from '../../../base/common/errors.js';
 var MAX_DECORATORS = 500;
 var ColorDetector = /** @class */ (function () {
     function ColorDetector(_editor, _codeEditorService, _configurationService) {
@@ -53,7 +54,7 @@ var ColorDetector = /** @class */ (function () {
                 }
             }
         }));
-        this._timeoutPromise = null;
+        this._timeoutTimer = null;
         this._computePromise = null;
         this._isEnabled = this.isEnabled();
         this.onModelChanged();
@@ -99,28 +100,29 @@ var ColorDetector = /** @class */ (function () {
             return;
         }
         this._localToDispose.push(this._editor.onDidChangeModelContent(function (e) {
-            if (!_this._timeoutPromise) {
-                _this._timeoutPromise = TPromise.timeout(ColorDetector.RECOMPUTE_TIME);
-                _this._timeoutPromise.then(function () {
-                    _this._timeoutPromise = null;
+            if (!_this._timeoutTimer) {
+                _this._timeoutTimer = new TimeoutTimer();
+                _this._timeoutTimer.cancelAndSet(function () {
+                    _this._timeoutTimer = null;
                     _this.beginCompute();
-                });
+                }, ColorDetector.RECOMPUTE_TIME);
             }
         }));
         this.beginCompute();
     };
     ColorDetector.prototype.beginCompute = function () {
         var _this = this;
-        this._computePromise = getColors(this._editor.getModel()).then(function (colorInfos) {
+        this._computePromise = createCancelablePromise(function (token) { return getColors(_this._editor.getModel(), token); });
+        this._computePromise.then(function (colorInfos) {
             _this.updateDecorations(colorInfos);
             _this.updateColorDecorators(colorInfos);
             _this._computePromise = null;
-        });
+        }, onUnexpectedError);
     };
     ColorDetector.prototype.stop = function () {
-        if (this._timeoutPromise) {
-            this._timeoutPromise.cancel();
-            this._timeoutPromise = null;
+        if (this._timeoutTimer) {
+            this._timeoutTimer.cancel();
+            this._timeoutTimer = null;
         }
         if (this._computePromise) {
             this._computePromise.cancel();

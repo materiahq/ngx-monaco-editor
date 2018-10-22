@@ -88,7 +88,7 @@ var ModesGlyphHoverWidget = /** @class */ (function (_super) {
             // we need to recompute the displayed text
             this._hoverOperation.cancel();
             this._computer.clearResult();
-            this._hoverOperation.start();
+            this._hoverOperation.start(0 /* Delayed */);
         }
     };
     ModesGlyphHoverWidget.prototype.startShowingAt = function (lineNumber) {
@@ -100,7 +100,7 @@ var ModesGlyphHoverWidget = /** @class */ (function (_super) {
         this.hide();
         this._lastLineNumber = lineNumber;
         this._computer.setLineNumber(lineNumber);
-        this._hoverOperation.start();
+        this._hoverOperation.start(0 /* Delayed */);
     };
     ModesGlyphHoverWidget.prototype.hide = function () {
         this._lastLineNumber = -1;

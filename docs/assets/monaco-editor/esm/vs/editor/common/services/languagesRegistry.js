@@ -78,6 +78,7 @@ var LanguagesRegistry = /** @class */ (function () {
         this._mergeLanguage(resolvedLanguage, lang);
     };
     LanguagesRegistry.prototype._mergeLanguage = function (resolvedLanguage, lang) {
+        var _a;
         var langId = lang.id;
         var primaryMime = null;
         if (Array.isArray(lang.mimetypes) && lang.mimetypes.length > 0) {
@@ -153,10 +154,9 @@ var LanguagesRegistry = /** @class */ (function () {
                 resolvedLanguage.name = bestName;
             }
         }
-        if (typeof lang.configuration === 'string') {
+        if (lang.configuration) {
             resolvedLanguage.configurationFiles.push(lang.configuration);
         }
-        var _a;
     };
     LanguagesRegistry.prototype.isRegisteredMode = function (mimetypeOrModeId) {
         // Is this a known mime type ?
@@ -166,36 +166,11 @@ var LanguagesRegistry = /** @class */ (function () {
         // Is this a known mode id ?
         return hasOwnProperty.call(this._languages, mimetypeOrModeId);
     };
-    LanguagesRegistry.prototype.getRegisteredModes = function () {
-        return Object.keys(this._languages);
-    };
-    LanguagesRegistry.prototype.getRegisteredLanguageNames = function () {
-        return Object.keys(this._nameMap);
-    };
-    LanguagesRegistry.prototype.getLanguageName = function (modeId) {
-        if (!hasOwnProperty.call(this._languages, modeId)) {
-            return null;
-        }
-        return this._languages[modeId].name;
-    };
     LanguagesRegistry.prototype.getModeIdForLanguageNameLowercase = function (languageNameLower) {
         if (!hasOwnProperty.call(this._lowercaseNameMap, languageNameLower)) {
             return null;
         }
         return this._lowercaseNameMap[languageNameLower].language;
-    };
-    LanguagesRegistry.prototype.getConfigurationFiles = function (modeId) {
-        if (!hasOwnProperty.call(this._languages, modeId)) {
-            return [];
-        }
-        return this._languages[modeId].configurationFiles || [];
-    };
-    LanguagesRegistry.prototype.getMimeForMode = function (modeId) {
-        if (!hasOwnProperty.call(this._languages, modeId)) {
-            return null;
-        }
-        var language = this._languages[modeId];
-        return (language.mimetypes[0] || null);
     };
     LanguagesRegistry.prototype.extractModeIds = function (commaSeparatedMimetypesOrCommaSeparatedIds) {
         var _this = this;
@@ -234,35 +209,12 @@ var LanguagesRegistry = /** @class */ (function () {
         }
         return this._languages[modeId].identifier;
     };
-    LanguagesRegistry.prototype.getModeIdsFromLanguageName = function (languageName) {
-        if (!languageName) {
-            return [];
-        }
-        if (hasOwnProperty.call(this._nameMap, languageName)) {
-            return [this._nameMap[languageName].language];
-        }
-        return [];
-    };
     LanguagesRegistry.prototype.getModeIdsFromFilenameOrFirstLine = function (filename, firstLine) {
         if (!filename && !firstLine) {
             return [];
         }
         var mimeTypes = mime.guessMimeTypes(filename, firstLine);
         return this.extractModeIds(mimeTypes.join(','));
-    };
-    LanguagesRegistry.prototype.getExtensions = function (languageName) {
-        if (!hasOwnProperty.call(this._nameMap, languageName)) {
-            return [];
-        }
-        var languageId = this._nameMap[languageName];
-        return this._languages[languageId.language].extensions;
-    };
-    LanguagesRegistry.prototype.getFilenames = function (languageName) {
-        if (!hasOwnProperty.call(this._nameMap, languageName)) {
-            return [];
-        }
-        var languageId = this._nameMap[languageName];
-        return this._languages[languageId.language].filenames;
     };
     return LanguagesRegistry;
 }());

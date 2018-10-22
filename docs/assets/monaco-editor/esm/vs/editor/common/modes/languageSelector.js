@@ -25,8 +25,8 @@ export function score(selector, candidateUri, candidateLanguage, candidateIsSync
             return 0;
         }
         // short-hand notion, desugars to
-        // 'fooLang' -> [{ language: 'fooLang', scheme: 'file' }, { language: 'fooLang', scheme: 'untitled' }]
-        // '*' -> { language: '*', scheme: '*' }
+        // 'fooLang' -> { language: 'fooLang'}
+        // '*' -> { language: '*' }
         if (selector === '*') {
             return 5;
         }

@@ -61,26 +61,10 @@ var ErrorHandler = /** @class */ (function () {
             }, 0);
         };
     }
-    ErrorHandler.prototype.addListener = function (listener) {
-        var _this = this;
-        this.listeners.push(listener);
-        return function () {
-            _this._removeListener(listener);
-        };
-    };
     ErrorHandler.prototype.emit = function (e) {
         this.listeners.forEach(function (listener) {
             listener(e);
         });
-    };
-    ErrorHandler.prototype._removeListener = function (listener) {
-        this.listeners.splice(this.listeners.indexOf(listener), 1);
-    };
-    ErrorHandler.prototype.setUnexpectedErrorHandler = function (newUnexpectedErrorHandler) {
-        this.unexpectedErrorHandler = newUnexpectedErrorHandler;
-    };
-    ErrorHandler.prototype.getUnexpectedErrorHandler = function () {
-        return this.unexpectedErrorHandler;
     };
     ErrorHandler.prototype.onUnexpectedError = function (e) {
         this.unexpectedErrorHandler(e);
@@ -94,9 +78,6 @@ var ErrorHandler = /** @class */ (function () {
 }());
 export { ErrorHandler };
 export var errorHandler = new ErrorHandler();
-export function setUnexpectedErrorHandler(newUnexpectedErrorHandler) {
-    errorHandler.setUnexpectedErrorHandler(newUnexpectedErrorHandler);
-}
 export function onUnexpectedError(e) {
     // ignore errors from cancelled promises
     if (!isPromiseCanceledError(e)) {
@@ -155,37 +136,4 @@ export function illegalState(name) {
     else {
         return new Error('Illegal state');
     }
-}
-export function readonly(name) {
-    return name
-        ? new Error("readonly property '" + name + " cannot be changed'")
-        : new Error('readonly property cannot be changed');
-}
-export function disposed(what) {
-    var result = new Error(what + " has been disposed");
-    result.name = 'DISPOSED';
-    return result;
-}
-export function isErrorWithActions(obj) {
-    return obj instanceof Error && Array.isArray(obj.actions);
-}
-export function create(message, options) {
-    if (options === void 0) { options = Object.create(null); }
-    var result = new Error(message);
-    if (options.actions) {
-        result.actions = options.actions;
-    }
-    return result;
-}
-export function getErrorMessage(err) {
-    if (!err) {
-        return 'Error';
-    }
-    if (err.message) {
-        return err.message;
-    }
-    if (err.stack) {
-        return err.stack.split('\n')[0];
-    }
-    return String(err);
 }

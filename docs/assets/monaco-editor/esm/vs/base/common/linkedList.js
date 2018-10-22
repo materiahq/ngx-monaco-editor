@@ -15,10 +15,6 @@ var LinkedList = /** @class */ (function () {
     LinkedList.prototype.isEmpty = function () {
         return !this._first;
     };
-    LinkedList.prototype.clear = function () {
-        this._first = undefined;
-        this._last = undefined;
-    };
     LinkedList.prototype.unshift = function (element) {
         return this.insert(element, false);
     };
@@ -97,13 +93,6 @@ var LinkedList = /** @class */ (function () {
                 return element;
             }
         };
-    };
-    LinkedList.prototype.toArray = function () {
-        var result = [];
-        for (var node = this._first; node instanceof Node; node = node.next) {
-            result.push(node.element);
-        }
-        return result;
     };
     return LinkedList;
 }());

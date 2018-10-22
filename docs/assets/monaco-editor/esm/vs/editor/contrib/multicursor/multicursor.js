@@ -29,6 +29,7 @@ import { CommonFindController } from '../find/findController.js';
 import { ModelDecorationOptions } from '../../common/model/textModel.js';
 import { overviewRulerSelectionHighlightForeground } from '../../../platform/theme/common/colorRegistry.js';
 import { themeColorFromId } from '../../../platform/theme/common/themeService.js';
+import { MenuId } from '../../../platform/actions/common/actions.js';
 var InsertCursorAbove = /** @class */ (function (_super) {
     __extends(InsertCursorAbove, _super);
     function InsertCursorAbove() {
@@ -43,18 +44,26 @@ var InsertCursorAbove = /** @class */ (function (_super) {
                 linux: {
                     primary: 1024 /* Shift */ | 512 /* Alt */ | 16 /* UpArrow */,
                     secondary: [2048 /* CtrlCmd */ | 1024 /* Shift */ | 16 /* UpArrow */]
-                }
+                },
+                weight: 100 /* EditorContrib */
+            },
+            menubarOpts: {
+                menuId: MenuId.MenubarSelectionMenu,
+                group: '3_multi',
+                title: nls.localize({ key: 'miInsertCursorAbove', comment: ['&& denotes a mnemonic'] }, "&&Add Cursor Above"),
+                order: 2
             }
         }) || this;
     }
     InsertCursorAbove.prototype.run = function (accessor, editor, args) {
+        var useLogicalLine = (args && args.logicalLine === true);
         var cursors = editor._getCursors();
         var context = cursors.context;
         if (context.config.readOnly) {
             return;
         }
         context.model.pushStackElement();
-        cursors.setStates(args.source, CursorChangeReason.Explicit, CursorMoveCommands.addCursorUp(context, cursors.getAll()));
+        cursors.setStates(args.source, CursorChangeReason.Explicit, CursorMoveCommands.addCursorUp(context, cursors.getAll(), useLogicalLine));
         cursors.reveal(true, 1 /* TopMost */, 0 /* Smooth */);
     };
     return InsertCursorAbove;
@@ -74,18 +83,26 @@ var InsertCursorBelow = /** @class */ (function (_super) {
                 linux: {
                     primary: 1024 /* Shift */ | 512 /* Alt */ | 18 /* DownArrow */,
                     secondary: [2048 /* CtrlCmd */ | 1024 /* Shift */ | 18 /* DownArrow */]
-                }
+                },
+                weight: 100 /* EditorContrib */
+            },
+            menubarOpts: {
+                menuId: MenuId.MenubarSelectionMenu,
+                group: '3_multi',
+                title: nls.localize({ key: 'miInsertCursorBelow', comment: ['&& denotes a mnemonic'] }, "A&&dd Cursor Below"),
+                order: 3
             }
         }) || this;
     }
     InsertCursorBelow.prototype.run = function (accessor, editor, args) {
+        var useLogicalLine = (args && args.logicalLine === true);
         var cursors = editor._getCursors();
         var context = cursors.context;
         if (context.config.readOnly) {
             return;
         }
         context.model.pushStackElement();
-        cursors.setStates(args.source, CursorChangeReason.Explicit, CursorMoveCommands.addCursorDown(context, cursors.getAll()));
+        cursors.setStates(args.source, CursorChangeReason.Explicit, CursorMoveCommands.addCursorDown(context, cursors.getAll(), useLogicalLine));
         cursors.reveal(true, 2 /* BottomMost */, 0 /* Smooth */);
     };
     return InsertCursorBelow;
@@ -101,7 +118,14 @@ var InsertCursorAtEndOfEachLineSelected = /** @class */ (function (_super) {
             precondition: null,
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 1024 /* Shift */ | 512 /* Alt */ | 39 /* KEY_I */
+                primary: 1024 /* Shift */ | 512 /* Alt */ | 39 /* KEY_I */,
+                weight: 100 /* EditorContrib */
+            },
+            menubarOpts: {
+                menuId: MenuId.MenubarSelectionMenu,
+                group: '3_multi',
+                title: nls.localize({ key: 'miInsertCursorAtEndOfEachLineSelected', comment: ['&& denotes a mnemonic'] }, "Add C&&ursors to Line Ends"),
+                order: 4
             }
         }) || this;
     }
@@ -154,7 +178,7 @@ var MultiCursorSession = /** @class */ (function () {
         //  - focus is not in the editor (i.e. it is in the find widget)
         //  - and the search widget is visible
         //  - and the search string is non-empty
-        if (!editor.isFocused() && findState.isRevealed && findState.searchString.length > 0) {
+        if (!editor.hasTextFocus() && findState.isRevealed && findState.searchString.length > 0) {
             // Find widget owns what is searched for
             return new MultiCursorSession(editor, findController, false, findState.searchString, findState.wholeWord, findState.matchCase, null);
         }
@@ -462,7 +486,14 @@ var AddSelectionToNextFindMatchAction = /** @class */ (function (_super) {
             precondition: null,
             kbOpts: {
                 kbExpr: EditorContextKeys.focus,
-                primary: 2048 /* CtrlCmd */ | 34 /* KEY_D */
+                primary: 2048 /* CtrlCmd */ | 34 /* KEY_D */,
+                weight: 100 /* EditorContrib */
+            },
+            menubarOpts: {
+                menuId: MenuId.MenubarSelectionMenu,
+                group: '3_multi',
+                title: nls.localize({ key: 'miAddSelectionToNextFindMatch', comment: ['&& denotes a mnemonic'] }, "Add &&Next Occurrence"),
+                order: 5
             }
         }) || this;
     }
@@ -479,7 +510,13 @@ var AddSelectionToPreviousFindMatchAction = /** @class */ (function (_super) {
             id: 'editor.action.addSelectionToPreviousFindMatch',
             label: nls.localize('addSelectionToPreviousFindMatch', "Add Selection To Previous Find Match"),
             alias: 'Add Selection To Previous Find Match',
-            precondition: null
+            precondition: null,
+            menubarOpts: {
+                menuId: MenuId.MenubarSelectionMenu,
+                group: '3_multi',
+                title: nls.localize({ key: 'miAddSelectionToPreviousFindMatch', comment: ['&& denotes a mnemonic'] }, "Add P&&revious Occurrence"),
+                order: 6
+            }
         }) || this;
     }
     AddSelectionToPreviousFindMatchAction.prototype._run = function (multiCursorController, findController) {
@@ -498,7 +535,8 @@ var MoveSelectionToNextFindMatchAction = /** @class */ (function (_super) {
             precondition: null,
             kbOpts: {
                 kbExpr: EditorContextKeys.focus,
-                primary: KeyChord(2048 /* CtrlCmd */ | 41 /* KEY_K */, 2048 /* CtrlCmd */ | 34 /* KEY_D */)
+                primary: KeyChord(2048 /* CtrlCmd */ | 41 /* KEY_K */, 2048 /* CtrlCmd */ | 34 /* KEY_D */),
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
@@ -534,7 +572,14 @@ var SelectHighlightsAction = /** @class */ (function (_super) {
             precondition: null,
             kbOpts: {
                 kbExpr: EditorContextKeys.focus,
-                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 42 /* KEY_L */
+                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 42 /* KEY_L */,
+                weight: 100 /* EditorContrib */
+            },
+            menubarOpts: {
+                menuId: MenuId.MenubarSelectionMenu,
+                group: '3_multi',
+                title: nls.localize({ key: 'miSelectHighlights', comment: ['&& denotes a mnemonic'] }, "Select All &&Occurrences"),
+                order: 7
             }
         }) || this;
     }
@@ -554,7 +599,8 @@ var CompatChangeAll = /** @class */ (function (_super) {
             precondition: EditorContextKeys.writable,
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 2048 /* CtrlCmd */ | 60 /* F2 */
+                primary: 2048 /* CtrlCmd */ | 60 /* F2 */,
+                weight: 100 /* EditorContrib */
             },
             menuOpts: {
                 group: '1_modification',
@@ -750,7 +796,9 @@ var SelectionHighlighter = /** @class */ (function (_super) {
                 var cmp = Range.compareRangesUsingStarts(match, selections[j]);
                 if (cmp < 0) {
                     // match is before sel
-                    matches.push(match);
+                    if (selections[j].isEmpty() || !Range.areIntersecting(match, selections[j])) {
+                        matches.push(match);
+                    }
                     i++;
                 }
                 else if (cmp > 0) {

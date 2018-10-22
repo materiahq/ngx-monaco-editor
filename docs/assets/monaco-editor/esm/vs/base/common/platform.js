@@ -17,6 +17,8 @@ if (typeof process === 'object' && typeof process.nextTick === 'function' && typ
     _isWindows = (process.platform === 'win32');
     _isMacintosh = (process.platform === 'darwin');
     _isLinux = (process.platform === 'linux');
+    _locale = LANGUAGE_DEFAULT;
+    _language = LANGUAGE_DEFAULT;
     var rawNlsConfig = process.env['VSCODE_NLS_CONFIG'];
     if (rawNlsConfig) {
         try {
@@ -65,26 +67,6 @@ export var isMacintosh = _isMacintosh;
 export var isLinux = _isLinux;
 export var isNative = _isNative;
 export var isWeb = _isWeb;
-export var platform = _platform;
-export function isRootUser() {
-    return _isNative && !_isWindows && (process.getuid() === 0);
-}
-/**
- * The language used for the user interface. The format of
- * the string is all lower case (e.g. zh-tw for Traditional
- * Chinese)
- */
-export var language = _language;
-/**
- * The OS locale or the locale specified by --locale. The format of
- * the string is all lower case (e.g. zh-tw for Traditional
- * Chinese). The UI is not necessarily shown in the provided locale.
- */
-export var locale = _locale;
-/**
- * The translatios that are available through language packs.
- */
-export var translationsConfigFile = _translationsConfigFile;
 var _globals = (typeof self === 'object' ? self : typeof global === 'object' ? global : {});
 export var globals = _globals;
 var _setImmediate = null;

@@ -45,7 +45,7 @@ var InstantiationService = /** @class */ (function () {
                 get: function (id, isOptional) {
                     var result = _this._getOrCreateServiceInstance(id);
                     if (!result && isOptional !== optional) {
-                        throw new Error("[invokeFunction] unkown service '" + id + "'");
+                        throw new Error("[invokeFunction] unknown service '" + id + "'");
                     }
                     return result;
                 }

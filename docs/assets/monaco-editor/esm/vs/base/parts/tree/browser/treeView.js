@@ -194,7 +194,7 @@ var ViewItem = /** @class */ (function () {
             this.element.removeAttribute('id');
         }
         if (this.model.hasChildren()) {
-            this.element.setAttribute('aria-expanded', String(!!this.model.isExpanded()));
+            this.element.setAttribute('aria-expanded', String(!!this._styles['expanded']));
         }
         else {
             this.element.removeAttribute('aria-expanded');
@@ -236,16 +236,6 @@ var ViewItem = /** @class */ (function () {
                 this.element.style.width = '';
             }
         }
-    };
-    ViewItem.prototype.updateWidth = function () {
-        if (!this.context.horizontalScrolling || !this.element) {
-            return;
-        }
-        var style = window.getComputedStyle(this.element);
-        var paddingLeft = parseFloat(style.paddingLeft);
-        this.element.style.width = 'fit-content';
-        this.width = DOM.getContentWidth(this.element) + paddingLeft;
-        this.element.style.width = '';
     };
     ViewItem.prototype.insertInDOM = function (container, afterElement) {
         if (!this.row) {
@@ -350,6 +340,7 @@ var TreeView = /** @class */ (function (_super) {
         _this.refreshingPreviousChildrenIds = {};
         _this._onDOMFocus = new Emitter();
         _this._onDOMBlur = new Emitter();
+        _this._onDidScroll = new Emitter();
         TreeView.counter++;
         _this.instance = TreeView.counter;
         var horizontalScrollMode = typeof context.options.horizontalScrollMode === 'undefined' ? ScrollbarVisibility.Hidden : context.options.horizontalScrollMode;
@@ -401,6 +392,7 @@ var TreeView = /** @class */ (function (_super) {
         });
         _this.scrollableElement.onScroll(function (e) {
             _this.render(e.scrollTop, e.height, e.scrollLeft, e.width, e.scrollWidth);
+            _this._onDidScroll.fire();
         });
         if (Browser.isIE) {
             _this.wrapper.style.msTouchAction = 'none';
@@ -469,11 +461,6 @@ var TreeView = /** @class */ (function (_super) {
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(TreeView.prototype, "onDOMBlur", {
-        get: function () { return this._onDOMBlur.event; },
-        enumerable: true,
-        configurable: true
-    });
     TreeView.prototype.applyStyles = function (styles) {
         this.treeStyler.style(styles);
     };
@@ -492,20 +479,12 @@ var TreeView = /** @class */ (function (_super) {
     TreeView.prototype.blur = function () {
         this.domNode.blur();
     };
-    TreeView.prototype.onVisible = function () {
-        this.scrollTop = this.onHiddenScrollTop;
-        this.onHiddenScrollTop = null;
-        this.setupMSGesture();
-    };
     TreeView.prototype.setupMSGesture = function () {
         var _this = this;
         if (window.MSGesture) {
             this.msGesture = new MSGesture();
             setTimeout(function () { return _this.msGesture.target = _this.wrapper; }, 100); // TODO@joh, TODO@IETeam
         }
-    };
-    TreeView.prototype.onHidden = function () {
-        this.onHiddenScrollTop = this.scrollTop;
     };
     TreeView.prototype.isTreeVisible = function () {
         return this.onHiddenScrollTop === null;
@@ -698,14 +677,6 @@ var TreeView = /** @class */ (function (_super) {
         enumerable: true,
         configurable: true
     });
-    TreeView.prototype.getScrollPosition = function () {
-        var height = this.getContentHeight() - this.viewHeight;
-        return height <= 0 ? 1 : this.scrollTop / height;
-    };
-    TreeView.prototype.setScrollPosition = function (pos) {
-        var height = this.getContentHeight() - this.viewHeight;
-        this.scrollTop = height * pos;
-    };
     // Events
     TreeView.prototype.onClearingInput = function (e) {
         var item = e.item;
@@ -721,7 +692,7 @@ var TreeView = /** @class */ (function (_super) {
     TreeView.prototype.onItemChildrenRefreshing = function (e) {
         var item = e.item;
         var viewItem = this.items[item.id];
-        if (viewItem) {
+        if (viewItem && this.context.options.showLoading) {
             viewItem.loadingTimer = setTimeout(function () {
                 viewItem.loadingTimer = 0;
                 viewItem.loading = true;
@@ -762,10 +733,10 @@ var TreeView = /** @class */ (function (_super) {
             if (!skipDiff) {
                 var lcs = new Diff.LcsDiff({
                     getLength: function () { return previousChildrenIds.length; },
-                    getElementHash: function (i) { return previousChildrenIds[i]; }
+                    getElementAtIndex: function (i) { return previousChildrenIds[i]; }
                 }, {
                     getLength: function () { return afterModelItems.length; },
-                    getElementHash: function (i) { return afterModelItems[i].id; }
+                    getElementAtIndex: function (i) { return afterModelItems[i].id; }
                 }, null);
                 diff = lcs.ComputeDiff(false);
                 // this means that the result of the diff algorithm would result
@@ -842,26 +813,6 @@ var TreeView = /** @class */ (function (_super) {
             this.onRemoveItems(new MappedIterator(item.getNavigator(), function (item) { return item && item.id; }));
             this.onRowsChanged();
         }
-    };
-    TreeView.prototype.updateWidth = function (item) {
-        if (!item || !item.isVisible()) {
-            return;
-        }
-        var viewItem = this.items[item.id];
-        if (!viewItem) {
-            return;
-        }
-        viewItem.updateWidth();
-        this.updateScrollWidth();
-    };
-    TreeView.prototype.getRelativeTop = function (item) {
-        if (item && item.isVisible()) {
-            var viewItem = this.items[item.id];
-            if (viewItem) {
-                return (viewItem.top - this.scrollTop) / (this.viewHeight - viewItem.height);
-            }
-        }
-        return -1;
     };
     TreeView.prototype.onItemReveal = function (e) {
         var item = e.item;

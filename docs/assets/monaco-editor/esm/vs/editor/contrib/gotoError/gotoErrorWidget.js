@@ -31,8 +31,8 @@ import { Emitter } from '../../../base/common/event.js';
 var MessageWidget = /** @class */ (function () {
     function MessageWidget(parent, editor, onRelatedInformation) {
         var _this = this;
-        this.lines = 0;
-        this.longestLineLength = 0;
+        this._lines = 0;
+        this._longestLineLength = 0;
         this._relatedDiagnostics = new WeakMap();
         this._disposables = [];
         this._editor = editor;
@@ -40,7 +40,7 @@ var MessageWidget = /** @class */ (function () {
         domNode.className = 'descriptioncontainer';
         domNode.setAttribute('aria-live', 'assertive');
         domNode.setAttribute('role', 'alert');
-        this._messageBlock = document.createElement('span');
+        this._messageBlock = document.createElement('div');
         domNode.appendChild(this._messageBlock);
         this._relatedBlock = document.createElement('div');
         domNode.appendChild(this._relatedBlock);
@@ -53,13 +53,17 @@ var MessageWidget = /** @class */ (function () {
         }));
         this._scrollable = new ScrollableElement(domNode, {
             horizontal: ScrollbarVisibility.Auto,
-            vertical: ScrollbarVisibility.Hidden,
+            vertical: ScrollbarVisibility.Auto,
             useShadows: false,
-            horizontalScrollbarSize: 3
+            horizontalScrollbarSize: 3,
+            verticalScrollbarSize: 3
         });
         dom.addClass(this._scrollable.getDomNode(), 'block');
         parent.appendChild(this._scrollable.getDomNode());
-        this._disposables.push(this._scrollable.onScroll(function (e) { return domNode.style.left = "-" + e.scrollLeft + "px"; }));
+        this._disposables.push(this._scrollable.onScroll(function (e) {
+            domNode.style.left = "-" + e.scrollLeft + "px";
+            domNode.style.top = "-" + e.scrollTop + "px";
+        }));
         this._disposables.push(this._scrollable);
     }
     MessageWidget.prototype.dispose = function () {
@@ -68,14 +72,14 @@ var MessageWidget = /** @class */ (function () {
     MessageWidget.prototype.update = function (_a) {
         var source = _a.source, message = _a.message, relatedInformation = _a.relatedInformation;
         if (source) {
-            this.lines = 0;
-            this.longestLineLength = 0;
+            this._lines = 0;
+            this._longestLineLength = 0;
             var indent = new Array(source.length + 3 + 1).join(' ');
             var lines = message.split(/\r\n|\r|\n/g);
             for (var i = 0; i < lines.length; i++) {
                 var line = lines[i];
-                this.lines += 1;
-                this.longestLineLength = Math.max(line.length, this.longestLineLength);
+                this._lines += 1;
+                this._longestLineLength = Math.max(line.length, this._longestLineLength);
                 if (i === 0) {
                     message = "[" + source + "] " + line;
                 }
@@ -85,37 +89,43 @@ var MessageWidget = /** @class */ (function () {
             }
         }
         else {
-            this.lines = 1;
-            this.longestLineLength = message.length;
+            this._lines = 1;
+            this._longestLineLength = message.length;
         }
         dom.clearNode(this._relatedBlock);
         if (!isFalsyOrEmpty(relatedInformation)) {
             this._relatedBlock.style.paddingTop = Math.floor(this._editor.getConfiguration().lineHeight * .66) + "px";
-            this.lines += 1;
+            this._lines += 1;
             for (var _i = 0, relatedInformation_1 = relatedInformation; _i < relatedInformation_1.length; _i++) {
                 var related = relatedInformation_1[_i];
                 var container = document.createElement('div');
                 var relatedResource = document.createElement('span');
                 dom.addClass(relatedResource, 'filename');
                 relatedResource.innerHTML = getBaseLabel(related.resource) + "(" + related.startLineNumber + ", " + related.startColumn + "): ";
-                relatedResource.title = getPathLabel(related.resource);
+                relatedResource.title = getPathLabel(related.resource, undefined);
                 this._relatedDiagnostics.set(relatedResource, related);
                 var relatedMessage = document.createElement('span');
                 relatedMessage.innerText = related.message;
                 this._editor.applyFontInfo(relatedMessage);
                 container.appendChild(relatedResource);
                 container.appendChild(relatedMessage);
-                this.lines += 1;
+                this._lines += 1;
                 this._relatedBlock.appendChild(container);
             }
         }
         this._messageBlock.innerText = message;
         this._editor.applyFontInfo(this._messageBlock);
-        var width = Math.floor(this._editor.getConfiguration().fontInfo.typicalFullwidthCharacterWidth * this.longestLineLength);
-        this._scrollable.setScrollDimensions({ scrollWidth: width });
+        var fontInfo = this._editor.getConfiguration().fontInfo;
+        var scrollWidth = Math.ceil(fontInfo.typicalFullwidthCharacterWidth * this._longestLineLength * 0.75);
+        var scrollHeight = fontInfo.lineHeight * this._lines;
+        this._scrollable.setScrollDimensions({ scrollWidth: scrollWidth, scrollHeight: scrollHeight });
     };
     MessageWidget.prototype.layout = function (height, width) {
-        this._scrollable.setScrollDimensions({ width: width });
+        this._scrollable.getDomNode().style.height = height + "px";
+        this._scrollable.setScrollDimensions({ width: width, height: height });
+    };
+    MessageWidget.prototype.getHeightInLines = function () {
+        return Math.min(17, this._lines);
     };
     return MessageWidget;
 }());
@@ -214,7 +224,7 @@ var MarkerNavigationWidget = /** @class */ (function (_super) {
         _super.prototype._relayout.call(this, this.computeRequiredHeight());
     };
     MarkerNavigationWidget.prototype.computeRequiredHeight = function () {
-        return 1 + this._message.lines;
+        return 1 + this._message.getHeightInLines();
     };
     return MarkerNavigationWidget;
 }(ZoneWidget));

@@ -27,24 +27,6 @@ var Graph = /** @class */ (function () {
         });
         return ret;
     };
-    Graph.prototype.traverse = function (start, inwards, callback) {
-        var startNode = this.lookup(start);
-        if (!startNode) {
-            return;
-        }
-        this._traverse(startNode, inwards, Object.create(null), callback);
-    };
-    Graph.prototype._traverse = function (node, inwards, seen, callback) {
-        var _this = this;
-        var key = this._hashFn(node.data);
-        if (seen[key]) {
-            return;
-        }
-        seen[key] = true;
-        callback(node.data);
-        var nodes = inwards ? node.outgoing : node.incoming;
-        forEach(nodes, function (entry) { return _this._traverse(entry.value, inwards, seen, callback); });
-    };
     Graph.prototype.insertEdge = function (from, to) {
         var fromNode = this.lookupOrInsertNode(from), toNode = this.lookupOrInsertNode(to);
         fromNode.outgoing[this._hashFn(to)] = toNode;
@@ -66,9 +48,6 @@ var Graph = /** @class */ (function () {
             this._nodes[key] = node;
         }
         return node;
-    };
-    Graph.prototype.lookup = function (data) {
-        return this._nodes[this._hashFn(data)];
     };
     Object.defineProperty(Graph.prototype, "length", {
         get: function () {

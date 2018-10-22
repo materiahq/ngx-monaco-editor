@@ -27,8 +27,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
         while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
                 case 0: case 1: t = op; break;
                 case 4: _.label++; return { value: op[1], done: false };
@@ -50,32 +50,24 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 import * as nls from '../../../nls.js';
 import { onUnexpectedError } from '../../../base/common/errors.js';
 import { dispose } from '../../../base/common/lifecycle.js';
-import { IEditorService } from '../../../platform/editor/common/editor.js';
-import { IInstantiationService, optional } from '../../../platform/instantiation/common/instantiation.js';
+import { ICodeEditorService } from '../../browser/services/codeEditorService.js';
+import { IInstantiationService } from '../../../platform/instantiation/common/instantiation.js';
 import { IContextKeyService, RawContextKey } from '../../../platform/contextkey/common/contextkey.js';
 import { IConfigurationService } from '../../../platform/configuration/common/configuration.js';
-import { IWorkspaceContextService } from '../../../platform/workspace/common/workspace.js';
 import { IStorageService } from '../../../platform/storage/common/storage.js';
 import { ReferenceWidget } from './referencesWidget.js';
 import { Range } from '../../common/core/range.js';
-import { ITextModelService } from '../../common/services/resolverService.js';
-import { IThemeService } from '../../../platform/theme/common/themeService.js';
 import { Position } from '../../common/core/position.js';
-import { IEnvironmentService } from '../../../platform/environment/common/environment.js';
 import { INotificationService } from '../../../platform/notification/common/notification.js';
 export var ctxReferenceSearchVisible = new RawContextKey('referenceSearchVisible', false);
 var ReferencesController = /** @class */ (function () {
-    function ReferencesController(_defaultTreeKeyboardSupport, editor, contextKeyService, _editorService, _textModelResolverService, _notificationService, _instantiationService, _contextService, _storageService, _themeService, _configurationService, _environmentService) {
+    function ReferencesController(_defaultTreeKeyboardSupport, editor, contextKeyService, _editorService, _notificationService, _instantiationService, _storageService, _configurationService) {
         this._defaultTreeKeyboardSupport = _defaultTreeKeyboardSupport;
         this._editorService = _editorService;
-        this._textModelResolverService = _textModelResolverService;
         this._notificationService = _notificationService;
         this._instantiationService = _instantiationService;
-        this._contextService = _contextService;
         this._storageService = _storageService;
-        this._themeService = _themeService;
         this._configurationService = _configurationService;
-        this._environmentService = _environmentService;
         this._requestIdPool = 0;
         this._disposables = [];
         this._ignoreModelChangeEvent = false;
@@ -89,10 +81,12 @@ var ReferencesController = /** @class */ (function () {
         return ReferencesController.ID;
     };
     ReferencesController.prototype.dispose = function () {
-        if (this._widget) {
-            this._widget.dispose();
-            this._widget = null;
-        }
+        this._referenceSearchVisible.reset();
+        dispose(this._disposables);
+        dispose(this._widget);
+        dispose(this._model);
+        this._widget = null;
+        this._model = null;
         this._editor = null;
     };
     ReferencesController.prototype.toggleWidget = function (range, modelPromise, options) {
@@ -116,7 +110,7 @@ var ReferencesController = /** @class */ (function () {
         }));
         var storageKey = 'peekViewLayout';
         var data = JSON.parse(this._storageService.get(storageKey, undefined, '{}'));
-        this._widget = new ReferenceWidget(this._editor, this._defaultTreeKeyboardSupport, data, this._textModelResolverService, this._contextService, this._themeService, this._instantiationService, this._environmentService);
+        this._widget = this._instantiationService.createInstance(ReferenceWidget, this._editor, this._defaultTreeKeyboardSupport, data);
         this._widget.setTitle(nls.localize('labelLoading', "Loading..."));
         this._widget.show(range);
         this._disposables.push(this._widget.onDidClose(function () {
@@ -186,7 +180,7 @@ var ReferencesController = /** @class */ (function () {
                         if (!this._model) return [3 /*break*/, 3];
                         source = this._model.nearestReference(this._editor.getModel().uri, this._widget.position);
                         target = this._model.nextOrPreviousReference(source, fwd);
-                        editorFocus = this._editor.isFocused();
+                        editorFocus = this._editor.hasTextFocus();
                         return [4 /*yield*/, this._widget.setSelection(target)];
                     case 1:
                         _a.sent();
@@ -203,16 +197,12 @@ var ReferencesController = /** @class */ (function () {
         });
     };
     ReferencesController.prototype.closeWidget = function () {
-        if (this._widget) {
-            this._widget.dispose();
-            this._widget = null;
-        }
+        dispose(this._widget);
+        this._widget = null;
         this._referenceSearchVisible.reset();
         this._disposables = dispose(this._disposables);
-        if (this._model) {
-            this._model.dispose();
-            this._model = null;
-        }
+        dispose(this._model);
+        this._model = null;
         this._editor.focus();
         this._requestIdPool += 1; // Cancel pending requests
     };
@@ -221,12 +211,12 @@ var ReferencesController = /** @class */ (function () {
         this._widget.hide();
         this._ignoreModelChangeEvent = true;
         var range = Range.lift(ref.range).collapseToStart();
-        return this._editorService.openEditor({
+        return this._editorService.openCodeEditor({
             resource: ref.uri,
             options: { selection: range }
-        }).then(function (openedEditor) {
+        }, this._editor).then(function (openedEditor) {
             _this._ignoreModelChangeEvent = false;
-            if (!openedEditor || openedEditor.getControl() !== _this._editor) {
+            if (!openedEditor || openedEditor !== _this._editor) {
                 // TODO@Alex TODO@Joh
                 // when opening the current reference we might end up
                 // in a different editor instance. that means we also have
@@ -246,10 +236,10 @@ var ReferencesController = /** @class */ (function () {
     };
     ReferencesController.prototype.openReference = function (ref, sideBySide) {
         var uri = ref.uri, range = ref.range;
-        this._editorService.openEditor({
+        this._editorService.openCodeEditor({
             resource: uri,
             options: { selection: range }
-        }, sideBySide);
+        }, this._editor, sideBySide);
         // clear stage
         if (!sideBySide) {
             this.closeWidget();
@@ -258,15 +248,11 @@ var ReferencesController = /** @class */ (function () {
     ReferencesController.ID = 'editor.contrib.referencesController';
     ReferencesController = __decorate([
         __param(2, IContextKeyService),
-        __param(3, IEditorService),
-        __param(4, ITextModelService),
-        __param(5, INotificationService),
-        __param(6, IInstantiationService),
-        __param(7, IWorkspaceContextService),
-        __param(8, IStorageService),
-        __param(9, IThemeService),
-        __param(10, IConfigurationService),
-        __param(11, optional(IEnvironmentService))
+        __param(3, ICodeEditorService),
+        __param(4, INotificationService),
+        __param(5, IInstantiationService),
+        __param(6, IStorageService),
+        __param(7, IConfigurationService)
     ], ReferencesController);
     return ReferencesController;
 }());

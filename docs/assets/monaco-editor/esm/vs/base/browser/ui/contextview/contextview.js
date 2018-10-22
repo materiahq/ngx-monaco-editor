@@ -6,7 +6,7 @@
 import './contextview.css';
 import { $ } from '../../builder.js';
 import * as DOM from '../../dom.js';
-import { dispose } from '../../../common/lifecycle.js';
+import { dispose, toDisposable } from '../../../common/lifecycle.js';
 export var AnchorAlignment;
 (function (AnchorAlignment) {
     AnchorAlignment[AnchorAlignment["LEFT"] = 0] = "LEFT";
@@ -17,54 +17,45 @@ export var AnchorPosition;
     AnchorPosition[AnchorPosition["BELOW"] = 0] = "BELOW";
     AnchorPosition[AnchorPosition["ABOVE"] = 1] = "ABOVE";
 })(AnchorPosition || (AnchorPosition = {}));
-function layout(view, around, viewport, anchorPosition, anchorAlignment) {
-    var chooseBiased = function (a, aIsGood, b, bIsGood) {
-        if (aIsGood) {
-            return a;
+export var LayoutAnchorPosition;
+(function (LayoutAnchorPosition) {
+    LayoutAnchorPosition[LayoutAnchorPosition["Before"] = 0] = "Before";
+    LayoutAnchorPosition[LayoutAnchorPosition["After"] = 1] = "After";
+})(LayoutAnchorPosition || (LayoutAnchorPosition = {}));
+/**
+ * Lays out a one dimensional view next to an anchor in a viewport.
+ *
+ * @returns The view offset within the viewport.
+ */
+export function layout(viewportSize, viewSize, anchor) {
+    var anchorEnd = anchor.offset + anchor.size;
+    if (anchor.position === LayoutAnchorPosition.Before) {
+        if (viewSize <= viewportSize - anchorEnd) {
+            return anchorEnd; // happy case, lay it out after the anchor
         }
-        if (bIsGood) {
-            return b;
+        if (viewSize <= anchor.offset) {
+            return anchor.offset - viewSize; // ok case, lay it out before the anchor
         }
-        return a;
-    };
-    var chooseOne = function (a, aIsGood, b, bIsGood, aIsPreferred) {
-        if (aIsPreferred) {
-            return chooseBiased(a, aIsGood, b, bIsGood);
+        return Math.max(viewportSize - viewSize, 0); // sad case, lay it over the anchor
+    }
+    else {
+        if (viewSize <= anchor.offset) {
+            return anchor.offset - viewSize; // happy case, lay it out before the anchor
         }
-        else {
-            return chooseBiased(b, bIsGood, a, aIsGood);
+        if (viewSize <= viewportSize - anchorEnd) {
+            return anchorEnd; // ok case, lay it out after the anchor
         }
-    };
-    var top = (function () {
-        // Compute both options (putting the segment above and below)
-        var posAbove = around.top - view.height;
-        var posBelow = around.top + around.height;
-        // Check for both options if they are good
-        var aboveIsGood = (posAbove >= viewport.top && posAbove + view.height <= viewport.top + viewport.height);
-        var belowIsGood = (posBelow >= viewport.top && posBelow + view.height <= viewport.top + viewport.height);
-        return chooseOne(posAbove, aboveIsGood, posBelow, belowIsGood, anchorPosition === AnchorPosition.ABOVE);
-    })();
-    var left = (function () {
-        // Compute both options (aligning left and right)
-        var posLeft = around.left;
-        var posRight = around.left + around.width - view.width;
-        // Check for both options if they are good
-        var leftIsGood = (posLeft >= viewport.left && posLeft + view.width <= viewport.left + viewport.width);
-        var rightIsGood = (posRight >= viewport.left && posRight + view.width <= viewport.left + viewport.width);
-        return chooseOne(posLeft, leftIsGood, posRight, rightIsGood, anchorAlignment === AnchorAlignment.LEFT);
-    })();
-    return { top: top, left: left };
+        return 0; // sad case, lay it over the anchor
+    }
 }
 var ContextView = /** @class */ (function () {
     function ContextView(container) {
         var _this = this;
         this.$view = $('.context-view').hide();
         this.setContainer(container);
-        this.toDispose = [{
-                dispose: function () {
-                    _this.setContainer(null);
-                }
-            }];
+        this.toDispose = [toDisposable(function () {
+                _this.setContainer(null);
+            })];
         this.toDisposeOnClean = null;
     }
     ContextView.prototype.setContainer = function (container) {
@@ -136,25 +127,24 @@ var ContextView = /** @class */ (function () {
                 height: realAnchor.height || 0
             };
         }
-        var viewport = {
-            top: DOM.StandardWindow.scrollY,
-            left: DOM.StandardWindow.scrollX,
-            height: window.innerHeight,
-            width: window.innerWidth
-        };
-        // Get the view's size
         var viewSize = this.$view.getTotalSize();
-        var view = { width: viewSize.width, height: viewSize.height };
         var anchorPosition = this.delegate.anchorPosition || AnchorPosition.BELOW;
         var anchorAlignment = this.delegate.anchorAlignment || AnchorAlignment.LEFT;
-        var result = layout(view, around, viewport, anchorPosition, anchorAlignment);
+        var verticalAnchor = { offset: around.top, size: around.height, position: anchorPosition === AnchorPosition.BELOW ? LayoutAnchorPosition.Before : LayoutAnchorPosition.After };
+        var horizontalAnchor;
+        if (anchorAlignment === AnchorAlignment.LEFT) {
+            horizontalAnchor = { offset: around.left, size: 0, position: LayoutAnchorPosition.Before };
+        }
+        else {
+            horizontalAnchor = { offset: around.left + around.width, size: 0, position: LayoutAnchorPosition.After };
+        }
         var containerPosition = DOM.getDomNodePagePosition(this.$container.getHTMLElement());
-        result.top -= containerPosition.top;
-        result.left -= containerPosition.left;
+        var top = layout(window.innerHeight, viewSize.height, verticalAnchor) - containerPosition.top;
+        var left = layout(window.innerWidth, viewSize.width, horizontalAnchor) - containerPosition.left;
         this.$view.removeClass('top', 'bottom', 'left', 'right');
         this.$view.addClass(anchorPosition === AnchorPosition.BELOW ? 'bottom' : 'top');
         this.$view.addClass(anchorAlignment === AnchorAlignment.LEFT ? 'left' : 'right');
-        this.$view.style({ top: result.top + 'px', left: result.left + 'px', width: 'initial' });
+        this.$view.style({ top: top + "px", left: left + "px", width: 'initial' });
     };
     ContextView.prototype.hide = function (data) {
         if (this.delegate && this.delegate.onHide) {

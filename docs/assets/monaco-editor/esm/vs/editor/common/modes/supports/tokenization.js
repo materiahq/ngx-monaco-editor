@@ -59,7 +59,7 @@ export function parseTokenTheme(source) {
 /**
  * Resolve rules (i.e. inheritance).
  */
-function resolveParsedTokenThemeRules(parsedThemeRules) {
+function resolveParsedTokenThemeRules(parsedThemeRules, customTokenColors) {
     // Sort rules lexicographically, and then by index if necessary
     parsedThemeRules.sort(function (a, b) {
         var r = strcmp(a.token, b.token);
@@ -85,8 +85,14 @@ function resolveParsedTokenThemeRules(parsedThemeRules) {
         }
     }
     var colorMap = new ColorMap();
-    // ensure default foreground gets id 1 and default background gets id 2
-    var defaults = new ThemeTrieElementRule(defaultFontStyle, colorMap.getId(defaultForeground), colorMap.getId(defaultBackground));
+    // start with token colors from custom token themes
+    for (var _i = 0, customTokenColors_1 = customTokenColors; _i < customTokenColors_1.length; _i++) {
+        var color = customTokenColors_1[_i];
+        colorMap.getId(color);
+    }
+    var foregroundColorId = colorMap.getId(defaultForeground);
+    var backgroundColorId = colorMap.getId(defaultBackground);
+    var defaults = new ThemeTrieElementRule(defaultFontStyle, foregroundColorId, backgroundColorId);
     var root = new ThemeTrieElement(defaults);
     for (var i = 0, len = parsedThemeRules.length; i < len; i++) {
         var rule = parsedThemeRules[i];
@@ -94,6 +100,7 @@ function resolveParsedTokenThemeRules(parsedThemeRules) {
     }
     return new TokenTheme(colorMap, root);
 }
+var colorRegExp = /^#?([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})?$/;
 var ColorMap = /** @class */ (function () {
     function ColorMap() {
         this._lastColorId = 0;
@@ -104,10 +111,11 @@ var ColorMap = /** @class */ (function () {
         if (color === null) {
             return 0;
         }
-        color = color.toUpperCase();
-        if (!/^[0-9A-F]{6}$/.test(color)) {
-            throw new Error('Illegal color name: ' + color);
+        var match = color.match(colorRegExp);
+        if (!match) {
+            throw new Error('Illegal value for token color: ' + color);
         }
+        color = match[1].toUpperCase();
         var value = this._color2id.get(color);
         if (value) {
             return value;
@@ -129,20 +137,14 @@ var TokenTheme = /** @class */ (function () {
         this._root = root;
         this._cache = new Map();
     }
-    TokenTheme.createFromRawTokenTheme = function (source) {
-        return this.createFromParsedTokenTheme(parseTokenTheme(source));
+    TokenTheme.createFromRawTokenTheme = function (source, customTokenColors) {
+        return this.createFromParsedTokenTheme(parseTokenTheme(source), customTokenColors);
     };
-    TokenTheme.createFromParsedTokenTheme = function (source) {
-        return resolveParsedTokenThemeRules(source);
+    TokenTheme.createFromParsedTokenTheme = function (source, customTokenColors) {
+        return resolveParsedTokenThemeRules(source, customTokenColors);
     };
     TokenTheme.prototype.getColorMap = function () {
         return this._colorMap.getColorMap();
-    };
-    /**
-     * used for testing purposes
-     */
-    TokenTheme.prototype.getThemeTrieElement = function () {
-        return this._root.toExternalThemeTrieElement();
     };
     TokenTheme.prototype._match = function (token) {
         return this._root.match(token);
@@ -217,29 +219,11 @@ var ThemeTrieElementRule = /** @class */ (function () {
     return ThemeTrieElementRule;
 }());
 export { ThemeTrieElementRule };
-var ExternalThemeTrieElement = /** @class */ (function () {
-    function ExternalThemeTrieElement(mainRule, children) {
-        this.mainRule = mainRule;
-        this.children = children || Object.create(null);
-    }
-    return ExternalThemeTrieElement;
-}());
-export { ExternalThemeTrieElement };
 var ThemeTrieElement = /** @class */ (function () {
     function ThemeTrieElement(mainRule) {
         this._mainRule = mainRule;
         this._children = new Map();
     }
-    /**
-     * used for testing purposes
-     */
-    ThemeTrieElement.prototype.toExternalThemeTrieElement = function () {
-        var children = Object.create(null);
-        this._children.forEach(function (element, index) {
-            children[index] = element.toExternalThemeTrieElement();
-        });
-        return new ExternalThemeTrieElement(this._mainRule, children);
-    };
     ThemeTrieElement.prototype.match = function (token) {
         if (token === '') {
             return this._mainRule;
@@ -296,6 +280,6 @@ export function generateTokensCSSForColorMap(colorMap) {
     }
     rules.push('.mtki { font-style: italic; }');
     rules.push('.mtkb { font-weight: bold; }');
-    rules.push('.mtku { text-decoration: underline; }');
+    rules.push('.mtku { text-decoration: underline; text-underline-position: under; }');
     return rules.join('\n');
 }

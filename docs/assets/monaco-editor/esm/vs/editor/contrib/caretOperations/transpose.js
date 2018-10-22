@@ -33,7 +33,8 @@ var TransposeLettersAction = /** @class */ (function (_super) {
                 primary: 0,
                 mac: {
                     primary: 256 /* WinCtrl */ | 50 /* KEY_T */
-                }
+                },
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }

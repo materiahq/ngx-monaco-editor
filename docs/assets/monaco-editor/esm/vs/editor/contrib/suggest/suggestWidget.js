@@ -25,8 +25,7 @@ import * as nls from '../../../nls.js';
 import { createMatches } from '../../../base/common/filters.js';
 import * as strings from '../../../base/common/strings.js';
 import { Emitter, chain } from '../../../base/common/event.js';
-import { TPromise } from '../../../base/common/winjs.base.js';
-import { isPromiseCanceledError, onUnexpectedError } from '../../../base/common/errors.js';
+import { onUnexpectedError } from '../../../base/common/errors.js';
 import { dispose, toDisposable } from '../../../base/common/lifecycle.js';
 import { addClass, append, $, hide, removeClass, show, toggleClass, getDomNodePagePosition, hasClass } from '../../../base/browser/dom.js';
 import { HighlightedLabel } from '../../../base/browser/ui/highlightedlabel/highlightedLabel.js';
@@ -45,6 +44,8 @@ import { IStorageService, StorageScope } from '../../../platform/storage/common/
 import { MarkdownRenderer } from '../markdown/markdownRenderer.js';
 import { IModeService } from '../../common/services/modeService.js';
 import { IOpenerService } from '../../../platform/opener/common/opener.js';
+import { TimeoutTimer, createCancelablePromise } from '../../../base/common/async.js';
+import { CancellationToken } from '../../../base/common/cancellation.js';
 var sticky = false; // for development purposes
 var expandSuggestionDocsByDefault = false;
 var maxSuggestionsToShow = 12;
@@ -137,7 +138,7 @@ var Renderer = /** @class */ (function () {
                 data.colorspan.style.backgroundColor = color;
             }
         }
-        data.highlightedLabel.set(suggestion.label, createMatches(element.matches));
+        data.highlightedLabel.set(suggestion.label, createMatches(element.matches), '', true);
         // data.highlightedLabel.set(`${suggestion.label} <${element.score}=score(${element.word}, ${suggestion.filterText || suggestion.label})>`, createMatches(element.matches));
         data.typeLabel.textContent = (suggestion.detail || '').replace(/\n.*$/m, '');
         if (canExpandCompletionItem(element)) {
@@ -157,6 +158,9 @@ var Renderer = /** @class */ (function () {
             data.readMore.onmousedown = null;
             data.readMore.onclick = null;
         }
+    };
+    Renderer.prototype.disposeElement = function () {
+        // noop
     };
     Renderer.prototype.disposeTemplate = function (templateData) {
         templateData.disposables = dispose(templateData.disposables);
@@ -188,6 +192,7 @@ var SuggestionDetails = /** @class */ (function () {
         chain(this.editor.onDidChangeConfiguration.bind(this.editor))
             .filter(function (e) { return e.fontInfo; })
             .on(this.configureFont, this, this.disposables);
+        markdownRenderer.onDidRenderCodeBlock(function () { return _this.scrollbar.scanDomNode(); }, this, this.disposables);
     }
     Object.defineProperty(SuggestionDetails.prototype, "element", {
         get: function () {
@@ -292,6 +297,8 @@ var SuggestWidget = /** @class */ (function () {
         // Editor.IContentWidget.allowEditorOverflow
         this.allowEditorOverflow = true;
         this.ignoreFocusEvents = false;
+        this.editorBlurTimeout = new TimeoutTimer();
+        this.showTimeout = new TimeoutTimer();
         this.onDidSelectEmitter = new Emitter();
         this.onDidFocusEmitter = new Emitter();
         this.onDidHideEmitter = new Emitter();
@@ -304,6 +311,7 @@ var SuggestWidget = /** @class */ (function () {
         this.listWidth = 330;
         this.storageServiceAvailable = true;
         this.expandSuggestionDocs = false;
+        this.firstFocusInCurrentList = false;
         var kb = keybindingService.lookupKeybinding('editor.action.triggerSuggest');
         var triggerKeybindingLabel = !kb ? '' : " (" + kb.getLabel() + ")";
         var markdownRenderer = new MarkdownRenderer(editor, modeService, openerService);
@@ -348,19 +356,6 @@ var SuggestWidget = /** @class */ (function () {
         this.editor.addContentWidget(this);
         this.setState(0 /* Hidden */);
         this.onThemeChange(themeService.getTheme());
-        // TODO@Alex: this is useful, but spammy
-        // var isVisible = false;
-        // this.onDidVisibilityChange((newIsVisible) => {
-        // 	if (isVisible === newIsVisible) {
-        // 		return;
-        // 	}
-        // 	isVisible = newIsVisible;
-        // 	if (isVisible) {
-        // 		alert(nls.localize('suggestWidgetAriaVisible', "Suggestions opened"));
-        // 	} else {
-        // 		alert(nls.localize('suggestWidgetAriaInvisible', "Suggestions closed"));
-        // 	}
-        // });
     }
     SuggestWidget.prototype.onCursorSelectionChanged = function () {
         if (this.state === 0 /* Hidden */) {
@@ -373,11 +368,11 @@ var SuggestWidget = /** @class */ (function () {
         if (sticky) {
             return;
         }
-        this.editorBlurTimeout = TPromise.timeout(150).then(function () {
-            if (!_this.editor.isFocused()) {
+        this.editorBlurTimeout.cancelAndSet(function () {
+            if (!_this.editor.hasTextFocus()) {
                 _this.setState(0 /* Hidden */);
             }
-        });
+        }, 150);
     };
     SuggestWidget.prototype.onEditorLayoutChange = function () {
         if ((this.state === 3 /* Open */ || this.state === 5 /* Details */) && this.expandDocsSettingFromStorage()) {
@@ -391,7 +386,7 @@ var SuggestWidget = /** @class */ (function () {
         }
         var item = e.elements[0];
         var index = e.indexes[0];
-        item.resolve().then(function () {
+        item.resolve(CancellationToken.None).then(function () {
             _this.onDidSelectEmitter.fire({ item: item, index: index, model: _this.completionModel });
             alert(nls.localize('suggestionAriaAccepted', "{0}, accepted", item.suggestion.label));
             _this.editor.focus();
@@ -450,6 +445,7 @@ var SuggestWidget = /** @class */ (function () {
         }
         var item = e.elements[0];
         this._ariaAlert(this._getSuggestionAriaAlertLabel(item));
+        this.firstFocusInCurrentList = !this.focusedItem;
         if (item === this.focusedItem) {
             return;
         }
@@ -461,8 +457,8 @@ var SuggestWidget = /** @class */ (function () {
         this.suggestionSupportsAutoAccept.set(!item.suggestion.noAutoAccept);
         this.focusedItem = item;
         this.list.reveal(index);
-        this.currentSuggestionDetails = item.resolve()
-            .then(function () {
+        this.currentSuggestionDetails = createCancelablePromise(function (token) { return item.resolve(token); });
+        this.currentSuggestionDetails.then(function () {
             // item can have extra information, so re-render
             _this.ignoreFocusEvents = true;
             _this.list.splice(index, 1, [item]);
@@ -474,9 +470,11 @@ var SuggestWidget = /** @class */ (function () {
             else {
                 removeClass(_this.element, 'docs-side');
             }
-        })
-            .then(null, function (err) { return !isPromiseCanceledError(err) && onUnexpectedError(err); })
-            .then(function () { return _this.currentSuggestionDetails = null; });
+        }).catch(onUnexpectedError).then(function () {
+            if (_this.focusedItem === item) {
+                _this.currentSuggestionDetails = null;
+            }
+        });
         // emit an event
         this.onDidFocusEmitter.fire({ item: item, index: index, model: this.completionModel });
     };
@@ -495,6 +493,7 @@ var SuggestWidget = /** @class */ (function () {
                 if (stateChanged) {
                     this.list.splice(0, this.list.length);
                 }
+                this.focusedItem = null;
                 break;
             case 1 /* Loading */:
                 this.messageElement.textContent = SuggestWidget.LOADING_MESSAGE;
@@ -502,6 +501,7 @@ var SuggestWidget = /** @class */ (function () {
                 show(this.messageElement);
                 removeClass(this.element, 'docs-side');
                 this.show();
+                this.focusedItem = null;
                 break;
             case 2 /* Empty */:
                 this.messageElement.textContent = SuggestWidget.NO_SUGGESTIONS_MESSAGE;
@@ -509,9 +509,10 @@ var SuggestWidget = /** @class */ (function () {
                 show(this.messageElement);
                 removeClass(this.element, 'docs-side');
                 this.show();
+                this.focusedItem = null;
                 break;
             case 3 /* Open */:
-                hide(this.messageElement, this.details.element);
+                hide(this.messageElement);
                 show(this.listElement);
                 this.show();
                 break;
@@ -546,7 +547,9 @@ var SuggestWidget = /** @class */ (function () {
             clearTimeout(this.loadingTimeout);
             this.loadingTimeout = null;
         }
-        this.completionModel = completionModel;
+        if (this.completionModel !== completionModel) {
+            this.completionModel = completionModel;
+        }
         if (isFrozen && this.state !== 2 /* Empty */ && this.state !== 0 /* Hidden */) {
             this.setState(4 /* Frozen */);
             return;
@@ -576,7 +579,6 @@ var SuggestWidget = /** @class */ (function () {
                 }
             */
             this.telemetryService.publicLog('suggestWidget', __assign({}, stats, this.editor.getTelemetryData()));
-            this.focusedItem = null;
             this.list.splice(0, this.list.length, this.completionModel.items);
             if (isFrozen) {
                 this.setState(4 /* Frozen */);
@@ -724,7 +726,7 @@ var SuggestWidget = /** @class */ (function () {
             this.telemetryService.publicLog('suggestWidget:collapseDetails', this.editor.getTelemetryData());
         }
         else {
-            if (this.state !== 3 /* Open */ && this.state !== 5 /* Details */) {
+            if (this.state !== 3 /* Open */ && this.state !== 5 /* Details */ && this.state !== 4 /* Frozen */) {
                 return;
             }
             this.updateExpandDocsSetting(true);
@@ -760,10 +762,10 @@ var SuggestWidget = /** @class */ (function () {
             this.listHeight = newHeight;
         }
         this.suggestWidgetVisible.set(true);
-        this.showTimeout = TPromise.timeout(100).then(function () {
+        this.showTimeout.cancelAndSet(function () {
             addClass(_this.element, 'visible');
             _this.onDidShowEmitter.fire(_this);
-        });
+        }, 100);
     };
     SuggestWidget.prototype.hide = function () {
         this.suggestWidgetVisible.reset();
@@ -832,12 +834,17 @@ var SuggestWidget = /** @class */ (function () {
         }
     };
     SuggestWidget.prototype.expandSideOrBelow = function () {
+        if (!canExpandCompletionItem(this.focusedItem) && this.firstFocusInCurrentList) {
+            removeClass(this.element, 'docs-side');
+            removeClass(this.element, 'docs-below');
+            return;
+        }
         var matches = this.element.style.maxWidth.match(/(\d+)px/);
         if (!matches || Number(matches[1]) < this.maxWidgetWidth) {
             addClass(this.element, 'docs-below');
             removeClass(this.element, 'docs-side');
         }
-        else {
+        else if (canExpandCompletionItem(this.focusedItem)) {
             addClass(this.element, 'docs-side');
             removeClass(this.element, 'docs-below');
         }
@@ -900,14 +907,8 @@ var SuggestWidget = /** @class */ (function () {
             clearTimeout(this.loadingTimeout);
             this.loadingTimeout = null;
         }
-        if (this.editorBlurTimeout) {
-            this.editorBlurTimeout.cancel();
-            this.editorBlurTimeout = null;
-        }
-        if (this.showTimeout) {
-            this.showTimeout.cancel();
-            this.showTimeout = null;
-        }
+        this.editorBlurTimeout.dispose();
+        this.showTimeout.dispose();
     };
     SuggestWidget.ID = 'editor.widget.suggestWidget';
     SuggestWidget.LOADING_MESSAGE = nls.localize('suggestWidget.loading', "Loading...");

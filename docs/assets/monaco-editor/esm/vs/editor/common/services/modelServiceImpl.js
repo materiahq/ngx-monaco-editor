@@ -18,18 +18,16 @@ import { Emitter } from '../../../base/common/event.js';
 import { MarkdownString } from '../../../base/common/htmlContent.js';
 import { dispose } from '../../../base/common/lifecycle.js';
 import { TPromise } from '../../../base/common/winjs.base.js';
-import { IMarkerService, MarkerSeverity } from '../../../platform/markers/common/markers.js';
+import { IMarkerService, MarkerSeverity, MarkerTag } from '../../../platform/markers/common/markers.js';
 import { Range } from '../core/range.js';
-import { TextModel, createTextBuffer } from '../model/textModel.js';
+import { TextModel } from '../model/textModel.js';
 import * as platform from '../../../base/common/platform.js';
 import { IConfigurationService } from '../../../platform/configuration/common/configuration.js';
 import { EDITOR_MODEL_DEFAULTS } from '../config/editorOptions.js';
 import { PLAINTEXT_LANGUAGE_IDENTIFIER } from '../modes/modesRegistry.js';
-import { ClassName } from '../model/intervalTree.js';
-import { EditOperation } from '../core/editOperation.js';
 import { themeColorFromId } from '../../../platform/theme/common/themeService.js';
 import { overviewRulerWarning, overviewRulerError, overviewRulerInfo } from '../view/editorColorRegistry.js';
-import { TrackedRangeStickiness, OverviewRulerLane, DefaultEndOfLine, EndOfLineSequence, EndOfLinePreference } from '../model.js';
+import { TrackedRangeStickiness, OverviewRulerLane, DefaultEndOfLine } from '../model.js';
 import { isFalsyOrEmpty } from '../../../base/common/arrays.js';
 import { basename } from '../../../base/common/paths.js';
 function MODEL_ID(resource) {
@@ -111,30 +109,41 @@ var ModelMarkerHandler = /** @class */ (function () {
         var color;
         var darkColor;
         var zIndex;
+        var inlineClassName;
         switch (marker.severity) {
             case MarkerSeverity.Hint:
-                className = ClassName.EditorHintDecoration;
+                if (marker.tags && marker.tags.indexOf(MarkerTag.Unnecessary) >= 0) {
+                    className = "squiggly-unnecessary" /* EditorUnnecessaryDecoration */;
+                }
+                else {
+                    className = "squiggly-hint" /* EditorHintDecoration */;
+                }
                 zIndex = 0;
                 break;
             case MarkerSeverity.Warning:
-                className = ClassName.EditorWarningDecoration;
+                className = "squiggly-warning" /* EditorWarningDecoration */;
                 color = themeColorFromId(overviewRulerWarning);
                 darkColor = themeColorFromId(overviewRulerWarning);
                 zIndex = 20;
                 break;
             case MarkerSeverity.Info:
-                className = ClassName.EditorInfoDecoration;
+                className = "squiggly-info" /* EditorInfoDecoration */;
                 color = themeColorFromId(overviewRulerInfo);
                 darkColor = themeColorFromId(overviewRulerInfo);
                 zIndex = 10;
                 break;
             case MarkerSeverity.Error:
             default:
-                className = ClassName.EditorErrorDecoration;
+                className = "squiggly-error" /* EditorErrorDecoration */;
                 color = themeColorFromId(overviewRulerError);
                 darkColor = themeColorFromId(overviewRulerError);
                 zIndex = 30;
                 break;
+        }
+        if (marker.tags) {
+            if (marker.tags.indexOf(MarkerTag.Unnecessary) !== -1) {
+                inlineClassName = "squiggly-inline-unnecessary" /* EditorUnnecessaryInlineDecoration */;
+            }
         }
         var hoverMessage = null;
         var message = marker.message, source = marker.source, relatedInformation = marker.relatedInformation;
@@ -153,7 +162,9 @@ var ModelMarkerHandler = /** @class */ (function () {
                 hoverMessage.appendMarkdown('\n');
                 for (var _i = 0, relatedInformation_1 = relatedInformation; _i < relatedInformation_1.length; _i++) {
                     var _a = relatedInformation_1[_i], message_1 = _a.message, resource = _a.resource, startLineNumber = _a.startLineNumber, startColumn = _a.startColumn;
-                    hoverMessage.appendMarkdown("* [" + basename(resource.path) + "(" + startLineNumber + ", " + startColumn + ")](" + resource.toString(false) + "#" + startLineNumber + "," + startColumn + "): `" + message_1 + "` \n");
+                    hoverMessage.appendMarkdown("* [" + basename(resource.path) + "(" + startLineNumber + ", " + startColumn + ")](" + resource.toString(false) + "#" + startLineNumber + "," + startColumn + "): ");
+                    hoverMessage.appendText("" + message_1);
+                    hoverMessage.appendMarkdown('\n');
                 }
                 hoverMessage.appendMarkdown('\n');
             }
@@ -168,7 +179,8 @@ var ModelMarkerHandler = /** @class */ (function () {
                 darkColor: darkColor,
                 position: OverviewRulerLane.Right
             },
-            zIndex: zIndex
+            zIndex: zIndex,
+            inlineClassName: inlineClassName,
         };
     };
     return ModelMarkerHandler;
@@ -196,6 +208,9 @@ var ModelServiceImpl = /** @class */ (function () {
             var parsedTabSize = parseInt(config.editor.tabSize, 10);
             if (!isNaN(parsedTabSize)) {
                 tabSize = parsedTabSize;
+            }
+            if (tabSize < 1) {
+                tabSize = 1;
             }
         }
         var insertSpaces = EDITOR_MODEL_DEFAULTS.insertSpaces;
@@ -323,62 +338,6 @@ var ModelServiceImpl = /** @class */ (function () {
         this._models[modelId] = modelData;
         return modelData;
     };
-    ModelServiceImpl.prototype.updateModel = function (model, value) {
-        var options = this.getCreationOptions(model.getLanguageIdentifier().language, model.uri, model.isForSimpleWidget);
-        var textBuffer = createTextBuffer(value, options.defaultEOL);
-        // Return early if the text is already set in that form
-        if (model.equalsTextBuffer(textBuffer)) {
-            return;
-        }
-        // Otherwise find a diff between the values and update model
-        model.pushStackElement();
-        model.setEOL(textBuffer.getEOL() === '\r\n' ? EndOfLineSequence.CRLF : EndOfLineSequence.LF);
-        model.pushEditOperations([], ModelServiceImpl._computeEdits(model, textBuffer), function (inverseEditOperations) { return []; });
-        model.pushStackElement();
-    };
-    ModelServiceImpl._commonPrefix = function (a, aLen, aDelta, b, bLen, bDelta) {
-        var maxResult = Math.min(aLen, bLen);
-        var result = 0;
-        for (var i = 0; i < maxResult && a.getLineContent(aDelta + i) === b.getLineContent(bDelta + i); i++) {
-            result++;
-        }
-        return result;
-    };
-    ModelServiceImpl._commonSuffix = function (a, aLen, aDelta, b, bLen, bDelta) {
-        var maxResult = Math.min(aLen, bLen);
-        var result = 0;
-        for (var i = 0; i < maxResult && a.getLineContent(aDelta + aLen - i) === b.getLineContent(bDelta + bLen - i); i++) {
-            result++;
-        }
-        return result;
-    };
-    /**
-     * Compute edits to bring `model` to the state of `textSource`.
-     */
-    ModelServiceImpl._computeEdits = function (model, textBuffer) {
-        var modelLineCount = model.getLineCount();
-        var textBufferLineCount = textBuffer.getLineCount();
-        var commonPrefix = this._commonPrefix(model, modelLineCount, 1, textBuffer, textBufferLineCount, 1);
-        if (modelLineCount === textBufferLineCount && commonPrefix === modelLineCount) {
-            // equality case
-            return [];
-        }
-        var commonSuffix = this._commonSuffix(model, modelLineCount - commonPrefix, commonPrefix, textBuffer, textBufferLineCount - commonPrefix, commonPrefix);
-        var oldRange, newRange;
-        if (commonSuffix > 0) {
-            oldRange = new Range(commonPrefix + 1, 1, modelLineCount - commonSuffix + 1, 1);
-            newRange = new Range(commonPrefix + 1, 1, textBufferLineCount - commonSuffix + 1, 1);
-        }
-        else if (commonPrefix > 0) {
-            oldRange = new Range(commonPrefix, model.getLineMaxColumn(commonPrefix), modelLineCount, model.getLineMaxColumn(modelLineCount));
-            newRange = new Range(commonPrefix, 1 + textBuffer.getLineLength(commonPrefix), textBufferLineCount, 1 + textBuffer.getLineLength(textBufferLineCount));
-        }
-        else {
-            oldRange = new Range(1, 1, modelLineCount, model.getLineMaxColumn(modelLineCount));
-            newRange = new Range(1, 1, textBufferLineCount, 1 + textBuffer.getLineLength(textBufferLineCount));
-        }
-        return [EditOperation.replaceMove(oldRange, textBuffer.getValueInRange(newRange, EndOfLinePreference.TextDefined))];
-    };
     ModelServiceImpl.prototype.createModel = function (value, modeOrPromise, resource, isForSimpleWidget) {
         if (isForSimpleWidget === void 0) { isForSimpleWidget = false; }
         var modelData;
@@ -410,14 +369,6 @@ var ModelServiceImpl = /** @class */ (function () {
         else {
             model.setMode(modeOrPromise.getLanguageIdentifier());
         }
-    };
-    ModelServiceImpl.prototype.destroyModel = function (resource) {
-        // We need to support that not all models get disposed through this service (i.e. model.dispose() should work!)
-        var modelData = this._models[MODEL_ID(resource)];
-        if (!modelData) {
-            return;
-        }
-        modelData.model.dispose();
     };
     ModelServiceImpl.prototype.getModels = function () {
         var ret = [];

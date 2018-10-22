@@ -8,15 +8,6 @@ import { equalsIgnoreCase } from './strings.js';
 export function basenameOrAuthority(resource) {
     return paths.basename(resource.path) || resource.authority;
 }
-export function isEqualOrParent(resource, candidate, ignoreCase) {
-    if (resource.scheme === candidate.scheme && resource.authority === candidate.authority) {
-        if (resource.scheme === 'file') {
-            return paths.isEqualOrParent(resource.fsPath, candidate.fsPath, ignoreCase);
-        }
-        return paths.isEqualOrParent(resource.path, candidate.path, ignoreCase);
-    }
-    return false;
-}
 export function isEqual(first, second, ignoreCase) {
     var identityEquals = (first === second);
     if (identityEquals) {
@@ -38,23 +29,4 @@ export function dirname(resource) {
     return resource.with({
         path: dirname
     });
-}
-export function distinctParents(items, resourceAccessor) {
-    var distinctParents = [];
-    var _loop_1 = function (i) {
-        var candidateResource = resourceAccessor(items[i]);
-        if (items.some(function (otherItem, index) {
-            if (index === i) {
-                return false;
-            }
-            return isEqualOrParent(candidateResource, resourceAccessor(otherItem));
-        })) {
-            return "continue";
-        }
-        distinctParents.push(items[i]);
-    };
-    for (var i = 0; i < items.length; i++) {
-        _loop_1(i);
-    }
-    return distinctParents;
 }

@@ -5,7 +5,7 @@
 'use strict';
 import { localize } from '../../../nls.js';
 import { Emitter } from '../../../base/common/event.js';
-import { basename, dirname } from '../../../base/common/paths.js';
+import { basename } from '../../../base/common/paths.js';
 import { dispose } from '../../../base/common/lifecycle.js';
 import * as strings from '../../../base/common/strings.js';
 import { defaultGenerator } from '../../../base/common/idGenerator.js';
@@ -26,13 +26,6 @@ var OneReference = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(OneReference.prototype, "model", {
-        get: function () {
-            return this._parent;
-        },
-        enumerable: true,
-        configurable: true
-    });
     Object.defineProperty(OneReference.prototype, "parent", {
         get: function () {
             return this._parent;
@@ -43,20 +36,6 @@ var OneReference = /** @class */ (function () {
     Object.defineProperty(OneReference.prototype, "uri", {
         get: function () {
             return this._parent.uri;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OneReference.prototype, "name", {
-        get: function () {
-            return this._parent.name;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OneReference.prototype, "directory", {
-        get: function () {
-            return this._parent.directory;
         },
         enumerable: true,
         configurable: true
@@ -143,20 +122,6 @@ var FileReferences = /** @class */ (function () {
     Object.defineProperty(FileReferences.prototype, "uri", {
         get: function () {
             return this._uri;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(FileReferences.prototype, "name", {
-        get: function () {
-            return basename(this.uri.fsPath);
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(FileReferences.prototype, "directory", {
-        get: function () {
-            return dirname(this.uri.fsPath);
         },
         enumerable: true,
         configurable: true

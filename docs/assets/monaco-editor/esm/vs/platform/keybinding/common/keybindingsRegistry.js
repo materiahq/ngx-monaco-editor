@@ -9,28 +9,6 @@ import { CommandsRegistry } from '../../commands/common/commands.js';
 import { Registry } from '../../registry/common/platform.js';
 var KeybindingsRegistryImpl = /** @class */ (function () {
     function KeybindingsRegistryImpl() {
-        this.WEIGHT = {
-            editorCore: function (importance) {
-                if (importance === void 0) { importance = 0; }
-                return 0 + importance;
-            },
-            editorContrib: function (importance) {
-                if (importance === void 0) { importance = 0; }
-                return 100 + importance;
-            },
-            workbenchContrib: function (importance) {
-                if (importance === void 0) { importance = 0; }
-                return 200 + importance;
-            },
-            builtinExtension: function (importance) {
-                if (importance === void 0) { importance = 0; }
-                return 300 + importance;
-            },
-            externalExtension: function (importance) {
-                if (importance === void 0) { importance = 0; }
-                return 400 + importance;
-            }
-        };
         this._keybindings = [];
         this._keybindingsSorted = true;
     }
@@ -38,27 +16,6 @@ var KeybindingsRegistryImpl = /** @class */ (function () {
      * Take current platform into account and reduce to primary & secondary.
      */
     KeybindingsRegistryImpl.bindToCurrentPlatform = function (kb) {
-        if (OS === 1 /* Windows */) {
-            if (kb && kb.win) {
-                return kb.win;
-            }
-        }
-        else if (OS === 2 /* Macintosh */) {
-            if (kb && kb.mac) {
-                return kb.mac;
-            }
-        }
-        else {
-            if (kb && kb.linux) {
-                return kb.linux;
-            }
-        }
-        return kb;
-    };
-    /**
-     * Take current platform into account and reduce to primary & secondary.
-     */
-    KeybindingsRegistryImpl.bindToCurrentPlatform2 = function (kb) {
         if (OS === 1 /* Windows */) {
             if (kb && kb.win) {
                 return kb.win;
@@ -87,13 +44,6 @@ var KeybindingsRegistryImpl = /** @class */ (function () {
                 var k = actualKb.secondary[i];
                 this._registerDefaultKeybinding(createKeybinding(k, OS), rule.id, rule.weight, -i - 1, rule.when, source);
             }
-        }
-    };
-    KeybindingsRegistryImpl.prototype.registerKeybindingRule2 = function (rule, source) {
-        if (source === void 0) { source = 0 /* Core */; }
-        var actualKb = KeybindingsRegistryImpl.bindToCurrentPlatform2(rule);
-        if (actualKb && actualKb.primary) {
-            this._registerDefaultKeybinding(actualKb.primary, rule.id, rule.weight, 0, rule.when, source);
         }
     };
     KeybindingsRegistryImpl.prototype.registerCommandAndKeybindingRule = function (desc, source) {
@@ -143,7 +93,7 @@ var KeybindingsRegistryImpl = /** @class */ (function () {
         this._keybindings.push({
             keybinding: keybinding,
             command: commandId,
-            commandArgs: null,
+            commandArgs: undefined,
             when: when,
             weight1: weight1,
             weight2: weight2

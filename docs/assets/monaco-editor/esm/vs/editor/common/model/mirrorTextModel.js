@@ -15,13 +15,6 @@ var MirrorTextModel = /** @class */ (function () {
     MirrorTextModel.prototype.dispose = function () {
         this._lines.length = 0;
     };
-    Object.defineProperty(MirrorTextModel.prototype, "version", {
-        get: function () {
-            return this._versionId;
-        },
-        enumerable: true,
-        configurable: true
-    });
     MirrorTextModel.prototype.getText = function () {
         return this._lines.join(this._eol);
     };

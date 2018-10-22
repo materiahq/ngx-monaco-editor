@@ -7,7 +7,6 @@ import './tree.css';
 import * as TreeDefaults from './treeDefaults.js';
 import * as Model from './treeModel.js';
 import * as View from './treeView.js';
-import { MappedNavigator } from '../../../common/iterator.js';
 import { Emitter, Relay } from '../../../common/event.js';
 import { Color } from '../../../common/color.js';
 import { mixin } from '../../../common/objects.js';
@@ -50,11 +49,8 @@ var Tree = /** @class */ (function () {
         this._onDidChangeSelection = new Relay();
         this.onDidChangeSelection = this._onDidChangeSelection.event;
         this._onHighlightChange = new Relay();
-        this.onDidChangeHighlight = this._onHighlightChange.event;
         this._onDidExpandItem = new Relay();
-        this.onDidExpandItem = this._onDidExpandItem.event;
         this._onDidCollapseItem = new Relay();
-        this.onDidCollapseItem = this._onDidCollapseItem.event;
         this._onDispose = new Emitter();
         this.onDidDispose = this._onDispose.event;
         this.container = container;
@@ -65,6 +61,7 @@ var Tree = /** @class */ (function () {
         options.alwaysFocused = options.alwaysFocused === true ? true : false;
         options.useShadows = options.useShadows === false ? false : true;
         options.paddingOnRow = options.paddingOnRow === false ? false : true;
+        options.showLoading = options.showLoading === false ? false : true;
         this.context = new TreeContext(this, configuration, options);
         this.model = new Model.TreeModel(this.context);
         this.view = new View.TreeView(this.context, this.container);
@@ -85,13 +82,6 @@ var Tree = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(Tree.prototype, "onDidBlur", {
-        get: function () {
-            return this.view && this.view.onDOMBlur;
-        },
-        enumerable: true,
-        configurable: true
-    });
     Tree.prototype.getHTMLElement = function () {
         return this.view.getHTMLElement();
     };
@@ -107,12 +97,6 @@ var Tree = /** @class */ (function () {
     Tree.prototype.domBlur = function () {
         this.view.blur();
     };
-    Tree.prototype.onVisible = function () {
-        this.view.onVisible();
-    };
-    Tree.prototype.onHidden = function () {
-        this.view.onHidden();
-    };
     Tree.prototype.setInput = function (element) {
         return this.model.setInput(element);
     };
@@ -124,96 +108,32 @@ var Tree = /** @class */ (function () {
         if (recursive === void 0) { recursive = true; }
         return this.model.refresh(element, recursive);
     };
-    Tree.prototype.updateWidth = function (element) {
-        var item = this.model.getItem(element);
-        return this.view.updateWidth(item);
-    };
     Tree.prototype.expand = function (element) {
         return this.model.expand(element);
-    };
-    Tree.prototype.expandAll = function (elements) {
-        return this.model.expandAll(elements);
     };
     Tree.prototype.collapse = function (element, recursive) {
         if (recursive === void 0) { recursive = false; }
         return this.model.collapse(element, recursive);
     };
-    Tree.prototype.collapseAll = function (elements, recursive) {
-        if (elements === void 0) { elements = null; }
-        if (recursive === void 0) { recursive = false; }
-        return this.model.collapseAll(elements, recursive);
-    };
-    Tree.prototype.collapseDeepestExpandedLevel = function () {
-        return this.model.collapseDeepestExpandedLevel();
-    };
     Tree.prototype.toggleExpansion = function (element, recursive) {
         if (recursive === void 0) { recursive = false; }
         return this.model.toggleExpansion(element, recursive);
     };
-    Tree.prototype.toggleExpansionAll = function (elements) {
-        return this.model.toggleExpansionAll(elements);
-    };
     Tree.prototype.isExpanded = function (element) {
         return this.model.isExpanded(element);
-    };
-    Tree.prototype.getExpandedElements = function () {
-        return this.model.getExpandedElements();
     };
     Tree.prototype.reveal = function (element, relativeTop) {
         if (relativeTop === void 0) { relativeTop = null; }
         return this.model.reveal(element, relativeTop);
     };
-    Tree.prototype.getRelativeTop = function (element) {
-        var item = this.model.getItem(element);
-        return this.view.getRelativeTop(item);
-    };
-    Tree.prototype.getScrollPosition = function () {
-        return this.view.getScrollPosition();
-    };
-    Tree.prototype.setScrollPosition = function (pos) {
-        this.view.setScrollPosition(pos);
-    };
-    Tree.prototype.getContentHeight = function () {
-        return this.view.getContentHeight();
-    };
-    Tree.prototype.setHighlight = function (element, eventPayload) {
-        this.model.setHighlight(element, eventPayload);
-    };
     Tree.prototype.getHighlight = function () {
         return this.model.getHighlight();
-    };
-    Tree.prototype.isHighlighted = function (element) {
-        return this.model.isFocused(element);
     };
     Tree.prototype.clearHighlight = function (eventPayload) {
         this.model.setHighlight(null, eventPayload);
     };
-    Tree.prototype.select = function (element, eventPayload) {
-        this.model.select(element, eventPayload);
-    };
-    Tree.prototype.selectRange = function (fromElement, toElement, eventPayload) {
-        this.model.selectRange(fromElement, toElement, eventPayload);
-    };
-    Tree.prototype.deselectRange = function (fromElement, toElement, eventPayload) {
-        this.model.deselectRange(fromElement, toElement, eventPayload);
-    };
-    Tree.prototype.selectAll = function (elements, eventPayload) {
-        this.model.selectAll(elements, eventPayload);
-    };
-    Tree.prototype.deselect = function (element, eventPayload) {
-        this.model.deselect(element, eventPayload);
-    };
-    Tree.prototype.deselectAll = function (elements, eventPayload) {
-        this.model.deselectAll(elements, eventPayload);
-    };
     Tree.prototype.setSelection = function (elements, eventPayload) {
         this.model.setSelection(elements, eventPayload);
-    };
-    Tree.prototype.toggleSelection = function (element, eventPayload) {
-        this.model.toggleSelection(element, eventPayload);
-    };
-    Tree.prototype.isSelected = function (element) {
-        return this.model.isSelected(element);
     };
     Tree.prototype.getSelection = function () {
         return this.model.getSelection();
@@ -221,20 +141,8 @@ var Tree = /** @class */ (function () {
     Tree.prototype.clearSelection = function (eventPayload) {
         this.model.setSelection([], eventPayload);
     };
-    Tree.prototype.selectNext = function (count, clearSelection, eventPayload) {
-        this.model.selectNext(count, clearSelection, eventPayload);
-    };
-    Tree.prototype.selectPrevious = function (count, clearSelection, eventPayload) {
-        this.model.selectPrevious(count, clearSelection, eventPayload);
-    };
-    Tree.prototype.selectParent = function (clearSelection, eventPayload) {
-        this.model.selectParent(clearSelection, eventPayload);
-    };
     Tree.prototype.setFocus = function (element, eventPayload) {
         this.model.setFocus(element, eventPayload);
-    };
-    Tree.prototype.isFocused = function (element) {
-        return this.model.isFocused(element);
     };
     Tree.prototype.getFocus = function () {
         return this.model.getFocus();
@@ -268,22 +176,6 @@ var Tree = /** @class */ (function () {
     };
     Tree.prototype.clearFocus = function (eventPayload) {
         this.model.setFocus(null, eventPayload);
-    };
-    Tree.prototype.addTraits = function (trait, elements) {
-        this.model.addTraits(trait, elements);
-    };
-    Tree.prototype.removeTraits = function (trait, elements) {
-        this.model.removeTraits(trait, elements);
-    };
-    Tree.prototype.toggleTrait = function (trait, element) {
-        this.model.hasTrait(trait, element) ? this.model.removeTraits(trait, [element])
-            : this.model.addTraits(trait, [element]);
-    };
-    Tree.prototype.hasTrait = function (trait, element) {
-        return this.model.hasTrait(trait, element);
-    };
-    Tree.prototype.getNavigator = function (fromElement, subTreeOnly) {
-        return new MappedNavigator(this.model.getNavigator(fromElement, subTreeOnly), function (i) { return i && i.getElement(); });
     };
     Tree.prototype.dispose = function () {
         this._onDispose.fire();

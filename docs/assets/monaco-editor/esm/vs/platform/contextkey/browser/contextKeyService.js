@@ -13,14 +13,6 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var __assign = (this && this.__assign) || Object.assign || function(t) {
-    for (var s, i = 1, n = arguments.length; i < n; i++) {
-        s = arguments[i];
-        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-            t[p] = s[p];
-    }
-    return t;
-};
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -67,12 +59,6 @@ var Context = /** @class */ (function () {
         }
         return ret;
     };
-    Context.prototype.collectAllValues = function () {
-        var result = this._parent ? this._parent.collectAllValues() : Object.create(null);
-        result = __assign({}, result, this._value);
-        delete result['_contextId'];
-        return result;
-    };
     return Context;
 }());
 export { Context };
@@ -101,7 +87,7 @@ var ConfigAwareContextValuesContainer = /** @class */ (function (_super) {
                 var contextKey = "config." + configKey;
                 if (contextKey in this._value) {
                     this._value[contextKey] = this._configurationService.getValue(configKey);
-                    this._emitter.fire(configKey);
+                    this._emitter.fire(contextKey);
                 }
             }
         }
@@ -310,6 +296,7 @@ var ScopedContextKeyService = /** @class */ (function (_super) {
         this._parent.disposeContext(this._myContextId);
         if (this._domNode) {
             this._domNode.removeAttribute(KEYBINDING_CONTEXT_ATTR);
+            this._domNode = undefined;
         }
     };
     Object.defineProperty(ScopedContextKeyService.prototype, "onDidChangeContext", {

@@ -135,14 +135,6 @@ var TextAreaInput = /** @class */ (function (_super) {
         };
         _this._register(dom.addDisposableListener(textArea.domNode, 'compositionupdate', function (e) {
             _this._lastTextAreaEvent = 2 /* compositionupdate */;
-            if (browser.isChromev56) {
-                // See https://github.com/Microsoft/monaco-editor/issues/320
-                // where compositionupdate .data is broken in Chrome v55 and v56
-                // See https://bugs.chromium.org/p/chromium/issues/detail?id=677050#c9
-                // The textArea doesn't get the composition update yet, the value of textarea is still obsolete
-                // so we can't correct e at this moment.
-                return;
-            }
             if (compositionDataInValid(e.locale)) {
                 var _a = deduceInputFromTextAreaValue(/*couldBeEmojiInput*/ false, /*couldBeTypingAtOffset0*/ false), newState_1 = _a[0], typeInput_1 = _a[1];
                 _this._textAreaState = newState_1;
@@ -187,25 +179,14 @@ var TextAreaInput = /** @class */ (function (_super) {
             // result in a `selectionchange` event which we want to ignore
             _this._textArea.setIgnoreSelectionChangeTime('received input event');
             if (_this._isDoingComposition) {
-                // See https://github.com/Microsoft/monaco-editor/issues/320
-                if (browser.isChromev56) {
-                    var _a = deduceComposition(_this._textArea.getValue()), newState_2 = _a[0], typeInput_2 = _a[1];
-                    _this._textAreaState = newState_2;
-                    _this._onType.fire(typeInput_2);
-                    var e = {
-                        data: typeInput_2.text
-                    };
-                    _this._onCompositionUpdate.fire(e);
-                }
                 return;
             }
-            var _b = deduceInputFromTextAreaValue(/*couldBeEmojiInput*/ platform.isMacintosh, /*couldBeTypingAtOffset0*/ previousEventWasFocus && platform.isMacintosh), newState = _b[0], typeInput = _b[1];
+            var _a = deduceInputFromTextAreaValue(/*couldBeEmojiInput*/ platform.isMacintosh, /*couldBeTypingAtOffset0*/ previousEventWasFocus && platform.isMacintosh), newState = _a[0], typeInput = _a[1];
             if (typeInput.replaceCharCnt === 0 && typeInput.text.length === 1 && strings.isHighSurrogate(typeInput.text.charCodeAt(0))) {
                 // Ignore invalid input but keep it around for next time
                 return;
             }
             _this._textAreaState = newState;
-            // console.log('==> DEDUCED INPUT: ' + JSON.stringify(typeInput));
             if (_this._nextCommand === 0 /* Type */) {
                 if (typeInput.text !== '') {
                     _this._onType.fire(typeInput);

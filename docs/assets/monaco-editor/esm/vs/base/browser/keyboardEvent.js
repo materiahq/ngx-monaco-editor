@@ -161,9 +161,6 @@ function extractKeyCode(e) {
     }
     return KEY_CODE_MAP[e.keyCode] || 0 /* Unknown */;
 }
-export function getCodeForKeyCode(keyCode) {
-    return INVERSE_KEY_CODE_MAP[keyCode];
-}
 var ctrlKeyMod = (platform.isMacintosh ? 256 /* WinCtrl */ : 2048 /* CtrlCmd */);
 var altKeyMod = 512 /* Alt */;
 var shiftKeyMod = 1024 /* Shift */;

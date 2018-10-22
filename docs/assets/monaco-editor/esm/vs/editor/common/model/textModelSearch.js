@@ -93,6 +93,49 @@ export function createFindMatch(range, rawMatches, captureMatches) {
     }
     return new FindMatch(range, matches);
 }
+var LineFeedCounter = /** @class */ (function () {
+    function LineFeedCounter(text) {
+        var lineFeedsOffsets = [];
+        var lineFeedsOffsetsLen = 0;
+        for (var i = 0, textLen = text.length; i < textLen; i++) {
+            if (text.charCodeAt(i) === 10 /* LineFeed */) {
+                lineFeedsOffsets[lineFeedsOffsetsLen++] = i;
+            }
+        }
+        this._lineFeedsOffsets = lineFeedsOffsets;
+    }
+    LineFeedCounter.prototype.findLineFeedCountBeforeOffset = function (offset) {
+        var lineFeedsOffsets = this._lineFeedsOffsets;
+        var min = 0;
+        var max = lineFeedsOffsets.length - 1;
+        if (max === -1) {
+            // no line feeds
+            return 0;
+        }
+        if (offset <= lineFeedsOffsets[0]) {
+            // before first line feed
+            return 0;
+        }
+        while (min < max) {
+            var mid = min + ((max - min) / 2 >> 0);
+            if (lineFeedsOffsets[mid] >= offset) {
+                max = mid - 1;
+            }
+            else {
+                if (lineFeedsOffsets[mid + 1] >= offset) {
+                    // bingo!
+                    min = mid;
+                    max = mid;
+                }
+                else {
+                    min = mid + 1;
+                }
+            }
+        }
+        return min + 1;
+    };
+    return LineFeedCounter;
+}());
 var TextModelSearch = /** @class */ (function () {
     function TextModelSearch() {
     }
@@ -102,23 +145,6 @@ var TextModelSearch = /** @class */ (function () {
             return [];
         }
         if (searchData.regex.multiline) {
-            if (searchData.regex.source === '\\n') {
-                // Fast path for searching for EOL
-                var result = [], resultLen = 0;
-                for (var lineNumber = 1, lineCount = model.getLineCount(); lineNumber < lineCount; lineNumber++) {
-                    var range = new Range(lineNumber, model.getLineMaxColumn(lineNumber), lineNumber + 1, 1);
-                    if (captureMatches) {
-                        result[resultLen++] = new FindMatch(range, null);
-                    }
-                    else {
-                        result[resultLen++] = new FindMatch(range, ['\n']);
-                    }
-                    if (resultLen >= limitResultCount) {
-                        break;
-                    }
-                }
-                return result;
-            }
             return this._doFindMatchesMultiline(model, searchRange, new Searcher(searchData.wordSeparators, searchData.regex), captureMatches, limitResultCount);
         }
         return this._doFindMatchesLineByLine(model, searchRange, searchData, captureMatches, limitResultCount);
@@ -127,16 +153,11 @@ var TextModelSearch = /** @class */ (function () {
      * Multiline search always executes on the lines concatenated with \n.
      * We must therefore compensate for the count of \n in case the model is CRLF
      */
-    TextModelSearch._getMultilineMatchRange = function (model, deltaOffset, text, matchIndex, match0) {
+    TextModelSearch._getMultilineMatchRange = function (model, deltaOffset, text, lfCounter, matchIndex, match0) {
         var startOffset;
+        var lineFeedCountBeforeMatch = 0;
         if (model.getEOL() === '\r\n') {
-            var lineFeedCountBeforeMatch = 0;
-            for (var i = 0; i < matchIndex; i++) {
-                var chCode = text.charCodeAt(i);
-                if (chCode === 10 /* LineFeed */) {
-                    lineFeedCountBeforeMatch++;
-                }
-            }
+            lineFeedCountBeforeMatch = lfCounter.findLineFeedCountBeforeOffset(matchIndex);
             startOffset = deltaOffset + matchIndex + lineFeedCountBeforeMatch /* add as many \r as there were \n */;
         }
         else {
@@ -144,13 +165,8 @@ var TextModelSearch = /** @class */ (function () {
         }
         var endOffset;
         if (model.getEOL() === '\r\n') {
-            var lineFeedCountInMatch = 0;
-            for (var i = 0, len = match0.length; i < len; i++) {
-                var chCode = text.charCodeAt(i + matchIndex);
-                if (chCode === 10 /* LineFeed */) {
-                    lineFeedCountInMatch++;
-                }
-            }
+            var lineFeedCountBeforeEndOfMatch = lfCounter.findLineFeedCountBeforeOffset(matchIndex + match0.length);
+            var lineFeedCountInMatch = lineFeedCountBeforeEndOfMatch - lineFeedCountBeforeMatch;
             endOffset = startOffset + match0.length + lineFeedCountInMatch /* add as many \r as there were \n */;
         }
         else {
@@ -166,12 +182,13 @@ var TextModelSearch = /** @class */ (function () {
         // This makes it that \n will match the EOL for both CRLF and LF models
         // We compensate for offset errors in `_getMultilineMatchRange`
         var text = model.getValueInRange(searchRange, EndOfLinePreference.LF);
+        var lfCounter = (model.getEOL() === '\r\n' ? new LineFeedCounter(text) : null);
         var result = [];
         var counter = 0;
         var m;
         searcher.reset(0);
         while ((m = searcher.next(text))) {
-            result[counter++] = createFindMatch(this._getMultilineMatchRange(model, deltaOffset, text, m.index, m[0]), m, captureMatches);
+            result[counter++] = createFindMatch(this._getMultilineMatchRange(model, deltaOffset, text, lfCounter, m.index, m[0]), m, captureMatches);
             if (counter >= limitResultCount) {
                 return result;
             }
@@ -252,10 +269,11 @@ var TextModelSearch = /** @class */ (function () {
         // This makes it that \n will match the EOL for both CRLF and LF models
         // We compensate for offset errors in `_getMultilineMatchRange`
         var text = model.getValueInRange(new Range(searchTextStart.lineNumber, searchTextStart.column, lineCount, model.getLineMaxColumn(lineCount)), EndOfLinePreference.LF);
+        var lfCounter = (model.getEOL() === '\r\n' ? new LineFeedCounter(text) : null);
         searcher.reset(searchStart.column - 1);
         var m = searcher.next(text);
         if (m) {
-            return createFindMatch(this._getMultilineMatchRange(model, deltaOffset, text, m.index, m[0]), m, captureMatches);
+            return createFindMatch(this._getMultilineMatchRange(model, deltaOffset, text, lfCounter, m.index, m[0]), m, captureMatches);
         }
         if (searchStart.lineNumber !== 1 || searchStart.column !== 1) {
             // Try again from the top

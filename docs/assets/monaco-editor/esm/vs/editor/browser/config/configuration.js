@@ -21,7 +21,6 @@ import { CommonEditorConfiguration } from '../../common/config/commonEditorConfi
 import { FontInfo } from '../../common/config/fontInfo.js';
 import { ElementSizeObserver } from './elementSizeObserver.js';
 import { CharWidthRequest, readCharWidths } from './charWidthReader.js';
-import { StorageScope } from '../../../platform/storage/common/storage.js';
 var CSSBasedConfigurationCache = /** @class */ (function () {
     function CSSBasedConfigurationCache() {
         this._keys = Object.create(null);
@@ -51,30 +50,6 @@ var CSSBasedConfigurationCache = /** @class */ (function () {
     };
     return CSSBasedConfigurationCache;
 }());
-export function readFontInfo(bareFontInfo) {
-    return CSSBasedConfiguration.INSTANCE.readConfiguration(bareFontInfo);
-}
-export function restoreFontInfo(storageService) {
-    var strStoredFontInfo = storageService.get('editorFontInfo', StorageScope.GLOBAL);
-    if (typeof strStoredFontInfo !== 'string') {
-        return;
-    }
-    var storedFontInfo = null;
-    try {
-        storedFontInfo = JSON.parse(strStoredFontInfo);
-    }
-    catch (err) {
-        return;
-    }
-    if (!Array.isArray(storedFontInfo)) {
-        return;
-    }
-    CSSBasedConfiguration.INSTANCE.restoreFontInfo(storedFontInfo);
-}
-export function saveFontInfo(storageService) {
-    var knownFontInfo = CSSBasedConfiguration.INSTANCE.saveFontInfo();
-    storageService.store('editorFontInfo', JSON.stringify(knownFontInfo), StorageScope.GLOBAL);
-}
 var CSSBasedConfiguration = /** @class */ (function (_super) {
     __extends(CSSBasedConfiguration, _super);
     function CSSBasedConfiguration() {
@@ -115,18 +90,6 @@ var CSSBasedConfiguration = /** @class */ (function (_super) {
         }
         if (somethingRemoved) {
             this._onDidChange.fire();
-        }
-    };
-    CSSBasedConfiguration.prototype.saveFontInfo = function () {
-        // Only save trusted font info (that has been measured in this running instance)
-        return this._cache.getValues().filter(function (item) { return item.isTrusted; });
-    };
-    CSSBasedConfiguration.prototype.restoreFontInfo = function (savedFontInfo) {
-        // Take all the saved font info and insert them in the cache without the trusted flag.
-        // The reason for this is that a font might have been installed on the OS in the meantime.
-        for (var i = 0, len = savedFontInfo.length; i < len; i++) {
-            var fontInfo = new FontInfo(savedFontInfo[i], false);
-            this._writeToCache(fontInfo, fontInfo);
         }
     };
     CSSBasedConfiguration.prototype.readConfiguration = function (bareFontInfo) {

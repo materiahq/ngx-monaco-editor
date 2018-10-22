@@ -10,10 +10,10 @@ import { registerLanguageCommand } from '../../browser/editorExtensions.js';
 import { Range } from '../../common/core/range.js';
 import { illegalArgument } from '../../../base/common/errors.js';
 import { IModelService } from '../../common/services/modelService.js';
-export function getColors(model) {
+export function getColors(model, token) {
     var colors = [];
     var providers = ColorProviderRegistry.ordered(model).reverse();
-    var promises = providers.map(function (provider) { return asWinJsPromise(function (token) { return provider.provideDocumentColors(model, token); }).then(function (result) {
+    var promises = providers.map(function (provider) { return Promise.resolve(provider.provideDocumentColors(model, token)).then(function (result) {
         if (Array.isArray(result)) {
             for (var _i = 0, result_1 = result; _i < result_1.length; _i++) {
                 var colorInfo = result_1[_i];
@@ -21,10 +21,10 @@ export function getColors(model) {
             }
         }
     }); });
-    return TPromise.join(promises).then(function () { return colors; });
+    return Promise.all(promises).then(function () { return colors; });
 }
-export function getColorPresentations(model, colorInfo, provider) {
-    return asWinJsPromise(function (token) { return provider.provideColorPresentations(model, colorInfo, token); });
+export function getColorPresentations(model, colorInfo, provider, token) {
+    return Promise.resolve(provider.provideColorPresentations(model, colorInfo, token));
 }
 registerLanguageCommand('_executeDocumentColorProvider', function (accessor, args) {
     var resource = args.resource;

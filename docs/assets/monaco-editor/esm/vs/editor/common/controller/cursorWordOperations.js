@@ -3,6 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 'use strict';
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 import { SingleCursorState } from './cursorCommon.js';
 import { Position } from '../core/position.js';
 import { getMapForWordSeparators } from './wordCharacterClassifier.js';
@@ -406,3 +416,131 @@ var WordOperations = /** @class */ (function () {
     return WordOperations;
 }());
 export { WordOperations };
+export function _lastWordPartEnd(str, startIndex) {
+    if (startIndex === void 0) { startIndex = str.length - 1; }
+    var ignoreUpperCase = !strings.isLowerAsciiLetter(str.charCodeAt(startIndex + 1));
+    for (var i = startIndex; i >= 0; i--) {
+        var chCode = str.charCodeAt(i);
+        if (chCode === 32 /* Space */ || chCode === 9 /* Tab */ || (!ignoreUpperCase && strings.isUpperAsciiLetter(chCode)) || chCode === 95 /* Underline */) {
+            return i - 1;
+        }
+        if (ignoreUpperCase && i < startIndex && strings.isLowerAsciiLetter(chCode)) {
+            return i;
+        }
+        ignoreUpperCase = ignoreUpperCase && strings.isUpperAsciiLetter(chCode);
+    }
+    return -1;
+}
+export function _nextWordPartBegin(str, startIndex) {
+    if (startIndex === void 0) { startIndex = 0; }
+    var prevChCode = str.charCodeAt(startIndex - 1);
+    var chCode = str.charCodeAt(startIndex);
+    // handle the special case ' X' and ' x' which is different from the standard methods
+    if ((prevChCode === 32 /* Space */ || prevChCode === 9 /* Tab */) && (strings.isLowerAsciiLetter(chCode) || strings.isUpperAsciiLetter(chCode))) {
+        return startIndex + 1;
+    }
+    var ignoreUpperCase = strings.isUpperAsciiLetter(chCode);
+    for (var i = startIndex; i < str.length; ++i) {
+        chCode = str.charCodeAt(i);
+        if (chCode === 32 /* Space */ || chCode === 9 /* Tab */ || (!ignoreUpperCase && strings.isUpperAsciiLetter(chCode))) {
+            return i + 1;
+        }
+        if (ignoreUpperCase && strings.isLowerAsciiLetter(chCode)) {
+            return i; // multiple UPPERCase : assume an upper case word and a CamelCase word - like DSLModel
+        }
+        ignoreUpperCase = ignoreUpperCase && strings.isUpperAsciiLetter(chCode);
+        if (chCode === 95 /* Underline */) {
+            return i + 2;
+        }
+    }
+    return str.length + 1;
+}
+var WordPartOperations = /** @class */ (function (_super) {
+    __extends(WordPartOperations, _super);
+    function WordPartOperations() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    WordPartOperations.deleteWordPartLeft = function (wordSeparators, model, selection, whitespaceHeuristics, wordNavigationType) {
+        if (!selection.isEmpty()) {
+            return selection;
+        }
+        var position = new Position(selection.positionLineNumber, selection.positionColumn);
+        var lineNumber = position.lineNumber;
+        var column = position.column;
+        if (lineNumber === 1 && column === 1) {
+            // Ignore deleting at beginning of file
+            return null;
+        }
+        if (whitespaceHeuristics) {
+            var r = WordOperations._deleteWordLeftWhitespace(model, position);
+            if (r) {
+                return r;
+            }
+        }
+        var wordRange = WordOperations.deleteWordLeft(wordSeparators, model, selection, whitespaceHeuristics, wordNavigationType);
+        var lastWordPartEnd = _lastWordPartEnd(model.getLineContent(position.lineNumber), position.column - 2);
+        var wordPartRange = new Range(lineNumber, column, lineNumber, lastWordPartEnd + 2);
+        if (wordPartRange.getStartPosition().isBeforeOrEqual(wordRange.getStartPosition())) {
+            return wordRange;
+        }
+        return wordPartRange;
+    };
+    WordPartOperations.deleteWordPartRight = function (wordSeparators, model, selection, whitespaceHeuristics, wordNavigationType) {
+        if (!selection.isEmpty()) {
+            return selection;
+        }
+        var position = new Position(selection.positionLineNumber, selection.positionColumn);
+        var lineNumber = position.lineNumber;
+        var column = position.column;
+        var lineCount = model.getLineCount();
+        var maxColumn = model.getLineMaxColumn(lineNumber);
+        if (lineNumber === lineCount && column === maxColumn) {
+            // Ignore deleting at end of file
+            return null;
+        }
+        if (whitespaceHeuristics) {
+            var r = WordOperations._deleteWordRightWhitespace(model, position);
+            if (r) {
+                return r;
+            }
+        }
+        var wordRange = WordOperations.deleteWordRight(wordSeparators, model, selection, whitespaceHeuristics, wordNavigationType);
+        var nextWordPartBegin = _nextWordPartBegin(model.getLineContent(position.lineNumber), position.column);
+        var wordPartRange = new Range(lineNumber, column, lineNumber, nextWordPartBegin);
+        if (wordRange.getEndPosition().isBeforeOrEqual(wordPartRange.getEndPosition())) {
+            return wordRange;
+        }
+        return wordPartRange;
+    };
+    WordPartOperations.moveWordPartLeft = function (wordSeparators, model, position, wordNavigationType) {
+        var lineNumber = position.lineNumber;
+        var column = position.column;
+        if (column === 1) {
+            return (lineNumber > 1 ? new Position(lineNumber - 1, model.getLineMaxColumn(lineNumber - 1)) : position);
+        }
+        var wordPos = WordOperations.moveWordLeft(wordSeparators, model, position, wordNavigationType);
+        var lastWordPartEnd = _lastWordPartEnd(model.getLineContent(lineNumber), column - 2);
+        var wordPartPos = new Position(lineNumber, lastWordPartEnd + 2);
+        if (wordPartPos.isBeforeOrEqual(wordPos)) {
+            return wordPos;
+        }
+        return wordPartPos;
+    };
+    WordPartOperations.moveWordPartRight = function (wordSeparators, model, position, wordNavigationType) {
+        var lineNumber = position.lineNumber;
+        var column = position.column;
+        var maxColumn = model.getLineMaxColumn(lineNumber);
+        if (column === maxColumn) {
+            return (lineNumber < model.getLineCount() ? new Position(lineNumber + 1, 1) : position);
+        }
+        var wordPos = WordOperations.moveWordRight(wordSeparators, model, position, wordNavigationType);
+        var nextWordPartBegin = _nextWordPartBegin(model.getLineContent(lineNumber), column);
+        var wordPartPos = new Position(lineNumber, nextWordPartBegin);
+        if (wordPos.isBeforeOrEqual(wordPartPos)) {
+            return wordPos;
+        }
+        return wordPartPos;
+    };
+    return WordPartOperations;
+}(WordOperations));
+export { WordPartOperations };

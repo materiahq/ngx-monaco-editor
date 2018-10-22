@@ -22,24 +22,6 @@ var ModeServiceImpl = /** @class */ (function () {
     ModeServiceImpl.prototype.isRegisteredMode = function (mimetypeOrModeId) {
         return this._registry.isRegisteredMode(mimetypeOrModeId);
     };
-    ModeServiceImpl.prototype.getRegisteredModes = function () {
-        return this._registry.getRegisteredModes();
-    };
-    ModeServiceImpl.prototype.getRegisteredLanguageNames = function () {
-        return this._registry.getRegisteredLanguageNames();
-    };
-    ModeServiceImpl.prototype.getExtensions = function (alias) {
-        return this._registry.getExtensions(alias);
-    };
-    ModeServiceImpl.prototype.getFilenames = function (alias) {
-        return this._registry.getFilenames(alias);
-    };
-    ModeServiceImpl.prototype.getMimeForMode = function (modeId) {
-        return this._registry.getMimeForMode(modeId);
-    };
-    ModeServiceImpl.prototype.getLanguageName = function (modeId) {
-        return this._registry.getLanguageName(modeId);
-    };
     ModeServiceImpl.prototype.getModeIdForLanguageName = function (alias) {
         return this._registry.getModeIdForLanguageNameLowercase(alias);
     };
@@ -59,9 +41,6 @@ var ModeServiceImpl = /** @class */ (function () {
     };
     ModeServiceImpl.prototype.getLanguageIdentifier = function (modeId) {
         return this._registry.getLanguageIdentifier(modeId);
-    };
-    ModeServiceImpl.prototype.getConfigurationFiles = function (modeId) {
-        return this._registry.getConfigurationFiles(modeId);
     };
     // --- instantiation
     ModeServiceImpl.prototype.getMode = function (commaSeparatedMimetypesOrCommaSeparatedIds) {
@@ -90,21 +69,6 @@ var ModeServiceImpl = /** @class */ (function () {
             // Fall back to plain text if no mode was found
             return _this._getOrCreateMode(modeId || 'plaintext');
         });
-    };
-    ModeServiceImpl.prototype.getOrCreateModeByLanguageName = function (languageName) {
-        var _this = this;
-        return this._onReady().then(function () {
-            var modeId = _this._getModeIdByLanguageName(languageName);
-            // Fall back to plain text if no mode was found
-            return _this._getOrCreateMode(modeId || 'plaintext');
-        });
-    };
-    ModeServiceImpl.prototype._getModeIdByLanguageName = function (languageName) {
-        var modeIds = this._registry.getModeIdsFromLanguageName(languageName);
-        if (modeIds.length > 0) {
-            return modeIds[0];
-        }
-        return null;
     };
     ModeServiceImpl.prototype.getOrCreateModeByFilenameOrFirstLine = function (filename, firstLine) {
         var _this = this;

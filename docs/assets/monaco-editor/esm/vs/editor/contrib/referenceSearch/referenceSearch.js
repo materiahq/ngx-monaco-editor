@@ -23,27 +23,28 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 import * as nls from '../../../nls.js';
-import URI from '../../../base/common/uri.js';
 import { TPromise } from '../../../base/common/winjs.base.js';
-import { IEditorService } from '../../../platform/editor/common/editor.js';
-import { CommandsRegistry } from '../../../platform/commands/common/commands.js';
 import { IContextKeyService, ContextKeyExpr } from '../../../platform/contextkey/common/contextkey.js';
 import { KeybindingsRegistry } from '../../../platform/keybinding/common/keybindingsRegistry.js';
 import { Position } from '../../common/core/position.js';
-import { Range } from '../../common/core/range.js';
 import { registerEditorAction, EditorAction, registerEditorContribution, registerDefaultLanguageCommand } from '../../browser/editorExtensions.js';
 import { ReferenceProviderRegistry } from '../../common/modes.js';
+import { Range } from '../../common/core/range.js';
 import { PeekContext, getOuterEditor } from './peekViewWidget.js';
 import { ReferencesController, ctxReferenceSearchVisible } from './referencesController.js';
 import { ReferencesModel, OneReference } from './referencesModel.js';
-import { asWinJsPromise } from '../../../base/common/async.js';
+import { asWinJsPromise, createCancelablePromise } from '../../../base/common/async.js';
 import { onUnexpectedExternalError } from '../../../base/common/errors.js';
 import { EditorContextKeys } from '../../common/editorContextKeys.js';
 import { EmbeddedCodeEditorWidget } from '../../browser/widget/embeddedCodeEditorWidget.js';
 import { isCodeEditor } from '../../browser/editorBrowser.js';
 import { IListService } from '../../../platform/list/browser/listService.js';
 import { ctxReferenceWidgetSearchTreeFocused } from './referencesWidget.js';
-var defaultReferenceSearchOptions = {
+import { CommandsRegistry } from '../../../platform/commands/common/commands.js';
+import URI from '../../../base/common/uri.js';
+import { ICodeEditorService } from '../../browser/services/codeEditorService.js';
+import { CancellationToken } from '../../../base/common/cancellation.js';
+export var defaultReferenceSearchOptions = {
     getMetaTitle: function (model) {
         return model.references.length > 1 && nls.localize('meta.titleReference', " – {0} references", model.references.length);
     }
@@ -76,7 +77,8 @@ var ReferenceAction = /** @class */ (function (_super) {
             precondition: ContextKeyExpr.and(EditorContextKeys.hasReferenceProvider, PeekContext.notInPeekEditor, EditorContextKeys.isInEmbeddedEditor.toNegated()),
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 1024 /* Shift */ | 70 /* F12 */
+                primary: 1024 /* Shift */ | 70 /* F12 */,
+                weight: 100 /* EditorContrib */
             },
             menuOpts: {
                 group: 'navigation',
@@ -91,7 +93,7 @@ var ReferenceAction = /** @class */ (function (_super) {
         }
         var range = editor.getSelection();
         var model = editor.getModel();
-        var references = provideReferences(model, range.getStartPosition()).then(function (references) { return new ReferencesModel(references); });
+        var references = createCancelablePromise(function (token) { return provideReferences(model, range.getStartPosition(), token).then(function (references) { return new ReferencesModel(references); }); });
         controller.toggleWidget(range, references, defaultReferenceSearchOptions);
     };
     return ReferenceAction;
@@ -106,8 +108,8 @@ var findReferencesCommand = function (accessor, resource, position) {
     if (!position) {
         throw new Error('illegal argument, position');
     }
-    return accessor.get(IEditorService).openEditor({ resource: resource }).then(function (editor) {
-        var control = editor.getControl();
+    var codeEditorService = accessor.get(ICodeEditorService);
+    return codeEditorService.openCodeEditor({ resource: resource }, codeEditorService.getFocusedCodeEditor()).then(function (control) {
         if (!isCodeEditor(control)) {
             return undefined;
         }
@@ -115,7 +117,7 @@ var findReferencesCommand = function (accessor, resource, position) {
         if (!controller) {
             return undefined;
         }
-        var references = provideReferences(control.getModel(), Position.lift(position)).then(function (references) { return new ReferencesModel(references); });
+        var references = createCancelablePromise(function (token) { return provideReferences(control.getModel(), Position.lift(position), token).then(function (references) { return new ReferencesModel(references); }); });
         var range = new Range(position.lineNumber, position.column, position.lineNumber, position.column);
         return TPromise.as(controller.toggleWidget(range, references, defaultReferenceSearchOptions));
     });
@@ -124,8 +126,8 @@ var showReferencesCommand = function (accessor, resource, position, references) 
     if (!(resource instanceof URI)) {
         throw new Error('illegal argument, uri expected');
     }
-    return accessor.get(IEditorService).openEditor({ resource: resource }).then(function (editor) {
-        var control = editor.getControl();
+    var codeEditorService = accessor.get(ICodeEditorService);
+    return codeEditorService.openCodeEditor({ resource: resource }, codeEditorService.getFocusedCodeEditor()).then(function (control) {
         if (!isCodeEditor(control)) {
             return undefined;
         }
@@ -133,7 +135,7 @@ var showReferencesCommand = function (accessor, resource, position, references) 
         if (!controller) {
             return undefined;
         }
-        return TPromise.as(controller.toggleWidget(new Range(position.lineNumber, position.column, position.lineNumber, position.column), TPromise.as(new ReferencesModel(references)), defaultReferenceSearchOptions)).then(function () { return true; });
+        return TPromise.as(controller.toggleWidget(new Range(position.lineNumber, position.column, position.lineNumber, position.column), createCancelablePromise(function (_) { return Promise.resolve(new ReferencesModel(references)); }), defaultReferenceSearchOptions)).then(function () { return true; });
     });
 };
 // register commands
@@ -176,7 +178,7 @@ function withController(accessor, fn) {
 }
 KeybindingsRegistry.registerCommandAndKeybindingRule({
     id: 'goToNextReference',
-    weight: KeybindingsRegistry.WEIGHT.workbenchContrib(50),
+    weight: 200 /* WorkbenchContrib */ + 50,
     primary: 62 /* F4 */,
     when: ctxReferenceSearchVisible,
     handler: function (accessor) {
@@ -187,7 +189,7 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
 });
 KeybindingsRegistry.registerCommandAndKeybindingRule({
     id: 'goToNextReferenceFromEmbeddedEditor',
-    weight: KeybindingsRegistry.WEIGHT.editorContrib(50),
+    weight: 100 /* EditorContrib */ + 50,
     primary: 62 /* F4 */,
     when: PeekContext.inPeekEditor,
     handler: function (accessor) {
@@ -198,7 +200,7 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
 });
 KeybindingsRegistry.registerCommandAndKeybindingRule({
     id: 'goToPreviousReference',
-    weight: KeybindingsRegistry.WEIGHT.workbenchContrib(50),
+    weight: 200 /* WorkbenchContrib */ + 50,
     primary: 1024 /* Shift */ | 62 /* F4 */,
     when: ctxReferenceSearchVisible,
     handler: function (accessor) {
@@ -209,7 +211,7 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
 });
 KeybindingsRegistry.registerCommandAndKeybindingRule({
     id: 'goToPreviousReferenceFromEmbeddedEditor',
-    weight: KeybindingsRegistry.WEIGHT.editorContrib(50),
+    weight: 100 /* EditorContrib */ + 50,
     primary: 1024 /* Shift */ | 62 /* F4 */,
     when: PeekContext.inPeekEditor,
     handler: function (accessor) {
@@ -220,7 +222,7 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
 });
 KeybindingsRegistry.registerCommandAndKeybindingRule({
     id: 'closeReferenceSearch',
-    weight: KeybindingsRegistry.WEIGHT.workbenchContrib(50),
+    weight: 200 /* WorkbenchContrib */ + 50,
     primary: 9 /* Escape */,
     secondary: [1024 /* Shift */ | 9 /* Escape */],
     when: ContextKeyExpr.and(ctxReferenceSearchVisible, ContextKeyExpr.not('config.editor.stablePeek')),
@@ -228,7 +230,7 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
 });
 KeybindingsRegistry.registerCommandAndKeybindingRule({
     id: 'closeReferenceSearchEditor',
-    weight: KeybindingsRegistry.WEIGHT.editorContrib(-101),
+    weight: 100 /* EditorContrib */ - 101,
     primary: 9 /* Escape */,
     secondary: [1024 /* Shift */ | 9 /* Escape */],
     when: ContextKeyExpr.and(PeekContext.inPeekEditor, ContextKeyExpr.not('config.editor.stablePeek')),
@@ -236,7 +238,7 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
 });
 KeybindingsRegistry.registerCommandAndKeybindingRule({
     id: 'openReferenceToSide',
-    weight: KeybindingsRegistry.WEIGHT.editorContrib(),
+    weight: 100 /* EditorContrib */,
     primary: 2048 /* CtrlCmd */ | 3 /* Enter */,
     mac: {
         primary: 256 /* WinCtrl */ | 3 /* Enter */
@@ -244,7 +246,7 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
     when: ContextKeyExpr.and(ctxReferenceSearchVisible, ctxReferenceWidgetSearchTreeFocused),
     handler: openReferenceToSide
 });
-export function provideReferences(model, position) {
+export function provideReferences(model, position, token) {
     // collect references from all providers
     var promises = ReferenceProviderRegistry.ordered(model).map(function (provider) {
         return asWinJsPromise(function (token) {
@@ -258,7 +260,7 @@ export function provideReferences(model, position) {
             onUnexpectedExternalError(err);
         });
     });
-    return TPromise.join(promises).then(function (references) {
+    return Promise.all(promises).then(function (references) {
         var result = [];
         for (var _i = 0, references_1 = references; _i < references_1.length; _i++) {
             var ref = references_1[_i];
@@ -269,4 +271,4 @@ export function provideReferences(model, position) {
         return result;
     });
 }
-registerDefaultLanguageCommand('_executeReferenceProvider', provideReferences);
+registerDefaultLanguageCommand('_executeReferenceProvider', function (model, position) { return provideReferences(model, position, CancellationToken.None); });

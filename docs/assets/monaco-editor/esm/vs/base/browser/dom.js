@@ -14,7 +14,6 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import * as platform from '../common/platform.js';
-import { TPromise } from '../common/winjs.base.js';
 import { TimeoutTimer } from '../common/async.js';
 import { onUnexpectedError } from '../common/errors.js';
 import { Disposable, dispose } from '../common/lifecycle.js';
@@ -180,9 +179,7 @@ var _nativeClassList = new /** @class */ (function () {
 var _classList = browser.isIE ? _manualClassList : _nativeClassList;
 export var hasClass = _classList.hasClass.bind(_classList);
 export var addClass = _classList.addClass.bind(_classList);
-export var addClasses = _classList.addClasses.bind(_classList);
 export var removeClass = _classList.removeClass.bind(_classList);
-export var removeClasses = _classList.removeClasses.bind(_classList);
 export var toggleClass = _classList.toggleClass.bind(_classList);
 var DomListener = /** @class */ (function () {
     function DomListener(node, type, handler, useCapture) {
@@ -496,30 +493,6 @@ export function getTopLeftOffset(element) {
         top: top
     };
 }
-export function size(element, width, height) {
-    if (typeof width === 'number') {
-        element.style.width = width + "px";
-    }
-    if (typeof height === 'number') {
-        element.style.height = height + "px";
-    }
-}
-export function position(element, top, right, bottom, left, position) {
-    if (position === void 0) { position = 'absolute'; }
-    if (typeof top === 'number') {
-        element.style.top = top + "px";
-    }
-    if (typeof right === 'number') {
-        element.style.right = right + "px";
-    }
-    if (typeof bottom === 'number') {
-        element.style.bottom = bottom + "px";
-    }
-    if (typeof left === 'number') {
-        element.style.left = left + "px";
-    }
-    element.style.position = position;
-}
 /**
  * Returns the position of a dom node relative to the entire page.
  */
@@ -574,10 +547,6 @@ export function getContentWidth(element) {
     var padding = sizeUtils.getPaddingLeft(element) + sizeUtils.getPaddingRight(element);
     return element.offsetWidth - border - padding;
 }
-export function getTotalScrollWidth(element) {
-    var margin = sizeUtils.getMarginLeft(element) + sizeUtils.getMarginRight(element);
-    return element.scrollWidth + margin;
-}
 // Adapted from WinJS
 // Gets the height of the content of the specified element. The content height does not include borders or padding.
 export function getContentHeight(element) {
@@ -591,22 +560,6 @@ export function getTotalHeight(element) {
     var margin = sizeUtils.getMarginTop(element) + sizeUtils.getMarginBottom(element);
     return element.offsetHeight + margin;
 }
-// Gets the left coordinate of the specified element relative to the specified parent.
-function getRelativeLeft(element, parent) {
-    if (element === null) {
-        return 0;
-    }
-    var elementPosition = getTopLeftOffset(element);
-    var parentPosition = getTopLeftOffset(parent);
-    return elementPosition.left - parentPosition.left;
-}
-export function getLargestChildWidth(parent, children) {
-    var childWidths = children.map(function (child) {
-        return Math.max(getTotalScrollWidth(child), getTotalWidth(child)) + getRelativeLeft(child, parent) || 0;
-    });
-    var maxWidth = Math.max.apply(Math, childWidths);
-    return maxWidth;
-}
 // ----------------------------------------------------------------------------------------
 export function isAncestor(testChild, testAncestor) {
     while (testChild) {
@@ -617,13 +570,22 @@ export function isAncestor(testChild, testAncestor) {
     }
     return false;
 }
-export function findParentWithClass(node, clazz, stopAtClazz) {
+export function findParentWithClass(node, clazz, stopAtClazzOrNode) {
     while (node) {
         if (hasClass(node, clazz)) {
             return node;
         }
-        if (stopAtClazz && hasClass(node, stopAtClazz)) {
-            return null;
+        if (stopAtClazzOrNode) {
+            if (typeof stopAtClazzOrNode === 'string') {
+                if (hasClass(node, stopAtClazzOrNode)) {
+                    return null;
+                }
+            }
+            else {
+                if (node === stopAtClazzOrNode) {
+                    return null;
+                }
+            }
         }
         node = node.parentNode;
     }
@@ -695,6 +657,8 @@ export var EventType = {
     MOUSE_OVER: 'mouseover',
     MOUSE_MOVE: 'mousemove',
     MOUSE_OUT: 'mouseout',
+    MOUSE_ENTER: 'mouseenter',
+    MOUSE_LEAVE: 'mouseleave',
     CONTEXT_MENU: 'contextmenu',
     WHEEL: 'wheel',
     // Keyboard
@@ -714,6 +678,8 @@ export var EventType = {
     SUBMIT: 'submit',
     RESET: 'reset',
     FOCUS: 'focus',
+    FOCUS_IN: 'focusin',
+    FOCUS_OUT: 'focusout',
     BLUR: 'blur',
     INPUT: 'input',
     // Local Storage
@@ -865,21 +831,6 @@ export function $(description, attrs) {
     });
     return result;
 }
-export function join(nodes, separator) {
-    var result = [];
-    nodes.forEach(function (node, index) {
-        if (index > 0) {
-            if (separator instanceof Node) {
-                result.push(separator.cloneNode());
-            }
-            else {
-                result.push(document.createTextNode(separator));
-            }
-        }
-        result.push(node);
-    });
-    return result;
-}
 export function show() {
     var elements = [];
     for (var _i = 0; _i < arguments.length; _i++) {
@@ -929,24 +880,6 @@ export function removeTabIndexAndUpdateFocus(node) {
 }
 export function getElementsByTagName(tag) {
     return Array.prototype.slice.call(document.getElementsByTagName(tag), 0);
-}
-export function finalHandler(fn) {
-    return function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        fn(e);
-    };
-}
-export function domContentLoaded() {
-    return new TPromise(function (c, e) {
-        var readyState = document.readyState;
-        if (readyState === 'complete' || (document && document.body !== null)) {
-            platform.setImmediate(c);
-        }
-        else {
-            window.addEventListener('DOMContentLoaded', c, false);
-        }
-    });
 }
 /**
  * Find a value usable for a dom node size such that the likelihood that it would be

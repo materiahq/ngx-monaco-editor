@@ -14,20 +14,49 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import * as errors from './errors.js';
-import { Promise, TPromise } from './winjs.base.js';
+import { TPromise } from './winjs.base.js';
 import { CancellationTokenSource } from './cancellation.js';
 import { Disposable } from './lifecycle.js';
-import { Emitter } from './event.js';
-export function isPromiseLike(obj) {
+export function isThenable(obj) {
     return obj && typeof obj.then === 'function';
 }
-export function toPromiseLike(arg) {
-    if (isPromiseLike(arg)) {
+export function toThenable(arg) {
+    if (isThenable(arg)) {
         return arg;
     }
     else {
         return TPromise.as(arg);
     }
+}
+export function createCancelablePromise(callback) {
+    var source = new CancellationTokenSource();
+    var thenable = callback(source.token);
+    var promise = new Promise(function (resolve, reject) {
+        source.token.onCancellationRequested(function () {
+            reject(errors.canceled());
+        });
+        Promise.resolve(thenable).then(function (value) {
+            source.dispose();
+            resolve(value);
+        }, function (err) {
+            source.dispose();
+            reject(err);
+        });
+    });
+    return new /** @class */ (function () {
+        function class_1() {
+        }
+        class_1.prototype.cancel = function () {
+            source.cancel();
+        };
+        class_1.prototype.then = function (resolve, reject) {
+            return promise.then(resolve, reject);
+        };
+        class_1.prototype.catch = function (reject) {
+            return this.then(undefined, reject);
+        };
+        return class_1;
+    }());
 }
 export function asWinJsPromise(callback) {
     var source = new CancellationTokenSource();
@@ -42,7 +71,7 @@ export function asWinJsPromise(callback) {
                 reject(err);
             }, progress);
         }
-        else if (isPromiseLike(item)) {
+        else if (isThenable(item)) {
             item.then(function (result) {
                 source.dispose();
                 resolve(result);
@@ -145,22 +174,11 @@ var Throttler = /** @class */ (function () {
     return Throttler;
 }());
 export { Throttler };
-// TODO@Joao: can the previous throttler be replaced with this?
-var SimpleThrottler = /** @class */ (function () {
-    function SimpleThrottler() {
-        this.current = TPromise.wrap(null);
-    }
-    SimpleThrottler.prototype.queue = function (promiseTask) {
-        return this.current = this.current.then(function () { return promiseTask(); });
-    };
-    return SimpleThrottler;
-}());
-export { SimpleThrottler };
 /**
  * A helper to delay execution of a task that is being requested often.
  *
  * Following the throttler, now imagine the mail man wants to optimize the number of
- * trips proactively. The trip itself can be long, so the he decides not to make the trip
+ * trips proactively. The trip itself can be long, so he decides not to make the trip
  * as soon as a letter is submitted. Instead he waits a while, in case more
  * letters are submitted. After said waiting period, if no letters were submitted, he
  * decides to make the trip. Imagine that N more letters were submitted after the first
@@ -211,9 +229,6 @@ var Delayer = /** @class */ (function () {
         }, delay);
         return this.completionPromise;
     };
-    Delayer.prototype.isTriggered = function () {
-        return this.timeout !== null;
-    };
     Delayer.prototype.cancel = function () {
         this.cancelTimeout();
         if (this.completionPromise) {
@@ -230,53 +245,6 @@ var Delayer = /** @class */ (function () {
     return Delayer;
 }());
 export { Delayer };
-/**
- * A helper to delay execution of a task that is being requested often, while
- * preventing accumulation of consecutive executions, while the task runs.
- *
- * Simply combine the two mail man strategies from the Throttler and Delayer
- * helpers, for an analogy.
- */
-var ThrottledDelayer = /** @class */ (function (_super) {
-    __extends(ThrottledDelayer, _super);
-    function ThrottledDelayer(defaultDelay) {
-        var _this = _super.call(this, defaultDelay) || this;
-        _this.throttler = new Throttler();
-        return _this;
-    }
-    ThrottledDelayer.prototype.trigger = function (promiseFactory, delay) {
-        var _this = this;
-        return _super.prototype.trigger.call(this, function () { return _this.throttler.queue(promiseFactory); }, delay);
-    };
-    return ThrottledDelayer;
-}(Delayer));
-export { ThrottledDelayer };
-/**
- * A barrier that is initially closed and then becomes opened permanently.
- */
-var Barrier = /** @class */ (function () {
-    function Barrier() {
-        var _this = this;
-        this._isOpen = false;
-        this._promise = new TPromise(function (c, e, p) {
-            _this._completePromise = c;
-        }, function () {
-            console.warn('You should really not try to cancel this ready promise!');
-        });
-    }
-    Barrier.prototype.isOpen = function () {
-        return this._isOpen;
-    };
-    Barrier.prototype.open = function () {
-        this._isOpen = true;
-        this._completePromise(true);
-    };
-    Barrier.prototype.wait = function () {
-        return this._promise;
-    };
-    return Barrier;
-}());
-export { Barrier };
 var ShallowCancelThenPromise = /** @class */ (function (_super) {
     __extends(ShallowCancelThenPromise, _super);
     function ShallowCancelThenPromise(outer) {
@@ -298,18 +266,26 @@ var ShallowCancelThenPromise = /** @class */ (function (_super) {
 }(TPromise));
 export { ShallowCancelThenPromise };
 /**
- * Replacement for `WinJS.Promise.timeout`.
+ * Replacement for `WinJS.TPromise.timeout`.
  */
 export function timeout(n) {
-    return new Promise(function (resolve) { return setTimeout(resolve, n); });
+    return createCancelablePromise(function (token) {
+        return new Promise(function (resolve, reject) {
+            var handle = setTimeout(resolve, n);
+            token.onCancellationRequested(function (_) {
+                clearTimeout(handle);
+                reject(errors.canceled());
+            });
+        });
+    });
 }
 function isWinJSPromise(candidate) {
     return TPromise.is(candidate) && typeof candidate.done === 'function';
 }
-export function always(winjsPromiseOrPromiseLike, f) {
-    if (isWinJSPromise(winjsPromiseOrPromiseLike)) {
+export function always(winjsPromiseOrThenable, f) {
+    if (isWinJSPromise(winjsPromiseOrThenable)) {
         return new TPromise(function (c, e, p) {
-            winjsPromiseOrPromiseLike.done(function (result) {
+            winjsPromiseOrThenable.done(function (result) {
                 try {
                     f(result);
                 }
@@ -329,49 +305,45 @@ export function always(winjsPromiseOrPromiseLike, f) {
                 p(progress);
             });
         }, function () {
-            winjsPromiseOrPromiseLike.cancel();
+            winjsPromiseOrThenable.cancel();
         });
     }
     else {
         // simple
-        winjsPromiseOrPromiseLike.then(function (_) { return f(); }, function (_) { return f(); });
-        return winjsPromiseOrPromiseLike;
+        winjsPromiseOrThenable.then(function (_) { return f(); }, function (_) { return f(); });
+        return winjsPromiseOrThenable;
     }
 }
-/**
- * Runs the provided list of promise factories in sequential order. The returned
- * promise will complete to an array of results from each promise.
- */
-export function sequence(promiseFactories) {
-    var results = [];
-    // reverse since we start with last element using pop()
-    promiseFactories = promiseFactories.reverse();
-    function next() {
-        if (promiseFactories.length) {
-            return promiseFactories.pop()();
-        }
-        return null;
-    }
-    function thenHandler(result) {
-        if (result !== undefined && result !== null) {
-            results.push(result);
-        }
-        var n = next();
-        if (n) {
-            return n.then(thenHandler);
-        }
-        return TPromise.as(results);
-    }
-    return TPromise.as(null).then(thenHandler);
-}
-export function first(promiseFactories, shouldStop) {
+export function first2(promiseFactories, shouldStop, defaultValue) {
     if (shouldStop === void 0) { shouldStop = function (t) { return !!t; }; }
-    promiseFactories = promiseFactories.reverse().slice();
+    if (defaultValue === void 0) { defaultValue = null; }
+    var index = 0;
+    var len = promiseFactories.length;
     var loop = function () {
-        if (promiseFactories.length === 0) {
-            return TPromise.as(null);
+        if (index >= len) {
+            return Promise.resolve(defaultValue);
         }
-        var factory = promiseFactories.pop();
+        var factory = promiseFactories[index++];
+        var promise = factory();
+        return promise.then(function (result) {
+            if (shouldStop(result)) {
+                return Promise.resolve(result);
+            }
+            return loop();
+        });
+    };
+    return loop();
+}
+export function first(promiseFactories, shouldStop, defaultValue) {
+    if (shouldStop === void 0) { shouldStop = function (t) { return !!t; }; }
+    if (defaultValue === void 0) { defaultValue = null; }
+    var index = 0;
+    var len = promiseFactories.length;
+    var loop = function () {
+        if (index >= len) {
+            return TPromise.as(defaultValue);
+        }
+        var factory = promiseFactories[index++];
         var promise = factory();
         return promise.then(function (result) {
             if (shouldStop(result)) {
@@ -382,103 +354,6 @@ export function first(promiseFactories, shouldStop) {
     };
     return loop();
 }
-/**
- * A helper to queue N promises and run them all with a max degree of parallelism. The helper
- * ensures that at any time no more than M promises are running at the same time.
- */
-var Limiter = /** @class */ (function () {
-    function Limiter(maxDegreeOfParalellism) {
-        this.maxDegreeOfParalellism = maxDegreeOfParalellism;
-        this.outstandingPromises = [];
-        this.runningPromises = 0;
-        this._onFinished = new Emitter();
-    }
-    Object.defineProperty(Limiter.prototype, "onFinished", {
-        get: function () {
-            return this._onFinished.event;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Limiter.prototype, "size", {
-        get: function () {
-            return this.runningPromises + this.outstandingPromises.length;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Limiter.prototype.queue = function (promiseFactory) {
-        var _this = this;
-        return new TPromise(function (c, e, p) {
-            _this.outstandingPromises.push({
-                factory: promiseFactory,
-                c: c,
-                e: e,
-                p: p
-            });
-            _this.consume();
-        });
-    };
-    Limiter.prototype.consume = function () {
-        var _this = this;
-        while (this.outstandingPromises.length && this.runningPromises < this.maxDegreeOfParalellism) {
-            var iLimitedTask = this.outstandingPromises.shift();
-            this.runningPromises++;
-            var promise = iLimitedTask.factory();
-            promise.done(iLimitedTask.c, iLimitedTask.e, iLimitedTask.p);
-            promise.done(function () { return _this.consumed(); }, function () { return _this.consumed(); });
-        }
-    };
-    Limiter.prototype.consumed = function () {
-        this.runningPromises--;
-        if (this.outstandingPromises.length > 0) {
-            this.consume();
-        }
-        else {
-            this._onFinished.fire();
-        }
-    };
-    Limiter.prototype.dispose = function () {
-        this._onFinished.dispose();
-    };
-    return Limiter;
-}());
-export { Limiter };
-/**
- * A queue is handles one promise at a time and guarantees that at any time only one promise is executing.
- */
-var Queue = /** @class */ (function (_super) {
-    __extends(Queue, _super);
-    function Queue() {
-        return _super.call(this, 1) || this;
-    }
-    return Queue;
-}(Limiter));
-export { Queue };
-/**
- * A helper to organize queues per resource. The ResourceQueue makes sure to manage queues per resource
- * by disposing them once the queue is empty.
- */
-var ResourceQueue = /** @class */ (function () {
-    function ResourceQueue() {
-        this.queues = Object.create(null);
-    }
-    ResourceQueue.prototype.queueFor = function (resource) {
-        var _this = this;
-        var key = resource.toString();
-        if (!this.queues[key]) {
-            var queue_1 = new Queue();
-            queue_1.onFinished(function () {
-                queue_1.dispose();
-                delete _this.queues[key];
-            });
-            this.queues[key] = queue_1;
-        }
-        return this.queues[key];
-    };
-    return ResourceQueue;
-}());
-export { ResourceQueue };
 export function setDisposableTimeout(handler, timeout) {
     var args = [];
     for (var _i = 2; _i < arguments.length; _i++) {
@@ -592,59 +467,12 @@ var RunOnceScheduler = /** @class */ (function () {
     RunOnceScheduler.prototype.onTimeout = function () {
         this.timeoutToken = -1;
         if (this.runner) {
-            this.runner();
+            this.doRun();
         }
+    };
+    RunOnceScheduler.prototype.doRun = function () {
+        this.runner();
     };
     return RunOnceScheduler;
 }());
 export { RunOnceScheduler };
-export function nfcall(fn) {
-    var args = [];
-    for (var _i = 1; _i < arguments.length; _i++) {
-        args[_i - 1] = arguments[_i];
-    }
-    return new TPromise(function (c, e) { return fn.apply(void 0, args.concat([function (err, result) { return err ? e(err) : c(result); }])); }, function () { return null; });
-}
-export function ninvoke(thisArg, fn) {
-    var args = [];
-    for (var _i = 2; _i < arguments.length; _i++) {
-        args[_i - 2] = arguments[_i];
-    }
-    return new TPromise(function (c, e) { return fn.call.apply(fn, [thisArg].concat(args, [function (err, result) { return err ? e(err) : c(result); }])); }, function () { return null; });
-}
-/**
- * An emitter that will ignore any events that occur during a specific code
- * execution triggered via throttle() until the promise has finished (either
- * successfully or with an error). Only after the promise has finished, the
- * last event that was fired during the operation will get emitted.
- *
- */
-var ThrottledEmitter = /** @class */ (function (_super) {
-    __extends(ThrottledEmitter, _super);
-    function ThrottledEmitter() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    ThrottledEmitter.prototype.throttle = function (promise) {
-        var _this = this;
-        this.suspended = true;
-        return always(promise, function () { return _this.resume(); });
-    };
-    ThrottledEmitter.prototype.fire = function (event) {
-        if (this.suspended) {
-            this.lastEvent = event;
-            this.hasLastEvent = true;
-            return;
-        }
-        return _super.prototype.fire.call(this, event);
-    };
-    ThrottledEmitter.prototype.resume = function () {
-        this.suspended = false;
-        if (this.hasLastEvent) {
-            this.fire(this.lastEvent);
-        }
-        this.hasLastEvent = false;
-        this.lastEvent = void 0;
-    };
-    return ThrottledEmitter;
-}(Emitter));
-export { ThrottledEmitter };

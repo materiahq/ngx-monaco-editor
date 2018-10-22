@@ -110,7 +110,9 @@ var ViewLayout = /** @class */ (function (_super) {
     ViewLayout.prototype._computeScrollWidth = function (maxLineWidth, viewportWidth) {
         var isViewportWrapping = this._configuration.editor.wrappingInfo.isViewportWrapping;
         if (!isViewportWrapping) {
-            return Math.max(maxLineWidth + ViewLayout.LINES_HORIZONTAL_EXTRA_PX, viewportWidth);
+            var extraHorizontalSpace = this._configuration.editor.viewInfo.scrollBeyondLastColumn * this._configuration.editor.fontInfo.typicalHalfwidthCharacterWidth;
+            var whitespaceMinWidth = this._linesLayout.getWhitespaceMinWidth();
+            return Math.max(maxLineWidth + extraHorizontalSpace, viewportWidth, whitespaceMinWidth);
         }
         return Math.max(maxLineWidth, viewportWidth);
     };
@@ -135,8 +137,8 @@ var ViewLayout = /** @class */ (function (_super) {
         };
     };
     // ---- IVerticalLayoutProvider
-    ViewLayout.prototype.addWhitespace = function (afterLineNumber, ordinal, height) {
-        return this._linesLayout.insertWhitespace(afterLineNumber, ordinal, height);
+    ViewLayout.prototype.addWhitespace = function (afterLineNumber, ordinal, height, minWidth) {
+        return this._linesLayout.insertWhitespace(afterLineNumber, ordinal, height, minWidth);
     };
     ViewLayout.prototype.changeWhitespace = function (id, newAfterLineNumber, newHeight) {
         return this._linesLayout.changeWhitespace(id, newAfterLineNumber, newHeight);
@@ -211,7 +213,6 @@ var ViewLayout = /** @class */ (function (_super) {
             scrollTop: currentScrollPosition.scrollTop + deltaScrollTop
         });
     };
-    ViewLayout.LINES_HORIZONTAL_EXTRA_PX = 30;
     return ViewLayout;
 }(Disposable));
 export { ViewLayout };

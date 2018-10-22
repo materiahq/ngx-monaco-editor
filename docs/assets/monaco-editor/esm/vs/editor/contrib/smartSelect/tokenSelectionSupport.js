@@ -24,7 +24,8 @@ var TokenSelectionSupport = /** @class */ (function () {
         return TPromise.as(this.getRangesToPositionSync(resource, position));
     };
     TokenSelectionSupport.prototype.getRangesToPositionSync = function (resource, position) {
-        var model = this._modelService.getModel(resource), entries = [];
+        var model = this._modelService.getModel(resource);
+        var entries = [];
         if (model) {
             this._doGetRangesToPosition(model, position).forEach(function (range) {
                 entries.push({
@@ -36,7 +37,9 @@ var TokenSelectionSupport = /** @class */ (function () {
         return entries;
     };
     TokenSelectionSupport.prototype._doGetRangesToPosition = function (model, position) {
-        var tree = build(model), node, lastRange;
+        var tree = build(model);
+        var node;
+        var lastRange;
         node = find(tree, position);
         var ranges = [];
         while (node) {

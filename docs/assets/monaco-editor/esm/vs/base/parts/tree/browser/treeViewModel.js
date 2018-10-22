@@ -132,19 +132,6 @@ var HeightMap = /** @class */ (function () {
         if (needsRender === void 0) { needsRender = false; }
         // noop
     };
-    HeightMap.prototype.itemsCount = function () {
-        return this.heightMap.length;
-    };
-    HeightMap.prototype.itemAt = function (position) {
-        return this.heightMap[this.indexAt(position)].model.id;
-    };
-    HeightMap.prototype.withItemsInRange = function (start, end, fn) {
-        start = this.indexAt(start);
-        end = this.indexAt(end);
-        for (var i = start; i <= end; i++) {
-            fn(this.heightMap[i].model.id);
-        }
-    };
     HeightMap.prototype.indexAt = function (position) {
         var left = 0;
         var right = this.heightMap.length;

@@ -150,7 +150,8 @@ var PeekViewWidget = /** @class */ (function (_super) {
             this.dispose();
             return;
         }
-        var headHeight = Math.ceil(this.editor.getConfiguration().lineHeight * 1.2), bodyHeight = heightInPixel - (headHeight + 2 /* the border-top/bottom width*/);
+        var headHeight = Math.ceil(this.editor.getConfiguration().lineHeight * 1.2);
+        var bodyHeight = heightInPixel - (headHeight + 2 /* the border-top/bottom width*/);
         this._doLayoutHead(headHeight, widthInPixel);
         this._doLayoutBody(bodyHeight, widthInPixel);
     };

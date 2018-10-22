@@ -39,28 +39,23 @@ import { editorHoverHighlight, editorHoverBackground, editorHoverBorder, textLin
 import { EditorContextKeys } from '../../common/editorContextKeys.js';
 import { MarkdownRenderer } from '../markdown/markdownRenderer.js';
 var ModesHoverController = /** @class */ (function () {
-    function ModesHoverController(editor, _openerService, _modeService, _themeService) {
+    function ModesHoverController(_editor, _openerService, _modeService, _themeService) {
         var _this = this;
+        this._editor = _editor;
         this._openerService = _openerService;
         this._modeService = _modeService;
         this._themeService = _themeService;
-        this._editor = editor;
         this._toUnhook = [];
         this._isMouseDown = false;
-        if (editor.getConfiguration().contribInfo.hover) {
-            this._toUnhook.push(this._editor.onMouseDown(function (e) { return _this._onEditorMouseDown(e); }));
-            this._toUnhook.push(this._editor.onMouseUp(function (e) { return _this._onEditorMouseUp(e); }));
-            this._toUnhook.push(this._editor.onMouseMove(function (e) { return _this._onEditorMouseMove(e); }));
-            this._toUnhook.push(this._editor.onMouseLeave(function (e) { return _this._hideWidgets(); }));
-            this._toUnhook.push(this._editor.onKeyDown(function (e) { return _this._onKeyDown(e); }));
-            this._toUnhook.push(this._editor.onDidChangeModel(function () { return _this._hideWidgets(); }));
-            this._toUnhook.push(this._editor.onDidChangeModelDecorations(function () { return _this._onModelDecorationsChanged(); }));
-            this._toUnhook.push(this._editor.onDidScrollChange(function (e) {
-                if (e.scrollTopChanged || e.scrollLeftChanged) {
-                    _this._hideWidgets();
-                }
-            }));
-        }
+        this._hoverClicked = false;
+        this._hookEvents();
+        this._didChangeConfigurationHandler = this._editor.onDidChangeConfiguration(function (e) {
+            if (e.contribInfo) {
+                _this._hideWidgets();
+                _this._unhookEvents();
+                _this._hookEvents();
+            }
+        });
     }
     Object.defineProperty(ModesHoverController.prototype, "contentWidget", {
         get: function () {
@@ -85,9 +80,37 @@ var ModesHoverController = /** @class */ (function () {
     ModesHoverController.get = function (editor) {
         return editor.getContribution(ModesHoverController.ID);
     };
+    ModesHoverController.prototype._hookEvents = function () {
+        var _this = this;
+        var hideWidgetsEventHandler = function () { return _this._hideWidgets(); };
+        var hoverOpts = this._editor.getConfiguration().contribInfo.hover;
+        this._isHoverEnabled = hoverOpts.enabled;
+        this._isHoverSticky = hoverOpts.sticky;
+        if (this._isHoverEnabled) {
+            this._toUnhook.push(this._editor.onMouseDown(function (e) { return _this._onEditorMouseDown(e); }));
+            this._toUnhook.push(this._editor.onMouseUp(function (e) { return _this._onEditorMouseUp(e); }));
+            this._toUnhook.push(this._editor.onMouseMove(function (e) { return _this._onEditorMouseMove(e); }));
+            this._toUnhook.push(this._editor.onKeyDown(function (e) { return _this._onKeyDown(e); }));
+            this._toUnhook.push(this._editor.onDidChangeModelDecorations(function () { return _this._onModelDecorationsChanged(); }));
+        }
+        else {
+            this._toUnhook.push(this._editor.onMouseMove(hideWidgetsEventHandler));
+        }
+        this._toUnhook.push(this._editor.onMouseLeave(hideWidgetsEventHandler));
+        this._toUnhook.push(this._editor.onDidChangeModel(hideWidgetsEventHandler));
+        this._toUnhook.push(this._editor.onDidScrollChange(function (e) { return _this._onEditorScrollChanged(e); }));
+    };
+    ModesHoverController.prototype._unhookEvents = function () {
+        this._toUnhook = dispose(this._toUnhook);
+    };
     ModesHoverController.prototype._onModelDecorationsChanged = function () {
         this.contentWidget.onModelDecorationsChanged();
         this.glyphWidget.onModelDecorationsChanged();
+    };
+    ModesHoverController.prototype._onEditorScrollChanged = function (e) {
+        if (e.scrollTopChanged || e.scrollLeftChanged) {
+            this._hideWidgets();
+        }
     };
     ModesHoverController.prototype._onEditorMouseDown = function (mouseEvent) {
         this._isMouseDown = true;
@@ -110,16 +133,17 @@ var ModesHoverController = /** @class */ (function () {
         this._isMouseDown = false;
     };
     ModesHoverController.prototype._onEditorMouseMove = function (mouseEvent) {
+        // const this._editor.getConfiguration().contribInfo.hover.sticky;
         var targetType = mouseEvent.target.type;
-        var stopKey = platform.isMacintosh ? 'metaKey' : 'ctrlKey';
+        var hasStopKey = (platform.isMacintosh ? mouseEvent.event.metaKey : mouseEvent.event.ctrlKey);
         if (this._isMouseDown && this._hoverClicked && this.contentWidget.isColorPickerVisible()) {
             return;
         }
-        if (targetType === MouseTargetType.CONTENT_WIDGET && mouseEvent.target.detail === ModesContentHoverWidget.ID && !mouseEvent.event[stopKey]) {
+        if (this._isHoverSticky && targetType === MouseTargetType.CONTENT_WIDGET && mouseEvent.target.detail === ModesContentHoverWidget.ID && !hasStopKey) {
             // mouse moved on top of content hover widget
             return;
         }
-        if (targetType === MouseTargetType.OVERLAY_WIDGET && mouseEvent.target.detail === ModesGlyphHoverWidget.ID && !mouseEvent.event[stopKey]) {
+        if (this._isHoverSticky && targetType === MouseTargetType.OVERLAY_WIDGET && mouseEvent.target.detail === ModesGlyphHoverWidget.ID && !hasStopKey) {
             // mouse moved on top of overlay hover widget
             return;
         }
@@ -131,13 +155,17 @@ var ModesHoverController = /** @class */ (function () {
                 targetType = MouseTargetType.CONTENT_TEXT;
             }
         }
-        if (this._editor.getConfiguration().contribInfo.hover && targetType === MouseTargetType.CONTENT_TEXT) {
+        if (targetType === MouseTargetType.CONTENT_TEXT) {
             this.glyphWidget.hide();
-            this.contentWidget.startShowingAt(mouseEvent.target.range, false);
+            if (this._isHoverEnabled) {
+                this.contentWidget.startShowingAt(mouseEvent.target.range, 0 /* Delayed */, false);
+            }
         }
         else if (targetType === MouseTargetType.GUTTER_GLYPH_MARGIN) {
             this.contentWidget.hide();
-            this.glyphWidget.startShowingAt(mouseEvent.target.position.lineNumber);
+            if (this._isHoverEnabled) {
+                this.glyphWidget.startShowingAt(mouseEvent.target.position.lineNumber);
+            }
         }
         else {
             this._hideWidgets();
@@ -161,14 +189,15 @@ var ModesHoverController = /** @class */ (function () {
         this._contentWidget = new ModesContentHoverWidget(this._editor, renderer, this._themeService);
         this._glyphWidget = new ModesGlyphHoverWidget(this._editor, renderer);
     };
-    ModesHoverController.prototype.showContentHover = function (range, focus) {
-        this.contentWidget.startShowingAt(range, focus);
+    ModesHoverController.prototype.showContentHover = function (range, mode, focus) {
+        this.contentWidget.startShowingAt(range, mode, focus);
     };
     ModesHoverController.prototype.getId = function () {
         return ModesHoverController.ID;
     };
     ModesHoverController.prototype.dispose = function () {
-        this._toUnhook = dispose(this._toUnhook);
+        this._unhookEvents();
+        this._didChangeConfigurationHandler.dispose();
         if (this._glyphWidget) {
             this._glyphWidget.dispose();
             this._glyphWidget = null;
@@ -203,7 +232,8 @@ var ShowHoverAction = /** @class */ (function (_super) {
             precondition: null,
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: KeyChord(2048 /* CtrlCmd */ | 41 /* KEY_K */, 2048 /* CtrlCmd */ | 39 /* KEY_I */)
+                primary: KeyChord(2048 /* CtrlCmd */ | 41 /* KEY_K */, 2048 /* CtrlCmd */ | 39 /* KEY_I */),
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
@@ -214,7 +244,7 @@ var ShowHoverAction = /** @class */ (function (_super) {
         }
         var position = editor.getPosition();
         var range = new Range(position.lineNumber, position.column, position.lineNumber, position.column);
-        controller.showContentHover(range, true);
+        controller.showContentHover(range, 1 /* Immediate */, true);
     };
     return ShowHoverAction;
 }(EditorAction));

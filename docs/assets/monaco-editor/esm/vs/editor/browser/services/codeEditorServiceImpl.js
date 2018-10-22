@@ -178,7 +178,7 @@ var DecorationTypeOptionsProvider = /** @class */ (function () {
 }());
 var _CSS_MAP = {
     color: 'color:{0} !important;',
-    opacity: 'opacity:{0};',
+    opacity: 'opacity:{0}; will-change: opacity;',
     backgroundColor: 'background-color:{0};',
     outline: 'outline:{0};',
     outlineColor: 'outline-color:{0};',

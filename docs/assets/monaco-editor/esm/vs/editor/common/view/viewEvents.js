@@ -14,7 +14,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import * as errors from '../../../base/common/errors.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
+import { Disposable, toDisposable } from '../../../base/common/lifecycle.js';
 var ViewConfigurationChangedEvent = /** @class */ (function () {
     function ViewConfigurationChangedEvent(source) {
         this.type = 1 /* ViewConfigurationChanged */;
@@ -203,17 +203,15 @@ var ViewEventEmitter = /** @class */ (function (_super) {
     ViewEventEmitter.prototype.addEventListener = function (listener) {
         var _this = this;
         this._listeners.push(listener);
-        return {
-            dispose: function () {
-                var listeners = _this._listeners;
-                for (var i = 0, len = listeners.length; i < len; i++) {
-                    if (listeners[i] === listener) {
-                        listeners.splice(i, 1);
-                        break;
-                    }
+        return toDisposable(function () {
+            var listeners = _this._listeners;
+            for (var i = 0, len = listeners.length; i < len; i++) {
+                if (listeners[i] === listener) {
+                    listeners.splice(i, 1);
+                    break;
                 }
             }
-        };
+        });
     };
     return ViewEventEmitter;
 }(Disposable));

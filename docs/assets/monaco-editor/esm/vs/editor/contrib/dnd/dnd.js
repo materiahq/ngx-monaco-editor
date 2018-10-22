@@ -13,6 +13,14 @@ import { Range } from '../../common/core/range.js';
 import { Selection } from '../../common/core/selection.js';
 import { DragAndDropCommand } from './dragAndDropCommand.js';
 import { ModelDecorationOptions } from '../../common/model/textModel.js';
+function hasTriggerModifier(e) {
+    if (isMacintosh) {
+        return e.altKey;
+    }
+    else {
+        return e.ctrlKey;
+    }
+}
 var DragAndDropController = /** @class */ (function () {
     function DragAndDropController(editor) {
         var _this = this;
@@ -29,17 +37,14 @@ var DragAndDropController = /** @class */ (function () {
         this._modiferPressed = false;
         this._dragSelection = null;
     }
-    DragAndDropController.get = function (editor) {
-        return editor.getContribution(DragAndDropController.ID);
-    };
     DragAndDropController.prototype.onEditorKeyDown = function (e) {
         if (!this._editor.getConfiguration().dragAndDrop) {
             return;
         }
-        if (e[DragAndDropController.TRIGGER_MODIFIER]) {
+        if (hasTriggerModifier(e)) {
             this._modiferPressed = true;
         }
-        if (this._mouseDown && e[DragAndDropController.TRIGGER_MODIFIER]) {
+        if (this._mouseDown && hasTriggerModifier(e)) {
             this._editor.updateOptions({
                 mouseStyle: 'copy'
             });
@@ -49,7 +54,7 @@ var DragAndDropController = /** @class */ (function () {
         if (!this._editor.getConfiguration().dragAndDrop) {
             return;
         }
-        if (e[DragAndDropController.TRIGGER_MODIFIER]) {
+        if (hasTriggerModifier(e)) {
             this._modiferPressed = false;
         }
         if (this._mouseDown && e.keyCode === DragAndDropController.TRIGGER_KEY_VALUE) {
@@ -79,7 +84,7 @@ var DragAndDropController = /** @class */ (function () {
                 return;
             }
         }
-        if (mouseEvent.event[DragAndDropController.TRIGGER_MODIFIER]) {
+        if (hasTriggerModifier(mouseEvent.event)) {
             this._editor.updateOptions({
                 mouseStyle: 'copy'
             });
@@ -118,11 +123,11 @@ var DragAndDropController = /** @class */ (function () {
                 }
             }
             else if (!this._dragSelection.containsPosition(newCursorPosition_1) ||
-                ((mouseEvent.event[DragAndDropController.TRIGGER_MODIFIER] ||
+                ((hasTriggerModifier(mouseEvent.event) ||
                     this._modiferPressed) && (this._dragSelection.getEndPosition().equals(newCursorPosition_1) || this._dragSelection.getStartPosition().equals(newCursorPosition_1)) // we allow users to paste content beside the selection
                 )) {
                 this._editor.pushUndoStop();
-                this._editor.executeCommand(DragAndDropController.ID, new DragAndDropCommand(this._dragSelection, newCursorPosition_1, mouseEvent.event[DragAndDropController.TRIGGER_MODIFIER] || this._modiferPressed));
+                this._editor.executeCommand(DragAndDropController.ID, new DragAndDropCommand(this._dragSelection, newCursorPosition_1, hasTriggerModifier(mouseEvent.event) || this._modiferPressed));
                 this._editor.pushUndoStop();
             }
         }
@@ -164,7 +169,6 @@ var DragAndDropController = /** @class */ (function () {
         this._toUnhook = dispose(this._toUnhook);
     };
     DragAndDropController.ID = 'editor.contrib.dragAndDrop';
-    DragAndDropController.TRIGGER_MODIFIER = isMacintosh ? 'altKey' : 'ctrlKey';
     DragAndDropController.TRIGGER_KEY_VALUE = isMacintosh ? 6 /* Alt */ : 5 /* Ctrl */;
     DragAndDropController._DECORATION_OPTIONS = ModelDecorationOptions.register({
         className: 'dnd-target'

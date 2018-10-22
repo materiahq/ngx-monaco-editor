@@ -27,8 +27,8 @@ var contributionRegistry = Registry.as(JSONExtensions.JSONContribution);
 var ConfigurationRegistry = /** @class */ (function () {
     function ConfigurationRegistry() {
         this.overrideIdentifiers = [];
+        this._onDidSchemaChange = new Emitter();
         this._onDidRegisterConfiguration = new Emitter();
-        this.onDidRegisterConfiguration = this._onDidRegisterConfiguration.event;
         this.configurationContributors = [];
         this.editorConfigurationSchema = { properties: {}, patternProperties: {}, additionalProperties: false, errorMessage: 'Unknown editor configuration setting' };
         this.configurationProperties = {};
@@ -56,13 +56,10 @@ var ConfigurationRegistry = /** @class */ (function () {
         });
         this._onDidRegisterConfiguration.fire(properties);
     };
-    ConfigurationRegistry.prototype.notifyConfigurationSchemaUpdated = function (configuration) {
-        contributionRegistry.notifySchemaChanged(editorConfigurationSchemaId);
-    };
     ConfigurationRegistry.prototype.registerOverrideIdentifiers = function (overrideIdentifiers) {
+        var _a;
         (_a = this.overrideIdentifiers).push.apply(_a, overrideIdentifiers);
         this.updateOverridePropertyPatternKey();
-        var _a;
     };
     ConfigurationRegistry.prototype.toConfiguration = function (defaultConfigurations) {
         var configurationNode = {
@@ -90,7 +87,7 @@ var ConfigurationRegistry = /** @class */ (function () {
         if (validate === void 0) { validate = true; }
         if (scope === void 0) { scope = ConfigurationScope.WINDOW; }
         if (overridable === void 0) { overridable = false; }
-        scope = configuration.scope !== void 0 && configuration.scope !== null ? configuration.scope : scope;
+        scope = types.isUndefinedOrNull(configuration.scope) ? scope : configuration.scope;
         overridable = configuration.overridable || overridable;
         var propertyKeys = [];
         var properties = configuration.properties;
@@ -112,8 +109,11 @@ var ConfigurationRegistry = /** @class */ (function () {
                 if (overridable) {
                     property.overridable = true;
                 }
-                if (property.scope === void 0) {
-                    property.scope = scope;
+                if (OVERRIDE_PROPERTY_PATTERN.test(key)) {
+                    property.scope = void 0; // No scope for overridable properties `[${identifier}]`
+                }
+                else {
+                    property.scope = types.isUndefinedOrNull(property.scope) ? scope : property.scope;
                 }
                 // Add to properties maps
                 // Property is included by default if 'included' is unspecified
@@ -137,14 +137,8 @@ var ConfigurationRegistry = /** @class */ (function () {
         }
         return propertyKeys;
     };
-    ConfigurationRegistry.prototype.getConfigurations = function () {
-        return this.configurationContributors;
-    };
     ConfigurationRegistry.prototype.getConfigurationProperties = function () {
         return this.configurationProperties;
-    };
-    ConfigurationRegistry.prototype.getExcludedConfigurationProperties = function () {
-        return this.excludedConfigurationProperties;
     };
     ConfigurationRegistry.prototype.registerJSONConfiguration = function (configuration) {
         function register(configuration) {
@@ -171,6 +165,7 @@ var ConfigurationRegistry = /** @class */ (function () {
             }
         }
         register(configuration);
+        this._onDidSchemaChange.fire();
     };
     ConfigurationRegistry.prototype.updateSchemaForOverrideSettingsConfiguration = function (configuration) {
         if (configuration.id !== SETTINGS_OVERRRIDE_NODE_ID) {
@@ -197,6 +192,7 @@ var ConfigurationRegistry = /** @class */ (function () {
         applicationSettings.patternProperties[this.overridePropertyPattern] = patternProperties;
         windowSettings.patternProperties[this.overridePropertyPattern] = patternProperties;
         resourceSettings.patternProperties[this.overridePropertyPattern] = patternProperties;
+        this._onDidSchemaChange.fire();
     };
     ConfigurationRegistry.prototype.update = function (configuration) {
         var _this = this;
@@ -250,15 +246,4 @@ export function validateProperty(property) {
         return nls.localize('config.property.duplicate', "Cannot register '{0}'. This property is already registered.", property);
     }
     return null;
-}
-export function getScopes() {
-    var scopes = {};
-    var configurationProperties = configurationRegistry.getConfigurationProperties();
-    for (var _i = 0, _a = Object.keys(configurationProperties); _i < _a.length; _i++) {
-        var key = _a[_i];
-        scopes[key] = configurationProperties[key].scope;
-    }
-    scopes['launch'] = ConfigurationScope.RESOURCE;
-    scopes['task'] = ConfigurationScope.RESOURCE;
-    return scopes;
 }

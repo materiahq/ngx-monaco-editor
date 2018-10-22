@@ -28,6 +28,24 @@ import { RunOnceScheduler } from '../../../base/common/async.js';
 var Memory = /** @class */ (function () {
     function Memory() {
     }
+    Memory.prototype.select = function (model, pos, items) {
+        if (items.length === 0) {
+            return 0;
+        }
+        var topScore = items[0].score;
+        for (var i = 1; i < items.length; i++) {
+            var _a = items[i], score = _a.score, suggestion = _a.suggestion;
+            if (score !== topScore) {
+                // stop when leaving the group of top matches
+                break;
+            }
+            if (suggestion.preselect) {
+                // stop when seeing an auto-select-item
+                return i;
+            }
+        }
+        return 0;
+    };
     return Memory;
 }());
 export { Memory };
@@ -38,9 +56,6 @@ var NoMemory = /** @class */ (function (_super) {
     }
     NoMemory.prototype.memorize = function (model, pos, item) {
         // no-op
-    };
-    NoMemory.prototype.select = function (model, pos, items) {
-        return 0;
     };
     NoMemory.prototype.toJSON = function () {
         return undefined;
@@ -73,13 +88,13 @@ var LRUMemory = /** @class */ (function (_super) {
         // that has been used in the past
         var word = model.getWordUntilPosition(pos).word;
         if (word.length !== 0) {
-            return 0;
+            return _super.prototype.select.call(this, model, pos, items);
         }
         var lineSuffix = model.getLineContent(pos.lineNumber).substr(pos.column - 10, pos.column - 1);
         if (/\s$/.test(lineSuffix)) {
-            return 0;
+            return _super.prototype.select.call(this, model, pos, items);
         }
-        var res = 0;
+        var res = -1;
         var seq = -1;
         for (var i = 0; i < items.length; i++) {
             var suggestion = items[i].suggestion;
@@ -90,7 +105,12 @@ var LRUMemory = /** @class */ (function (_super) {
                 res = i;
             }
         }
-        return res;
+        if (res === -1) {
+            return _super.prototype.select.call(this, model, pos, items);
+        }
+        else {
+            return res;
+        }
     };
     LRUMemory.prototype.toJSON = function () {
         var data = [];
@@ -132,7 +152,7 @@ var PrefixMemory = /** @class */ (function (_super) {
     PrefixMemory.prototype.select = function (model, pos, items) {
         var word = model.getWordUntilPosition(pos).word;
         if (!word) {
-            return 0;
+            return _super.prototype.select.call(this, model, pos, items);
         }
         var key = model.getLanguageIdentifier().language + "/" + word;
         var item = this._trie.get(key);
@@ -147,7 +167,7 @@ var PrefixMemory = /** @class */ (function (_super) {
                 }
             }
         }
-        return 0;
+        return _super.prototype.select.call(this, model, pos, items);
     };
     PrefixMemory.prototype.toJSON = function () {
         var entries = [];

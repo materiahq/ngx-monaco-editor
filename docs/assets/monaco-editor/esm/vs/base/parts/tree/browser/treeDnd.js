@@ -10,9 +10,6 @@ var ElementsDragAndDropData = /** @class */ (function () {
     ElementsDragAndDropData.prototype.update = function (event) {
         // no-op
     };
-    ElementsDragAndDropData.prototype.getData = function () {
-        return this.elements;
-    };
     return ElementsDragAndDropData;
 }());
 export { ElementsDragAndDropData };
@@ -22,9 +19,6 @@ var ExternalElementsDragAndDropData = /** @class */ (function () {
     }
     ExternalElementsDragAndDropData.prototype.update = function (event) {
         // no-op
-    };
-    ExternalElementsDragAndDropData.prototype.getData = function () {
-        return this.elements;
     };
     return ExternalElementsDragAndDropData;
 }());
@@ -44,12 +38,6 @@ var DesktopDragAndDropData = /** @class */ (function () {
             Array.prototype.push.apply(this.files, event.dataTransfer.files);
             this.files = this.files.filter(function (f) { return f.size || f.type; });
         }
-    };
-    DesktopDragAndDropData.prototype.getData = function () {
-        return {
-            types: this.types,
-            files: this.files
-        };
     };
     return DesktopDragAndDropData;
 }());

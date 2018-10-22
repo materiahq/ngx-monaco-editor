@@ -428,6 +428,7 @@ var MouseTargetFactory = /** @class */ (function () {
             var offset = Math.abs(request.pos.x - request.editorPos.x);
             var detail = {
                 isAfterLines: res.isAfterLines,
+                glyphMarginLeft: ctx.layoutInfo.glyphMarginLeft,
                 glyphMarginWidth: ctx.layoutInfo.glyphMarginWidth,
                 lineNumbersWidth: ctx.layoutInfo.lineNumbersWidth,
                 offsetX: offset

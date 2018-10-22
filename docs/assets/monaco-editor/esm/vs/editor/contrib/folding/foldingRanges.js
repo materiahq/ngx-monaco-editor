@@ -179,9 +179,6 @@ var FoldingRegion = /** @class */ (function () {
     FoldingRegion.prototype.containsLine = function (lineNumber) {
         return this.startLineNumber <= lineNumber && lineNumber <= this.endLineNumber;
     };
-    FoldingRegion.prototype.hidesLine = function (lineNumber) {
-        return this.startLineNumber < lineNumber && lineNumber <= this.endLineNumber;
-    };
     return FoldingRegion;
 }());
 export { FoldingRegion };

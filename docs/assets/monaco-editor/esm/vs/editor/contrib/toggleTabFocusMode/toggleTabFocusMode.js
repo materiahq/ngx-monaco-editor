@@ -27,7 +27,8 @@ var ToggleTabFocusModeAction = /** @class */ (function (_super) {
             kbOpts: {
                 kbExpr: null,
                 primary: 2048 /* CtrlCmd */ | 43 /* KEY_M */,
-                mac: { primary: 256 /* WinCtrl */ | 1024 /* Shift */ | 43 /* KEY_M */ }
+                mac: { primary: 256 /* WinCtrl */ | 1024 /* Shift */ | 43 /* KEY_M */ },
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }

@@ -36,8 +36,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
         while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
                 case 0: case 1: t = op; break;
                 case 4: _.label++; return { value: op[1], done: false };
@@ -57,38 +57,36 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 import { dispose } from '../../../base/common/lifecycle.js';
+import { escapeRegExpCharacters } from '../../../base/common/strings.js';
 import { TPromise } from '../../../base/common/winjs.base.js';
 import { EditorAction, EditorCommand } from '../../browser/editorExtensions.js';
-import { BulkEdit } from '../../browser/services/bulkEdit.js';
+import { IBulkEditService } from '../../browser/services/bulkEditService.js';
 import { EditorContextKeys } from '../../common/editorContextKeys.js';
-import { ITextModelService } from '../../common/services/resolverService.js';
 import { MessageController } from '../message/messageController.js';
 import * as nls from '../../../nls.js';
 import { ICommandService } from '../../../platform/commands/common/commands.js';
 import { ContextKeyExpr, IContextKeyService } from '../../../platform/contextkey/common/contextkey.js';
 import { IContextMenuService } from '../../../platform/contextview/browser/contextView.js';
-import { IFileService } from '../../../platform/files/common/files.js';
-import { optional } from '../../../platform/instantiation/common/instantiation.js';
 import { IKeybindingService } from '../../../platform/keybinding/common/keybinding.js';
 import { IMarkerService } from '../../../platform/markers/common/markers.js';
+import { IProgressService } from '../../../platform/progress/common/progress.js';
 import { CodeActionModel, SUPPORTED_CODE_ACTIONS } from './codeActionModel.js';
 import { CodeActionAutoApply, CodeActionKind } from './codeActionTrigger.js';
 import { CodeActionContextMenu } from './codeActionWidget.js';
 import { LightBulbWidget } from './lightBulbWidget.js';
-import { escapeRegExpCharacters } from '../../../base/common/strings.js';
+import { onUnexpectedError } from '../../../base/common/errors.js';
 function contextKeyForSupportedActions(kind) {
     return ContextKeyExpr.regex(SUPPORTED_CODE_ACTIONS.keys()[0], new RegExp('(\\s|^)' + escapeRegExpCharacters(kind.value) + '\\b'));
 }
 var QuickFixController = /** @class */ (function () {
-    function QuickFixController(editor, markerService, contextKeyService, _commandService, contextMenuService, _keybindingService, _textModelService, _fileService) {
+    function QuickFixController(editor, markerService, contextKeyService, progressService, contextMenuService, _commandService, _keybindingService, _bulkEditService) {
         var _this = this;
         this._commandService = _commandService;
         this._keybindingService = _keybindingService;
-        this._textModelService = _textModelService;
-        this._fileService = _fileService;
+        this._bulkEditService = _bulkEditService;
         this._disposables = [];
         this._editor = editor;
-        this._model = new CodeActionModel(this._editor, markerService, contextKeyService);
+        this._model = new CodeActionModel(this._editor, markerService, contextKeyService, progressService);
         this._codeActionContextMenu = new CodeActionContextMenu(editor, contextMenuService, function (action) { return _this._onApplyCodeAction(action); });
         this._lightBulbWidget = new LightBulbWidget(editor);
         this._updateLightBulbTitle();
@@ -103,7 +101,14 @@ var QuickFixController = /** @class */ (function () {
     };
     QuickFixController.prototype._onCodeActionsEvent = function (e) {
         var _this = this;
-        if (e && e.trigger.filter && e.trigger.filter.kind) {
+        if (this._activeRequest) {
+            this._activeRequest.cancel();
+            this._activeRequest = undefined;
+        }
+        if (e && e.actions) {
+            this._activeRequest = e.actions;
+        }
+        if (e && e.actions && e.trigger.filter && e.trigger.filter.kind) {
             // Triggered for specific scope
             // Apply if we only have one action or requested autoApply, otherwise show menu
             e.actions.then(function (fixes) {
@@ -113,7 +118,7 @@ var QuickFixController = /** @class */ (function () {
                 else {
                     _this._codeActionContextMenu.show(e.actions, e.position);
                 }
-            });
+            }).catch(onUnexpectedError);
             return;
         }
         if (e && e.trigger.type === 'manual') {
@@ -138,7 +143,9 @@ var QuickFixController = /** @class */ (function () {
         return QuickFixController.ID;
     };
     QuickFixController.prototype._handleLightBulbSelect = function (coords) {
-        this._codeActionContextMenu.show(this._lightBulbWidget.model.actions, coords);
+        if (this._lightBulbWidget.model.actions) {
+            this._codeActionContextMenu.show(this._lightBulbWidget.model.actions, coords);
+        }
     };
     QuickFixController.prototype.triggerFromEditorSelection = function (filter, autoApply) {
         return this._model.trigger({ type: 'manual', filter: filter, autoApply: autoApply });
@@ -155,37 +162,28 @@ var QuickFixController = /** @class */ (function () {
         this._lightBulbWidget.title = title;
     };
     QuickFixController.prototype._onApplyCodeAction = function (action) {
-        return __awaiter(this, void 0, TPromise, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, applyCodeAction(action, this._textModelService, this._fileService, this._commandService, this._editor)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
+        return TPromise.wrap(applyCodeAction(action, this._bulkEditService, this._commandService, this._editor));
     };
     QuickFixController.ID = 'editor.contrib.quickFixController';
     QuickFixController = __decorate([
         __param(1, IMarkerService),
         __param(2, IContextKeyService),
-        __param(3, ICommandService),
+        __param(3, IProgressService),
         __param(4, IContextMenuService),
-        __param(5, IKeybindingService),
-        __param(6, ITextModelService),
-        __param(7, optional(IFileService))
+        __param(5, ICommandService),
+        __param(6, IKeybindingService),
+        __param(7, IBulkEditService)
     ], QuickFixController);
     return QuickFixController;
 }());
 export { QuickFixController };
-export function applyCodeAction(action, textModelService, fileService, commandService, editor) {
+export function applyCodeAction(action, bulkEditService, commandService, editor) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     if (!action.edit) return [3 /*break*/, 2];
-                    return [4 /*yield*/, BulkEdit.perform(action.edit.edits, textModelService, fileService, editor)];
+                    return [4 /*yield*/, bulkEditService.apply(action.edit, { editor: editor })];
                 case 1:
                     _a.sent();
                     _a.label = 2;
@@ -222,11 +220,12 @@ var QuickFixAction = /** @class */ (function (_super) {
             precondition: ContextKeyExpr.and(EditorContextKeys.writable, EditorContextKeys.hasCodeActionsProvider),
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 2048 /* CtrlCmd */ | 84 /* US_DOT */
+                primary: 2048 /* CtrlCmd */ | 84 /* US_DOT */,
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
-    QuickFixAction.prototype.run = function (accessor, editor) {
+    QuickFixAction.prototype.run = function (_accessor, editor) {
         return showCodeActionsForEditorSelection(editor, nls.localize('editor.action.quickFix.noneMessage', "No code actions available"));
     };
     QuickFixAction.Id = 'editor.action.quickFix';
@@ -270,7 +269,7 @@ var CodeActionCommand = /** @class */ (function (_super) {
             precondition: ContextKeyExpr.and(EditorContextKeys.writable, EditorContextKeys.hasCodeActionsProvider)
         }) || this;
     }
-    CodeActionCommand.prototype.runEditorCommand = function (accessor, editor, userArg) {
+    CodeActionCommand.prototype.runEditorCommand = function (_accessor, editor, userArg) {
         var args = CodeActionCommandArgs.fromUser(userArg);
         return showCodeActionsForEditorSelection(editor, nls.localize('editor.action.quickFix.noneMessage', "No code actions available"), { kind: args.kind, includeSourceActions: true }, args.apply);
     };
@@ -288,7 +287,11 @@ var RefactorAction = /** @class */ (function (_super) {
             precondition: ContextKeyExpr.and(EditorContextKeys.writable, EditorContextKeys.hasCodeActionsProvider),
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 256 /* WinCtrl */ | 1024 /* Shift */ | 48 /* KEY_R */
+                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 48 /* KEY_R */,
+                mac: {
+                    primary: 256 /* WinCtrl */ | 1024 /* Shift */ | 48 /* KEY_R */
+                },
+                weight: 100 /* EditorContrib */
             },
             menuOpts: {
                 group: '1_modification',
@@ -297,7 +300,7 @@ var RefactorAction = /** @class */ (function (_super) {
             }
         }) || this;
     }
-    RefactorAction.prototype.run = function (accessor, editor) {
+    RefactorAction.prototype.run = function (_accessor, editor) {
         return showCodeActionsForEditorSelection(editor, nls.localize('editor.action.refactor.noneMessage', "No refactorings available"), { kind: CodeActionKind.Refactor }, CodeActionAutoApply.Never);
     };
     RefactorAction.Id = 'editor.action.refactor';
@@ -319,7 +322,7 @@ var SourceAction = /** @class */ (function (_super) {
             }
         }) || this;
     }
-    SourceAction.prototype.run = function (accessor, editor) {
+    SourceAction.prototype.run = function (_accessor, editor) {
         return showCodeActionsForEditorSelection(editor, nls.localize('editor.action.source.noneMessage', "No source actions available"), { kind: CodeActionKind.Source, includeSourceActions: true }, CodeActionAutoApply.Never);
     };
     SourceAction.Id = 'editor.action.sourceAction';
@@ -336,11 +339,12 @@ var OrganizeImportsAction = /** @class */ (function (_super) {
             precondition: ContextKeyExpr.and(EditorContextKeys.writable, contextKeyForSupportedActions(CodeActionKind.SourceOrganizeImports)),
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 1024 /* Shift */ | 512 /* Alt */ | 45 /* KEY_O */
+                primary: 1024 /* Shift */ | 512 /* Alt */ | 45 /* KEY_O */,
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
-    OrganizeImportsAction.prototype.run = function (accessor, editor) {
+    OrganizeImportsAction.prototype.run = function (_accessor, editor) {
         return showCodeActionsForEditorSelection(editor, nls.localize('editor.action.organize.noneMessage', "No organize imports action available"), { kind: CodeActionKind.SourceOrganizeImports, includeSourceActions: true }, CodeActionAutoApply.IfSingle);
     };
     OrganizeImportsAction.Id = 'editor.action.organizeImports';

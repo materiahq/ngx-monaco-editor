@@ -138,7 +138,7 @@ var RenameInputField = /** @class */ (function () {
                 }
             };
             disposeOnDone.push(_this._editor.onDidChangeCursorSelection(onCursorChanged));
-            disposeOnDone.push(_this._editor.onDidBlurEditor(function () { return _this.cancelInput(false); }));
+            disposeOnDone.push(_this._editor.onDidBlurEditorWidget(function () { return _this.cancelInput(false); }));
             _this._show();
         }, function () {
             _this._currentCancelInput(true);

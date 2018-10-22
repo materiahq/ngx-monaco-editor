@@ -94,7 +94,8 @@ var CursorWordStartLeft = /** @class */ (function (_super) {
             kbOpts: {
                 kbExpr: EditorContextKeys.textInputFocus,
                 primary: 2048 /* CtrlCmd */ | 15 /* LeftArrow */,
-                mac: { primary: 512 /* Alt */ | 15 /* LeftArrow */ }
+                mac: { primary: 512 /* Alt */ | 15 /* LeftArrow */ },
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
@@ -138,7 +139,8 @@ var CursorWordStartLeftSelect = /** @class */ (function (_super) {
             kbOpts: {
                 kbExpr: EditorContextKeys.textInputFocus,
                 primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 15 /* LeftArrow */,
-                mac: { primary: 512 /* Alt */ | 1024 /* Shift */ | 15 /* LeftArrow */ }
+                mac: { primary: 512 /* Alt */ | 1024 /* Shift */ | 15 /* LeftArrow */ },
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
@@ -195,7 +197,8 @@ var CursorWordEndRight = /** @class */ (function (_super) {
             kbOpts: {
                 kbExpr: EditorContextKeys.textInputFocus,
                 primary: 2048 /* CtrlCmd */ | 17 /* RightArrow */,
-                mac: { primary: 512 /* Alt */ | 17 /* RightArrow */ }
+                mac: { primary: 512 /* Alt */ | 17 /* RightArrow */ },
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
@@ -239,7 +242,8 @@ var CursorWordEndRightSelect = /** @class */ (function (_super) {
             kbOpts: {
                 kbExpr: EditorContextKeys.textInputFocus,
                 primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 17 /* RightArrow */,
-                mac: { primary: 512 /* Alt */ | 1024 /* Shift */ | 17 /* RightArrow */ }
+                mac: { primary: 512 /* Alt */ | 1024 /* Shift */ | 17 /* RightArrow */ },
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
@@ -353,7 +357,8 @@ var DeleteWordLeft = /** @class */ (function (_super) {
             kbOpts: {
                 kbExpr: EditorContextKeys.textInputFocus,
                 primary: 2048 /* CtrlCmd */ | 1 /* Backspace */,
-                mac: { primary: 512 /* Alt */ | 1 /* Backspace */ }
+                mac: { primary: 512 /* Alt */ | 1 /* Backspace */ },
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
@@ -397,7 +402,8 @@ var DeleteWordRight = /** @class */ (function (_super) {
             kbOpts: {
                 kbExpr: EditorContextKeys.textInputFocus,
                 primary: 2048 /* CtrlCmd */ | 20 /* Delete */,
-                mac: { primary: 512 /* Alt */ | 20 /* Delete */ }
+                mac: { primary: 512 /* Alt */ | 20 /* Delete */ },
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }

@@ -21,7 +21,6 @@ var DiffNavigator = /** @class */ (function () {
         if (options === void 0) { options = {}; }
         var _this = this;
         this._onDidUpdate = new Emitter();
-        this.onDidUpdate = this._onDidUpdate.event;
         this._editor = editor;
         this._options = objects.mixin(options, defaultOptions, false);
         this.disposed = false;
@@ -63,7 +62,7 @@ var DiffNavigator = /** @class */ (function () {
             if (this._editor.getLineChanges() !== null) {
                 this.revealFirst = false;
                 this.nextIdx = -1;
-                this.next();
+                this.next(1 /* Immediate */);
             }
         }
     };
@@ -122,7 +121,7 @@ var DiffNavigator = /** @class */ (function () {
             this.nextIdx = this.ranges.length - 1;
         }
     };
-    DiffNavigator.prototype._move = function (fwd) {
+    DiffNavigator.prototype._move = function (fwd, scrollType) {
         assert.ok(!this.disposed, 'Illegal State - diff navigator has been disposed');
         if (!this.canNavigate()) {
             return;
@@ -147,7 +146,7 @@ var DiffNavigator = /** @class */ (function () {
         try {
             var pos = info.range.getStartPosition();
             this._editor.setPosition(pos);
-            this._editor.revealPositionInCenter(pos, 0 /* Smooth */);
+            this._editor.revealPositionInCenter(pos, scrollType);
         }
         finally {
             this.ignoreSelectionChange = false;
@@ -156,11 +155,13 @@ var DiffNavigator = /** @class */ (function () {
     DiffNavigator.prototype.canNavigate = function () {
         return this.ranges && this.ranges.length > 0;
     };
-    DiffNavigator.prototype.next = function () {
-        this._move(true);
+    DiffNavigator.prototype.next = function (scrollType) {
+        if (scrollType === void 0) { scrollType = 0 /* Smooth */; }
+        this._move(true, scrollType);
     };
-    DiffNavigator.prototype.previous = function () {
-        this._move(false);
+    DiffNavigator.prototype.previous = function (scrollType) {
+        if (scrollType === void 0) { scrollType = 0 /* Smooth */; }
+        this._move(false, scrollType);
     };
     DiffNavigator.prototype.dispose = function () {
         dispose(this._disposables);

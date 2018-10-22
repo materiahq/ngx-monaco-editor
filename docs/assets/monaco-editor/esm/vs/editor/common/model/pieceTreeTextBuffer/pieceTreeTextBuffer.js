@@ -14,19 +14,6 @@ var PieceTreeTextBuffer = /** @class */ (function () {
         this._mightContainRTL = containsRTL;
         this._pieceTree = new PieceTreeBase(chunks, eol, eolNormalized);
     }
-    // #region TextBuffer
-    PieceTreeTextBuffer.prototype.equals = function (other) {
-        if (!(other instanceof PieceTreeTextBuffer)) {
-            return false;
-        }
-        if (this._BOM !== other._BOM) {
-            return false;
-        }
-        if (this.getEOL() !== other.getEOL()) {
-            return false;
-        }
-        return this._pieceTree.equal(other._pieceTree);
-    };
     PieceTreeTextBuffer.prototype.mightContainRTL = function () {
         return this._mightContainRTL;
     };
@@ -38,9 +25,6 @@ var PieceTreeTextBuffer = /** @class */ (function () {
     };
     PieceTreeTextBuffer.prototype.getEOL = function () {
         return this._pieceTree.getEOL();
-    };
-    PieceTreeTextBuffer.prototype.createSnapshot = function (preserveBOM) {
-        return this._pieceTree.createSnapshot(preserveBOM ? this._BOM : '');
     };
     PieceTreeTextBuffer.prototype.getOffsetAt = function (lineNumber, column) {
         return this._pieceTree.getOffsetAt(lineNumber, column);
@@ -91,12 +75,6 @@ var PieceTreeTextBuffer = /** @class */ (function () {
     };
     PieceTreeTextBuffer.prototype.getLineLength = function (lineNumber) {
         return this._pieceTree.getLineLength(lineNumber);
-    };
-    PieceTreeTextBuffer.prototype.getLineMinColumn = function (lineNumber) {
-        return 1;
-    };
-    PieceTreeTextBuffer.prototype.getLineMaxColumn = function (lineNumber) {
-        return this.getLineLength(lineNumber) + 1;
     };
     PieceTreeTextBuffer.prototype.getLineFirstNonWhitespaceColumn = function (lineNumber) {
         var result = strings.firstNonWhitespaceIndex(this.getLineContent(lineNumber));
@@ -340,12 +318,6 @@ var PieceTreeTextBuffer = /** @class */ (function () {
     };
     PieceTreeTextBuffer.prototype.findMatchesLineByLine = function (searchRange, searchData, captureMatches, limitResultCount) {
         return this._pieceTree.findMatchesLineByLine(searchRange, searchData, captureMatches, limitResultCount);
-    };
-    // #endregion
-    // #region helper
-    // testing purpose.
-    PieceTreeTextBuffer.prototype.getPieceTree = function () {
-        return this._pieceTree;
     };
     /**
      * Assumes `operations` are validated and sorted ascending

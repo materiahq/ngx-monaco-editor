@@ -14,7 +14,6 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import './builder.css';
-import { TPromise } from '../common/winjs.base.js';
 import * as types from '../common/types.js';
 import { dispose } from '../common/lifecycle.js';
 import * as strings from '../common/strings.js';
@@ -22,7 +21,6 @@ import * as assert from '../common/assert.js';
 import * as DOM from './dom.js';
 // --- Implementation starts here
 var MS_DATA_KEY = '_msDataKey';
-var DATA_BINDING_ID = '__$binding';
 var LISTENER_BINDING_ID = '__$listeners';
 var VISIBILITY_BINDING_ID = '__$visibility';
 function data(element) {
@@ -43,16 +41,9 @@ var Builder = /** @class */ (function () {
         this.container = element;
         this.currentElement = element;
         this.createdElements = [];
-        this.toUnbind = {};
-        this.captureToUnbind = {};
+        this.toDispose = {};
+        this.captureToDispose = {};
     }
-    /**
-     *  Returns a new builder that lets the current HTML Element of this builder be the container
-     *  for future additions on the builder.
-     */
-    Builder.prototype.asContainer = function () {
-        return withBuilder(this, this.offdom);
-    };
     /**
      *  Clones the builder providing the same properties as this one.
      */
@@ -60,8 +51,8 @@ var Builder = /** @class */ (function () {
         var builder = new Builder(this.container, this.offdom);
         builder.currentElement = this.currentElement;
         builder.createdElements = this.createdElements;
-        builder.captureToUnbind = this.captureToUnbind;
-        builder.toUnbind = this.toUnbind;
+        builder.captureToDispose = this.captureToDispose;
+        builder.toDispose = this.toDispose;
         return builder;
     };
     Builder.prototype.build = function (container, index) {
@@ -117,35 +108,11 @@ var Builder = /** @class */ (function () {
         }
         return this;
     };
-    Builder.prototype.append = function (child, index) {
-        assert.ok(child, 'Need a child to append');
-        if (DOM.isHTMLElement(child)) {
-            child = withElement(child);
-        }
-        assert.ok(child instanceof Builder || child instanceof MultiBuilder, 'Need a child to append');
-        child.appendTo(this, index);
-        return this;
-    };
-    /**
-     *  Removes the current element of this builder from its parent node.
-     */
-    Builder.prototype.offDOM = function () {
-        if (this.currentElement.parentNode) {
-            this.currentElement.parentNode.removeChild(this.currentElement);
-        }
-        return this;
-    };
     /**
      *  Returns the HTML Element the builder is currently active on.
      */
     Builder.prototype.getHTMLElement = function () {
         return this.currentElement;
-    };
-    /**
-     *  Returns the HTML Element the builder is building in.
-     */
-    Builder.prototype.getContainer = function () {
-        return this.container;
     };
     // HTML Elements
     /**
@@ -158,72 +125,6 @@ var Builder = /** @class */ (function () {
      */
     Builder.prototype.div = function (attributes, fn) {
         return this.doElement('div', attributes, fn);
-    };
-    /**
-     *  Creates a new element of this kind as child of the current element or parent.
-     *  Accepts an object literal as first parameter that can be used to describe the
-     *  attributes of the element.
-     *  Accepts a function as second parameter that can be used to create child elements
-     *  of the element. The function will be called with a new builder created with the
-     *  provided element.
-     */
-    Builder.prototype.p = function (attributes, fn) {
-        return this.doElement('p', attributes, fn);
-    };
-    /**
-     *  Creates a new element of this kind as child of the current element or parent.
-     *  Accepts an object literal as first parameter that can be used to describe the
-     *  attributes of the element.
-     *  Accepts a function as second parameter that can be used to create child elements
-     *  of the element. The function will be called with a new builder created with the
-     *  provided element.
-     */
-    Builder.prototype.ul = function (attributes, fn) {
-        return this.doElement('ul', attributes, fn);
-    };
-    /**
-     *  Creates a new element of this kind as child of the current element or parent.
-     *  Accepts an object literal as first parameter that can be used to describe the
-     *  attributes of the element.
-     *  Accepts a function as second parameter that can be used to create child elements
-     *  of the element. The function will be called with a new builder created with the
-     *  provided element.
-     */
-    Builder.prototype.li = function (attributes, fn) {
-        return this.doElement('li', attributes, fn);
-    };
-    /**
-     *  Creates a new element of this kind as child of the current element or parent.
-     *  Accepts an object literal as first parameter that can be used to describe the
-     *  attributes of the element.
-     *  Accepts a function as second parameter that can be used to create child elements
-     *  of the element. The function will be called with a new builder created with the
-     *  provided element.
-     */
-    Builder.prototype.span = function (attributes, fn) {
-        return this.doElement('span', attributes, fn);
-    };
-    /**
-     *  Creates a new element of this kind as child of the current element or parent.
-     *  Accepts an object literal as first parameter that can be used to describe the
-     *  attributes of the element.
-     *  Accepts a function as second parameter that can be used to create child elements
-     *  of the element. The function will be called with a new builder created with the
-     *  provided element.
-     */
-    Builder.prototype.img = function (attributes, fn) {
-        return this.doElement('img', attributes, fn);
-    };
-    /**
-     *  Creates a new element of this kind as child of the current element or parent.
-     *  Accepts an object literal as first parameter that can be used to describe the
-     *  attributes of the element.
-     *  Accepts a function as second parameter that can be used to create child elements
-     *  of the element. The function will be called with a new builder created with the
-     *  provided element.
-     */
-    Builder.prototype.a = function (attributes, fn) {
-        return this.doElement('a', attributes, fn);
     };
     /**
      *  Creates a new element of given tag name as child of the current element or parent.
@@ -264,25 +165,18 @@ var Builder = /** @class */ (function () {
         return this;
     };
     /**
-     *  Calls focus() on the current HTML element;
-     */
-    Builder.prototype.domFocus = function () {
-        this.currentElement.focus();
-        return this;
-    };
-    /**
      *  Calls blur() on the current HTML element;
      */
     Builder.prototype.domBlur = function () {
         this.currentElement.blur();
         return this;
     };
-    Builder.prototype.on = function (arg1, fn, listenerToUnbindContainer, useCapture) {
+    Builder.prototype.on = function (arg1, fn, listenerToDisposeContainer, useCapture) {
         var _this = this;
         // Event Type Array
         if (types.isArray(arg1)) {
             arg1.forEach(function (type) {
-                _this.on(type, fn, listenerToUnbindContainer, useCapture);
+                _this.on(type, fn, listenerToDisposeContainer, useCapture);
             });
         }
         // Single Event Type
@@ -294,24 +188,24 @@ var Builder = /** @class */ (function () {
             }, useCapture || false);
             // Remember for off() use
             if (useCapture) {
-                if (!this.captureToUnbind[type]) {
-                    this.captureToUnbind[type] = [];
+                if (!this.captureToDispose[type]) {
+                    this.captureToDispose[type] = [];
                 }
-                this.captureToUnbind[type].push(unbind_1);
+                this.captureToDispose[type].push(unbind_1);
             }
             else {
-                if (!this.toUnbind[type]) {
-                    this.toUnbind[type] = [];
+                if (!this.toDispose[type]) {
+                    this.toDispose[type] = [];
                 }
-                this.toUnbind[type].push(unbind_1);
+                this.toDispose[type].push(unbind_1);
             }
             // Bind to Element
             var listenerBinding = this.getProperty(LISTENER_BINDING_ID, []);
             listenerBinding.push(unbind_1);
             this.setProperty(LISTENER_BINDING_ID, listenerBinding);
             // Add to Array if passed in
-            if (listenerToUnbindContainer && types.isArray(listenerToUnbindContainer)) {
-                listenerToUnbindContainer.push(unbind_1);
+            if (listenerToDisposeContainer && types.isArray(listenerToDisposeContainer)) {
+                listenerToDisposeContainer.push(unbind_1);
             }
         }
         return this;
@@ -328,37 +222,14 @@ var Builder = /** @class */ (function () {
         else {
             var type = arg1;
             if (useCapture) {
-                if (this.captureToUnbind[type]) {
-                    this.captureToUnbind[type] = dispose(this.captureToUnbind[type]);
+                if (this.captureToDispose[type]) {
+                    this.captureToDispose[type] = dispose(this.captureToDispose[type]);
                 }
             }
             else {
-                if (this.toUnbind[type]) {
-                    this.toUnbind[type] = dispose(this.toUnbind[type]);
+                if (this.toDispose[type]) {
+                    this.toDispose[type] = dispose(this.toDispose[type]);
                 }
-            }
-        }
-        return this;
-    };
-    Builder.prototype.once = function (arg1, fn, listenerToUnbindContainer, useCapture) {
-        var _this = this;
-        // Event Type Array
-        if (types.isArray(arg1)) {
-            arg1.forEach(function (type) {
-                _this.once(type, fn);
-            });
-        }
-        // Single Event Type
-        else {
-            var type = arg1;
-            // Add Listener
-            var unbind_2 = DOM.addDisposableListener(this.currentElement, type, function (e) {
-                fn(e, _this, unbind_2); // Pass in Builder as Second Argument
-                unbind_2.dispose();
-            }, useCapture || false);
-            // Add to Array if passed in
-            if (listenerToUnbindContainer && types.isArray(listenerToUnbindContainer)) {
-                listenerToUnbindContainer.push(unbind_2);
             }
         }
         return this;
@@ -402,47 +273,6 @@ var Builder = /** @class */ (function () {
         else {
             this.currentElement.setAttribute(prop, value);
         }
-    };
-    /**
-     * Removes an attribute by the given name.
-     */
-    Builder.prototype.removeAttribute = function (prop) {
-        this.currentElement.removeAttribute(prop);
-    };
-    /**
-     *  Sets the id attribute to the value provided for the current HTML element of the builder.
-     */
-    Builder.prototype.id = function (id) {
-        this.currentElement.setAttribute('id', id);
-        return this;
-    };
-    /**
-     *  Sets the title attribute to the value provided for the current HTML element of the builder.
-     */
-    Builder.prototype.title = function (title) {
-        this.currentElement.setAttribute('title', title);
-        return this;
-    };
-    /**
-     *  Sets the type attribute to the value provided for the current HTML element of the builder.
-     */
-    Builder.prototype.type = function (type) {
-        this.currentElement.setAttribute('type', type);
-        return this;
-    };
-    /**
-     *  Sets the value attribute to the value provided for the current HTML element of the builder.
-     */
-    Builder.prototype.value = function (value) {
-        this.currentElement.setAttribute('value', value);
-        return this;
-    };
-    /**
-     *  Sets the tabindex attribute to the value provided for the current HTML element of the builder.
-     */
-    Builder.prototype.tabindex = function (index) {
-        this.currentElement.setAttribute('tabindex', index.toString());
-        return this;
     };
     Builder.prototype.style = function (firstP, secondP) {
         // Apply Object Literal to Styles of Element
@@ -493,12 +323,6 @@ var Builder = /** @class */ (function () {
             key = 'cssFloat';
         }
         return key;
-    };
-    /**
-     *  Returns the computed CSS style for the current HTML element of the builder.
-     */
-    Builder.prototype.getComputedStyle = function () {
-        return DOM.getComputedStyle(this.currentElement);
     };
     /**
      *  Adds the variable list of arguments as class names to the current HTML element of the builder.
@@ -558,102 +382,6 @@ var Builder = /** @class */ (function () {
         return this;
     };
     /**
-     *  Adds or removes the provided className for the current HTML element of the builder.
-     */
-    Builder.prototype.toggleClass = function (className) {
-        if (this.hasClass(className)) {
-            this.removeClass(className);
-        }
-        else {
-            this.addClass(className);
-        }
-        return this;
-    };
-    /**
-     *  Sets the CSS property color.
-     */
-    Builder.prototype.color = function (color) {
-        this.currentElement.style.color = color;
-        return this;
-    };
-    Builder.prototype.padding = function (top, right, bottom, left) {
-        if (types.isString(top) && top.indexOf(' ') >= 0) {
-            return this.padding.apply(this, top.split(' '));
-        }
-        if (!types.isUndefinedOrNull(top)) {
-            this.currentElement.style.paddingTop = this.toPixel(top);
-        }
-        if (!types.isUndefinedOrNull(right)) {
-            this.currentElement.style.paddingRight = this.toPixel(right);
-        }
-        if (!types.isUndefinedOrNull(bottom)) {
-            this.currentElement.style.paddingBottom = this.toPixel(bottom);
-        }
-        if (!types.isUndefinedOrNull(left)) {
-            this.currentElement.style.paddingLeft = this.toPixel(left);
-        }
-        return this;
-    };
-    Builder.prototype.margin = function (top, right, bottom, left) {
-        if (types.isString(top) && top.indexOf(' ') >= 0) {
-            return this.margin.apply(this, top.split(' '));
-        }
-        if (!types.isUndefinedOrNull(top)) {
-            this.currentElement.style.marginTop = this.toPixel(top);
-        }
-        if (!types.isUndefinedOrNull(right)) {
-            this.currentElement.style.marginRight = this.toPixel(right);
-        }
-        if (!types.isUndefinedOrNull(bottom)) {
-            this.currentElement.style.marginBottom = this.toPixel(bottom);
-        }
-        if (!types.isUndefinedOrNull(left)) {
-            this.currentElement.style.marginLeft = this.toPixel(left);
-        }
-        return this;
-    };
-    Builder.prototype.position = function (top, right, bottom, left, position) {
-        if (types.isString(top) && top.indexOf(' ') >= 0) {
-            return this.position.apply(this, top.split(' '));
-        }
-        if (!types.isUndefinedOrNull(top)) {
-            this.currentElement.style.top = this.toPixel(top);
-        }
-        if (!types.isUndefinedOrNull(right)) {
-            this.currentElement.style.right = this.toPixel(right);
-        }
-        if (!types.isUndefinedOrNull(bottom)) {
-            this.currentElement.style.bottom = this.toPixel(bottom);
-        }
-        if (!types.isUndefinedOrNull(left)) {
-            this.currentElement.style.left = this.toPixel(left);
-        }
-        if (!position) {
-            position = 'absolute';
-        }
-        this.currentElement.style.position = position;
-        return this;
-    };
-    Builder.prototype.size = function (width, height) {
-        if (types.isString(width) && width.indexOf(' ') >= 0) {
-            return this.size.apply(this, width.split(' '));
-        }
-        if (!types.isUndefinedOrNull(width)) {
-            this.currentElement.style.width = this.toPixel(width);
-        }
-        if (!types.isUndefinedOrNull(height)) {
-            this.currentElement.style.height = this.toPixel(height);
-        }
-        return this;
-    };
-    /**
-     *  Sets the CSS property display.
-     */
-    Builder.prototype.display = function (display) {
-        this.currentElement.style.display = display;
-        return this;
-    };
-    /**
      *  Shows the current element of the builder.
      */
     Builder.prototype.show = function () {
@@ -662,26 +390,7 @@ var Builder = /** @class */ (function () {
         }
         this.attr('aria-hidden', 'false');
         // Cancel any pending showDelayed() invocation
-        this.cancelVisibilityPromise();
-        return this;
-    };
-    /**
-     *  Shows the current builder element after the provided delay. If the builder
-     *  was set to hidden using the hide() method before this method executed, the
-     *  function will return without showing the current element. This is useful to
-     *  only show the element when a specific delay is reached (e.g. for a long running
-     *  operation.
-     */
-    Builder.prototype.showDelayed = function (delay) {
-        var _this = this;
-        // Cancel any pending showDelayed() invocation
-        this.cancelVisibilityPromise();
-        var promise = TPromise.timeout(delay);
-        this.setProperty(VISIBILITY_BINDING_ID, promise);
-        promise.done(function () {
-            _this.removeProperty(VISIBILITY_BINDING_ID);
-            _this.show();
-        });
+        this.cancelVisibilityTimeout();
         return this;
     };
     /**
@@ -693,27 +402,15 @@ var Builder = /** @class */ (function () {
         }
         this.attr('aria-hidden', 'true');
         // Cancel any pending showDelayed() invocation
-        this.cancelVisibilityPromise();
+        this.cancelVisibilityTimeout();
         return this;
     };
-    /**
-     *  Returns true if the current element of the builder is hidden.
-     */
-    Builder.prototype.isHidden = function () {
-        return this.hasClass('monaco-builder-hidden') || this.currentElement.style.display === 'none';
-    };
-    Builder.prototype.cancelVisibilityPromise = function () {
-        var promise = this.getProperty(VISIBILITY_BINDING_ID);
-        if (promise) {
-            promise.cancel();
+    Builder.prototype.cancelVisibilityTimeout = function () {
+        var visibilityDisposable = this.getProperty(VISIBILITY_BINDING_ID);
+        if (visibilityDisposable) {
+            visibilityDisposable.dispose();
             this.removeProperty(VISIBILITY_BINDING_ID);
         }
-    };
-    Builder.prototype.toPixel = function (obj) {
-        if (obj.toString().indexOf('px') === -1) {
-            return obj.toString() + 'px';
-        }
-        return obj;
     };
     /**
      *  Sets the innerHTML attribute.
@@ -775,14 +472,6 @@ var Builder = /** @class */ (function () {
             delete data(this.currentElement)[key];
         }
         return this;
-    };
-    /**
-     * Returns a new builder with the child at the given index.
-     */
-    Builder.prototype.child = function (index) {
-        if (index === void 0) { index = 0; }
-        var children = this.currentElement.children;
-        return withElement(children.item(index));
     };
     /**
      * Recurse through all descendant nodes and remove their data binding.
@@ -857,14 +546,14 @@ var Builder = /** @class */ (function () {
             }
         }
         var type;
-        for (type in this.toUnbind) {
-            if (this.toUnbind.hasOwnProperty(type) && types.isArray(this.toUnbind[type])) {
-                this.toUnbind[type] = dispose(this.toUnbind[type]);
+        for (type in this.toDispose) {
+            if (this.toDispose.hasOwnProperty(type) && types.isArray(this.toDispose[type])) {
+                this.toDispose[type] = dispose(this.toDispose[type]);
             }
         }
-        for (type in this.captureToUnbind) {
-            if (this.captureToUnbind.hasOwnProperty(type) && types.isArray(this.captureToUnbind[type])) {
-                this.captureToUnbind[type] = dispose(this.captureToUnbind[type]);
+        for (type in this.captureToDispose) {
+            if (this.captureToDispose.hasOwnProperty(type) && types.isArray(this.captureToDispose[type])) {
+                this.captureToDispose[type] = dispose(this.captureToDispose[type]);
             }
         }
         // Nullify fields
@@ -872,8 +561,8 @@ var Builder = /** @class */ (function () {
         this.container = null;
         this.offdom = null;
         this.createdElements = null;
-        this.captureToUnbind = null;
-        this.toUnbind = null;
+        this.captureToDispose = null;
+        this.toDispose = null;
     };
     /**
      *  Removes the current HTML element and all its children from its parent and unbinds
@@ -1018,13 +707,6 @@ export function getPropertyFromElement(element, key, fallback) {
         }
     }
     return fallback;
-}
-/**
- *  Adds the provided object as property to the given element. Call getBinding()
- *  to retrieve it again.
- */
-export function bindElement(element, object) {
-    setPropertyOnElement(element, DATA_BINDING_ID, object);
 }
 var SELECTOR_REGEX = /([\w\-]+)?(#([\w\-]+))?((.([\w\-]+))*)/;
 export var $ = function (arg) {

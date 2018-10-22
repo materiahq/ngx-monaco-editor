@@ -15,7 +15,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 import { Emitter } from '../../../base/common/event.js';
 import { dispose } from '../../../base/common/lifecycle.js';
 import { IContextKeyService } from '../../contextkey/common/contextkey.js';
-import { MenuRegistry, MenuItemAction } from './actions.js';
+import { MenuRegistry, MenuItemAction, SubmenuItemAction, isIMenuItem } from './actions.js';
 import { ICommandService } from '../../commands/common/commands.js';
 var Menu = /** @class */ (function () {
     function Menu(id, startupSignal, _commandService, _contextKeyService) {
@@ -55,13 +55,6 @@ var Menu = /** @class */ (function () {
         this._disposables = dispose(this._disposables);
         this._onDidChange.dispose();
     };
-    Object.defineProperty(Menu.prototype, "onDidChange", {
-        get: function () {
-            return this._onDidChange.event;
-        },
-        enumerable: true,
-        configurable: true
-    });
     Menu.prototype.getActions = function (options) {
         var result = [];
         for (var _i = 0, _a = this._menuGroups; _i < _a.length; _i++) {
@@ -71,7 +64,7 @@ var Menu = /** @class */ (function () {
             for (var _b = 0, items_1 = items; _b < items_1.length; _b++) {
                 var item = items_1[_b];
                 if (this._contextKeyService.contextMatchesRules(item.when)) {
-                    var action = new MenuItemAction(item.command, item.alt, options, this._contextKeyService, this._commandService);
+                    var action = isIMenuItem(item) ? new MenuItemAction(item.command, item.alt, options, this._contextKeyService, this._commandService) : new SubmenuItemAction(item);
                     action.order = item.order; //TODO@Ben order is menu item property, not an action property
                     activeActions.push(action);
                 }

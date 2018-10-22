@@ -92,12 +92,12 @@ var DiffReview = /** @class */ (function (_super) {
             }
             _this._render();
         }));
-        _this._register(diffEditor.getOriginalEditor().onDidFocusEditor(function () {
+        _this._register(diffEditor.getOriginalEditor().onDidFocusEditorWidget(function () {
             if (_this._isVisible) {
                 _this.hide();
             }
         }));
-        _this._register(diffEditor.getModifiedEditor().onDidFocusEditor(function () {
+        _this._register(diffEditor.getModifiedEditor().onDidFocusEditorWidget(function () {
             if (_this._isVisible) {
                 _this.hide();
             }
@@ -620,7 +620,7 @@ var DiffReview = /** @class */ (function (_super) {
         var lineTokens = new LineTokens(tokens, lineContent);
         var isBasicASCII = ViewLineRenderingData.isBasicASCII(lineContent, model.mightContainNonBasicASCII());
         var containsRTL = ViewLineRenderingData.containsRTL(lineContent, isBasicASCII, model.mightContainRTL());
-        var r = renderViewLine(new RenderLineInput((config.fontInfo.isMonospace && !config.viewInfo.disableMonospaceOptimizations), lineContent, isBasicASCII, containsRTL, 0, lineTokens, [], tabSize, config.fontInfo.spaceWidth, config.viewInfo.stopRenderingLineAfter, config.viewInfo.renderWhitespace, config.viewInfo.renderControlCharacters, config.viewInfo.fontLigatures));
+        var r = renderViewLine(new RenderLineInput((config.fontInfo.isMonospace && !config.viewInfo.disableMonospaceOptimizations), lineContent, false, isBasicASCII, containsRTL, 0, lineTokens, [], tabSize, config.fontInfo.spaceWidth, config.viewInfo.stopRenderingLineAfter, config.viewInfo.renderWhitespace, config.viewInfo.renderControlCharacters, config.viewInfo.fontLigatures));
         return r.html;
     };
     return DiffReview;
@@ -647,7 +647,8 @@ var DiffReviewNext = /** @class */ (function (_super) {
             precondition: ContextKeyExpr.has('isInDiffEditor'),
             kbOpts: {
                 kbExpr: null,
-                primary: 65 /* F7 */
+                primary: 65 /* F7 */,
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
@@ -669,7 +670,8 @@ var DiffReviewPrev = /** @class */ (function (_super) {
             precondition: ContextKeyExpr.has('isInDiffEditor'),
             kbOpts: {
                 kbExpr: null,
-                primary: 1024 /* Shift */ | 65 /* F7 */
+                primary: 1024 /* Shift */ | 65 /* F7 */,
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }

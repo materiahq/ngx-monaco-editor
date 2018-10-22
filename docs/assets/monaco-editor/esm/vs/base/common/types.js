@@ -32,12 +32,6 @@ export function isString(str) {
     return false;
 }
 /**
- * @returns whether the provided parameter is a JavaScript Array and each element in the array is a string.
- */
-export function isStringArray(value) {
-    return isArray(value) && value.every(function (elem) { return isString(elem); });
-}
-/**
  *
  * @returns whether the provided parameter is of type `object` but **not**
  *	`null`, an `array`, a `regexp`, nor a `date`.
@@ -100,16 +94,6 @@ export function isEmptyObject(obj) {
  */
 export function isFunction(obj) {
     return typeof obj === _typeof.function;
-}
-/**
- * @returns whether the provided parameters is are JavaScript Function or not.
- */
-export function areFunctions() {
-    var objects = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        objects[_i] = arguments[_i];
-    }
-    return objects && objects.length > 0 && objects.every(isFunction);
 }
 export function validateConstraints(args, constraints) {
     var len = Math.min(args.length, constraints.length);

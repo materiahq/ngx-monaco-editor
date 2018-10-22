@@ -75,9 +75,13 @@ var QuickCommandAction = /** @class */ (function (_super) {
             precondition: null,
             kbOpts: {
                 kbExpr: EditorContextKeys.focus,
-                primary: (browser.isIE ? 512 /* Alt */ | 59 /* F1 */ : 59 /* F1 */)
+                primary: (browser.isIE ? 512 /* Alt */ | 59 /* F1 */ : 59 /* F1 */),
+                weight: 100 /* EditorContrib */
             },
-            menuOpts: {}
+            menuOpts: {
+                group: 'z_commands',
+                order: 1
+            }
         }) || this;
     }
     QuickCommandAction.prototype.run = function (accessor, editor) {

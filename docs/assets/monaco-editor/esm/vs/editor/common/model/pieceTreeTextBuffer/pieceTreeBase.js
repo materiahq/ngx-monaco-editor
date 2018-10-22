@@ -115,48 +115,6 @@ var StringBuffer = /** @class */ (function () {
     return StringBuffer;
 }());
 export { StringBuffer };
-/**
- * Readonly snapshot for piece tree.
- * In a real multiple thread environment, to make snapshot reading always work correctly, we need to
- * 1. Make TreeNode.piece immutable, then reading and writing can run in parallel.
- * 2. TreeNode/Buffers normalization should not happen during snapshot reading.
- */
-var PieceTreeSnapshot = /** @class */ (function () {
-    function PieceTreeSnapshot(tree, BOM) {
-        var _this = this;
-        this._pieces = [];
-        this._tree = tree;
-        this._BOM = BOM;
-        this._index = 0;
-        if (tree.root !== SENTINEL) {
-            tree.iterate(tree.root, function (node) {
-                if (node !== SENTINEL) {
-                    _this._pieces.push(node.piece);
-                }
-                return true;
-            });
-        }
-    }
-    PieceTreeSnapshot.prototype.read = function () {
-        if (this._pieces.length === 0) {
-            if (this._index === 0) {
-                this._index++;
-                return this._BOM;
-            }
-            else {
-                return null;
-            }
-        }
-        if (this._index > this._pieces.length - 1) {
-            return null;
-        }
-        if (this._index === 0) {
-            return this._BOM + this._tree.getPieceContent(this._pieces[this._index++]);
-        }
-        return this._tree.getPieceContent(this._pieces[this._index++]);
-    };
-    return PieceTreeSnapshot;
-}());
 var PieceTreeSearchCache = /** @class */ (function () {
     function PieceTreeSearchCache(limit) {
         this._limit = limit;
@@ -275,31 +233,6 @@ var PieceTreeBase = /** @class */ (function () {
         this._EOL = newEOL;
         this._EOLLength = this._EOL.length;
         this.normalizeEOL(newEOL);
-    };
-    PieceTreeBase.prototype.createSnapshot = function (BOM) {
-        return new PieceTreeSnapshot(this, BOM);
-    };
-    PieceTreeBase.prototype.equal = function (other) {
-        var _this = this;
-        if (this.getLength() !== other.getLength()) {
-            return false;
-        }
-        if (this.getLineCount() !== other.getLineCount()) {
-            return false;
-        }
-        var offset = 0;
-        var ret = this.iterate(this.root, function (node) {
-            if (node === SENTINEL) {
-                return true;
-            }
-            var str = _this.getNodeContent(node);
-            var len = str.length;
-            var startPosition = other.nodeAt(offset);
-            var endPosition = other.nodeAt(offset + len);
-            var val = other.getValueInRange2(startPosition, endPosition);
-            return str === val;
-        });
-        return ret;
     };
     PieceTreeBase.prototype.getOffsetAt = function (lineNumber, column) {
         var leftLen = 0; // inorder
@@ -890,9 +823,6 @@ var PieceTreeBase = /** @class */ (function () {
         this._lastChangeBufferPos = endPos;
         return [newPiece];
     };
-    PieceTreeBase.prototype.getLinesRawContent = function () {
-        return this.getContentOfSubTree(this.root);
-    };
     PieceTreeBase.prototype.getLineRawContent = function (lineNumber, endOffset) {
         if (endOffset === void 0) { endOffset = 0; }
         var x = this.root;
@@ -1330,13 +1260,6 @@ var PieceTreeBase = /** @class */ (function () {
         var startOffset = this.offsetInBuffer(piece.bufferIndex, piece.start);
         var endOffset = this.offsetInBuffer(piece.bufferIndex, piece.end);
         currentContent = buffer.buffer.substring(startOffset, endOffset);
-        return currentContent;
-    };
-    PieceTreeBase.prototype.getPieceContent = function (piece) {
-        var buffer = this._buffers[piece.bufferIndex];
-        var startOffset = this.offsetInBuffer(piece.bufferIndex, piece.start);
-        var endOffset = this.offsetInBuffer(piece.bufferIndex, piece.end);
-        var currentContent = buffer.buffer.substring(startOffset, endOffset);
         return currentContent;
     };
     /**

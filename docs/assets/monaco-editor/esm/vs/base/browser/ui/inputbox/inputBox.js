@@ -25,6 +25,7 @@ import { Emitter } from '../../../common/event.js';
 import { Widget } from '../widget.js';
 import { Color } from '../../../common/color.js';
 import { mixin } from '../../../common/objects.js';
+import { HistoryNavigator } from '../../../common/history.js';
 var $ = dom.$;
 export var MessageType;
 (function (MessageType) {
@@ -50,7 +51,6 @@ var InputBox = /** @class */ (function (_super) {
         _this._onDidChange = _this._register(new Emitter());
         _this.onDidChange = _this._onDidChange.event;
         _this._onDidHeightChange = _this._register(new Emitter());
-        _this.onDidHeightChange = _this._onDidHeightChange.event;
         _this.contextViewProvider = contextViewProvider;
         _this.options = options || Object.create(null);
         mixin(_this.options, defaultOpts, false);
@@ -159,13 +159,6 @@ var InputBox = /** @class */ (function (_super) {
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(InputBox.prototype, "height", {
-        get: function () {
-            return this.cachedHeight === null ? dom.getTotalHeight(this.element) : this.cachedHeight;
-        },
-        enumerable: true,
-        configurable: true
-    });
     InputBox.prototype.focus = function () {
         this.input.focus();
     };
@@ -240,9 +233,6 @@ var InputBox = /** @class */ (function (_super) {
         dom.addClass(this.element, 'idle');
         this._hideMessage();
         this.applyStyles();
-    };
-    InputBox.prototype.isInputValid = function () {
-        return !!this.validation && !this.validation(this.value);
     };
     InputBox.prototype.validate = function () {
         var errorMsg = null;
@@ -382,3 +372,58 @@ var InputBox = /** @class */ (function (_super) {
     return InputBox;
 }(Widget));
 export { InputBox };
+var HistoryInputBox = /** @class */ (function (_super) {
+    __extends(HistoryInputBox, _super);
+    function HistoryInputBox(container, contextViewProvider, options) {
+        var _this = _super.call(this, container, contextViewProvider, options) || this;
+        _this.history = new HistoryNavigator(options.history, 100);
+        return _this;
+    }
+    HistoryInputBox.prototype.addToHistory = function () {
+        if (this.value && this.value !== this.getCurrentValue()) {
+            this.history.add(this.value);
+        }
+    };
+    HistoryInputBox.prototype.showNextValue = function () {
+        if (!this.history.has(this.value)) {
+            this.addToHistory();
+        }
+        var next = this.getNextValue();
+        if (next) {
+            next = next === this.value ? this.getNextValue() : next;
+        }
+        if (next) {
+            this.value = next;
+            aria.status(this.value);
+        }
+    };
+    HistoryInputBox.prototype.showPreviousValue = function () {
+        if (!this.history.has(this.value)) {
+            this.addToHistory();
+        }
+        var previous = this.getPreviousValue();
+        if (previous) {
+            previous = previous === this.value ? this.getPreviousValue() : previous;
+        }
+        if (previous) {
+            this.value = previous;
+            aria.status(this.value);
+        }
+    };
+    HistoryInputBox.prototype.getCurrentValue = function () {
+        var currentValue = this.history.current();
+        if (!currentValue) {
+            currentValue = this.history.last();
+            this.history.next();
+        }
+        return currentValue;
+    };
+    HistoryInputBox.prototype.getPreviousValue = function () {
+        return this.history.previous() || this.history.first();
+    };
+    HistoryInputBox.prototype.getNextValue = function () {
+        return this.history.next() || this.history.last();
+    };
+    return HistoryInputBox;
+}(InputBox));
+export { HistoryInputBox };

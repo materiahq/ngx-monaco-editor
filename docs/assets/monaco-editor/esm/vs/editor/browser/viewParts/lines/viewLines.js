@@ -214,6 +214,7 @@ var ViewLines = /** @class */ (function (_super) {
         return this._visibleLines.onTokensChanged(e);
     };
     ViewLines.prototype.onZonesChanged = function (e) {
+        this._context.viewLayout.onMaxLineWidthChanged(this._maxLineWidth);
         return this._visibleLines.onZonesChanged(e);
     };
     ViewLines.prototype.onThemeChanged = function (e) {

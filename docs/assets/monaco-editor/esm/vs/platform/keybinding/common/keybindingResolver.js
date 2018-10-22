@@ -3,9 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 'use strict';
-import { isFalsyOrEmpty } from '../../../base/common/arrays.js';
 import { ContextKeyAndExpr } from '../../contextkey/common/contextkey.js';
-import { CommandsRegistry } from '../../commands/common/commands.js';
 var KeybindingResolver = /** @class */ (function () {
     function KeybindingResolver(defaultKeybindings, overrides) {
         this._defaultKeybindings = defaultKeybindings;
@@ -153,27 +151,6 @@ var KeybindingResolver = /** @class */ (function () {
         }
         return true;
     };
-    KeybindingResolver.prototype.getDefaultBoundCommands = function () {
-        return this._defaultBoundCommands;
-    };
-    KeybindingResolver.prototype.getDefaultKeybindings = function () {
-        return this._defaultKeybindings;
-    };
-    KeybindingResolver.prototype.getKeybindings = function () {
-        return this._keybindings;
-    };
-    KeybindingResolver.prototype.lookupKeybindings = function (commandId) {
-        var items = this._lookupMap.get(commandId);
-        if (typeof items === 'undefined' || items.length === 0) {
-            return [];
-        }
-        // Reverse to get the most specific item first
-        var result = [], resultLen = 0;
-        for (var i = items.length - 1; i >= 0; i--) {
-            result[resultLen++] = items[i];
-        }
-        return result;
-    };
     KeybindingResolver.prototype.lookupPrimaryKeybinding = function (commandId) {
         var items = this._lookupMap.get(commandId);
         if (typeof items === 'undefined' || items.length === 0) {
@@ -240,24 +217,6 @@ var KeybindingResolver = /** @class */ (function () {
             return true;
         }
         return rules.evaluate(context);
-    };
-    KeybindingResolver.getAllUnboundCommands = function (boundCommands) {
-        var commands = CommandsRegistry.getCommands();
-        var unboundCommands = [];
-        for (var id in commands) {
-            if (id[0] === '_' || id.indexOf('vscode.') === 0) { // private command
-                continue;
-            }
-            if (typeof commands[id].description === 'object'
-                && !isFalsyOrEmpty(commands[id].description.args)) { // command with args
-                continue;
-            }
-            if (boundCommands.get(id) === true) {
-                continue;
-            }
-            unboundCommands.push(id);
-        }
-        return unboundCommands;
     };
     return KeybindingResolver;
 }());

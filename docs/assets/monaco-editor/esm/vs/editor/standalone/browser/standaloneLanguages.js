@@ -10,7 +10,7 @@ import * as modes from '../../common/modes.js';
 import { IndentAction } from '../../common/modes/languageConfiguration.js';
 import { Position } from '../../common/core/position.js';
 import { Range } from '../../common/core/range.js';
-import { toPromiseLike } from '../../../base/common/async.js';
+import { toThenable } from '../../../base/common/async.js';
 import { compile } from '../common/monarch/monarchCompile.js';
 import { createTokenizationSupport } from '../common/monarch/monarchLexer.js';
 import { LanguageConfigurationRegistry } from '../../common/modes/languageConfigurationRegistry.js';
@@ -28,6 +28,10 @@ export function getLanguages() {
     var result = [];
     result = result.concat(ModesRegistry.getLanguages());
     return result;
+}
+export function getEncodedLanguageId(languageId) {
+    var lid = StaticServices.modeService.get().getLanguageIdentifier(languageId);
+    return lid && lid.id;
 }
 /**
  * An event emitted when a language is first time needed (e.g. a model has it set).
@@ -54,6 +58,26 @@ export function setLanguageConfiguration(languageId, configuration) {
     }
     return LanguageConfigurationRegistry.register(languageIdentifier, configuration);
 }
+/**
+ * @internal
+ */
+var EncodedTokenizationSupport2Adapter = /** @class */ (function () {
+    function EncodedTokenizationSupport2Adapter(actual) {
+        this._actual = actual;
+    }
+    EncodedTokenizationSupport2Adapter.prototype.getInitialState = function () {
+        return this._actual.getInitialState();
+    };
+    EncodedTokenizationSupport2Adapter.prototype.tokenize = function (line, state, offsetDelta) {
+        throw new Error('Not supported!');
+    };
+    EncodedTokenizationSupport2Adapter.prototype.tokenize2 = function (line, state) {
+        var result = this._actual.tokenizeEncoded(line, state);
+        return new TokenizationResult2(result.tokens, result.endState);
+    };
+    return EncodedTokenizationSupport2Adapter;
+}());
+export { EncodedTokenizationSupport2Adapter };
 /**
  * @internal
  */
@@ -147,6 +171,9 @@ var TokenizationSupport2Adapter = /** @class */ (function () {
     return TokenizationSupport2Adapter;
 }());
 export { TokenizationSupport2Adapter };
+function isEncodedTokensProvider(provider) {
+    return provider['tokenizeEncoded'];
+}
 /**
  * Set the tokens provider for a language (manual implementation).
  */
@@ -155,7 +182,13 @@ export function setTokensProvider(languageId, provider) {
     if (!languageIdentifier) {
         throw new Error("Cannot set tokens provider for unknown language " + languageId);
     }
-    var adapter = new TokenizationSupport2Adapter(StaticServices.standaloneThemeService.get(), languageIdentifier, provider);
+    var adapter;
+    if (isEncodedTokensProvider(provider)) {
+        adapter = new EncodedTokenizationSupport2Adapter(provider);
+    }
+    else {
+        adapter = new TokenizationSupport2Adapter(StaticServices.standaloneThemeService.get(), languageIdentifier, provider);
+    }
     return modes.TokenizationRegistry.register(languageId, adapter);
 }
 /**
@@ -191,7 +224,7 @@ export function registerHoverProvider(languageId, provider) {
     return modes.HoverProviderRegistry.register(languageId, {
         provideHover: function (model, position, token) {
             var word = model.getWordAtPosition(position);
-            return toPromiseLike(provider.provideHover(model, position, token)).then(function (value) {
+            return toThenable(provider.provideHover(model, position, token)).then(function (value) {
                 if (!value) {
                     return undefined;
                 }
@@ -405,7 +438,7 @@ var SuggestAdapter = /** @class */ (function () {
     };
     SuggestAdapter.prototype.provideCompletionItems = function (model, position, context, token) {
         var result = this._provider.provideCompletionItems(model, position, token, context);
-        return toPromiseLike(result).then(function (value) {
+        return toThenable(result).then(function (value) {
             var result = {
                 suggestions: []
             };
@@ -452,7 +485,7 @@ var SuggestAdapter = /** @class */ (function () {
         if (!item) {
             return TPromise.as(suggestion);
         }
-        return toPromiseLike(this._provider.resolveCompletionItem(item, token)).then(function (resolvedItem) {
+        return toThenable(this._provider.resolveCompletionItem(item, token)).then(function (resolvedItem) {
             var wordStartPos = position;
             var word = model.getWordUntilPosition(position);
             if (word) {
@@ -471,6 +504,7 @@ export function createMonacoLanguagesAPI() {
         register: register,
         getLanguages: getLanguages,
         onLanguage: onLanguage,
+        getEncodedLanguageId: getEncodedLanguageId,
         // provider methods
         setLanguageConfiguration: setLanguageConfiguration,
         setTokensProvider: setTokensProvider,

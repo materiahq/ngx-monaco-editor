@@ -47,7 +47,7 @@ var SimpleWorkerProtocol = /** @class */ (function () {
             c: null,
             e: null
         };
-        var result = new TPromise(function (c, e, p) {
+        var result = new TPromise(function (c, e) {
             reply.c = c;
             reply.e = e;
         }, function () {
@@ -168,7 +168,7 @@ var SimpleWorkerClient = /** @class */ (function (_super) {
             // Get the configuration from requirejs
             loaderConfiguration = self.requirejs.s.contexts._.config;
         }
-        _this._lazyProxy = new TPromise(function (c, e, p) {
+        _this._lazyProxy = new TPromise(function (c, e) {
             lazyProxyFulfill = c;
             lazyProxyReject = e;
         }, function () { });
@@ -206,7 +206,7 @@ var SimpleWorkerClient = /** @class */ (function (_super) {
     };
     SimpleWorkerClient.prototype._request = function (method, args) {
         var _this = this;
-        return new TPromise(function (c, e, p) {
+        return new TPromise(function (c, e) {
             _this._onModuleLoaded.then(function () {
                 _this._protocol.sendMessage(method, args).then(c, e);
             }, e);
@@ -281,7 +281,7 @@ var SimpleWorkerServer = /** @class */ (function () {
         }
         var cc;
         var ee;
-        var r = new TPromise(function (c, e, p) {
+        var r = new TPromise(function (c, e) {
             cc = c;
             ee = e;
         });

@@ -27,6 +27,7 @@ var IndentGuidesOverlay = /** @class */ (function (_super) {
         _this._lineHeight = _this._context.configuration.editor.lineHeight;
         _this._spaceWidth = _this._context.configuration.editor.fontInfo.spaceWidth;
         _this._enabled = _this._context.configuration.editor.viewInfo.renderIndentGuides;
+        _this._activeIndentEnabled = _this._context.configuration.editor.viewInfo.highlightActiveIndentGuide;
         _this._renderResult = null;
         _this._context.addEventHandler(_this);
         return _this;
@@ -47,6 +48,7 @@ var IndentGuidesOverlay = /** @class */ (function (_super) {
         }
         if (e.viewInfo) {
             this._enabled = this._context.configuration.editor.viewInfo.renderIndentGuides;
+            this._activeIndentEnabled = this._context.configuration.editor.viewInfo.highlightActiveIndentGuide;
         }
         return true;
     };
@@ -94,13 +96,14 @@ var IndentGuidesOverlay = /** @class */ (function (_super) {
         var visibleEndLineNumber = ctx.visibleRange.endLineNumber;
         var tabSize = this._context.model.getTabSize();
         var tabWidth = tabSize * this._spaceWidth;
+        var scrollWidth = ctx.scrollWidth;
         var lineHeight = this._lineHeight;
         var indentGuideWidth = tabWidth;
         var indents = this._context.model.getLinesIndentGuides(visibleStartLineNumber, visibleEndLineNumber);
         var activeIndentStartLineNumber = 0;
         var activeIndentEndLineNumber = 0;
         var activeIndentLevel = 0;
-        if (this._primaryLineNumber) {
+        if (this._activeIndentEnabled && this._primaryLineNumber) {
             var activeIndentInfo = this._context.model.getActiveIndentGuide(this._primaryLineNumber, visibleStartLineNumber, visibleEndLineNumber);
             activeIndentStartLineNumber = activeIndentInfo.startLineNumber;
             activeIndentEndLineNumber = activeIndentInfo.endLineNumber;
@@ -118,6 +121,9 @@ var IndentGuidesOverlay = /** @class */ (function (_super) {
                 var className = (containsActiveIndentGuide && i === activeIndentLevel ? 'cigra' : 'cigr');
                 result += "<div class=\"" + className + "\" style=\"left:" + left + "px;height:" + lineHeight + "px;width:" + indentGuideWidth + "px\"></div>";
                 left += tabWidth;
+                if (left > scrollWidth) {
+                    break;
+                }
             }
             output[lineIndex] = result;
         }

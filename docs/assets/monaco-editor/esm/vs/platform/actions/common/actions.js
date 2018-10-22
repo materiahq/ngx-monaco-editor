@@ -23,36 +23,21 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 import { Action } from '../../../base/common/actions.js';
-import { createSyncDescriptor } from '../../instantiation/common/descriptors.js';
 import { createDecorator } from '../../instantiation/common/instantiation.js';
 import { IContextKeyService } from '../../contextkey/common/contextkey.js';
 import { ICommandService } from '../../commands/common/commands.js';
+export function isIMenuItem(item) {
+    return item.command !== undefined;
+}
 var MenuId = /** @class */ (function () {
     function MenuId() {
         this.id = String(MenuId.ID++);
     }
     MenuId.ID = 1;
-    MenuId.EditorTitle = new MenuId();
-    MenuId.EditorTitleContext = new MenuId();
     MenuId.EditorContext = new MenuId();
-    MenuId.ExplorerContext = new MenuId();
-    MenuId.OpenEditorsContext = new MenuId();
-    MenuId.ProblemsPanelContext = new MenuId();
-    MenuId.DebugVariablesContext = new MenuId();
-    MenuId.DebugWatchContext = new MenuId();
-    MenuId.DebugCallStackContext = new MenuId();
-    MenuId.DebugBreakpointsContext = new MenuId();
-    MenuId.DebugConsoleContext = new MenuId();
-    MenuId.SCMTitle = new MenuId();
-    MenuId.SCMSourceControl = new MenuId();
-    MenuId.SCMResourceGroupContext = new MenuId();
-    MenuId.SCMResourceContext = new MenuId();
-    MenuId.SCMChangeContext = new MenuId();
     MenuId.CommandPalette = new MenuId();
-    MenuId.ViewTitle = new MenuId();
-    MenuId.ViewItemContext = new MenuId();
-    MenuId.TouchBarContext = new MenuId();
-    MenuId.SearchContext = new MenuId();
+    MenuId.MenubarEditMenu = new MenuId();
+    MenuId.MenubarSelectionMenu = new MenuId();
     return MenuId;
 }());
 export { MenuId };
@@ -100,8 +85,9 @@ export var MenuRegistry = new /** @class */ (function () {
     };
     class_1.prototype._appendImplicitItems = function (result) {
         var set = new Set();
-        for (var _i = 0, result_1 = result; _i < result_1.length; _i++) {
-            var _a = result_1[_i], command = _a.command, alt = _a.alt;
+        var temp = result.filter(function (item) { return isIMenuItem(item); });
+        for (var _i = 0, temp_1 = temp; _i < temp_1.length; _i++) {
+            var _a = temp_1[_i], command = _a.command, alt = _a.alt;
             set.add(command.id);
             if (alt) {
                 set.add(alt.id);
@@ -127,8 +113,8 @@ var ExecuteCommandAction = /** @class */ (function (_super) {
         for (var _i = 0; _i < arguments.length; _i++) {
             args[_i] = arguments[_i];
         }
-        return (_a = this._commandService).executeCommand.apply(_a, [this.id].concat(args));
         var _a;
+        return (_a = this._commandService).executeCommand.apply(_a, [this.id].concat(args));
     };
     ExecuteCommandAction = __decorate([
         __param(2, ICommandService)
@@ -136,6 +122,17 @@ var ExecuteCommandAction = /** @class */ (function (_super) {
     return ExecuteCommandAction;
 }(Action));
 export { ExecuteCommandAction };
+var SubmenuItemAction = /** @class */ (function (_super) {
+    __extends(SubmenuItemAction, _super);
+    function SubmenuItemAction(item) {
+        var _this = this;
+        typeof item.title === 'string' ? _this = _super.call(this, '', item.title, 'submenu') || this : _this = _super.call(this, '', item.title.value, 'submenu') || this;
+        _this.item = item;
+        return _this;
+    }
+    return SubmenuItemAction;
+}(Action));
+export { SubmenuItemAction };
 var MenuItemAction = /** @class */ (function (_super) {
     __extends(MenuItemAction, _super);
     function MenuItemAction(item, alt, options, contextKeyService, commandService) {
@@ -169,57 +166,3 @@ var MenuItemAction = /** @class */ (function (_super) {
     return MenuItemAction;
 }(ExecuteCommandAction));
 export { MenuItemAction };
-var SyncActionDescriptor = /** @class */ (function () {
-    function SyncActionDescriptor(ctor, id, label, keybindings, keybindingContext, keybindingWeight) {
-        this._id = id;
-        this._label = label;
-        this._keybindings = keybindings;
-        this._keybindingContext = keybindingContext;
-        this._keybindingWeight = keybindingWeight;
-        this._descriptor = createSyncDescriptor(ctor, this._id, this._label);
-    }
-    Object.defineProperty(SyncActionDescriptor.prototype, "syncDescriptor", {
-        get: function () {
-            return this._descriptor;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SyncActionDescriptor.prototype, "id", {
-        get: function () {
-            return this._id;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SyncActionDescriptor.prototype, "label", {
-        get: function () {
-            return this._label;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SyncActionDescriptor.prototype, "keybindings", {
-        get: function () {
-            return this._keybindings;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SyncActionDescriptor.prototype, "keybindingContext", {
-        get: function () {
-            return this._keybindingContext;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(SyncActionDescriptor.prototype, "keybindingWeight", {
-        get: function () {
-            return this._keybindingWeight;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return SyncActionDescriptor;
-}());
-export { SyncActionDescriptor };

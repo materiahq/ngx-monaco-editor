@@ -245,23 +245,6 @@ var Color = /** @class */ (function () {
         return (c <= 0.03928) ? c / 12.92 : Math.pow(((c + 0.055) / 1.055), 2.4);
     };
     /**
-     * http://www.w3.org/TR/WCAG20/#contrast-ratiodef
-     * Returns the contrast ration number in the set [1, 21].
-     */
-    Color.prototype.getContrastRatio = function (another) {
-        var lum1 = this.getRelativeLuminance();
-        var lum2 = another.getRelativeLuminance();
-        return lum1 > lum2 ? (lum1 + 0.05) / (lum2 + 0.05) : (lum2 + 0.05) / (lum1 + 0.05);
-    };
-    /**
-     *	http://24ways.org/2010/calculating-color-contrast
-     *  Return 'true' if darker color otherwise 'false'
-     */
-    Color.prototype.isDarker = function () {
-        var yiq = (this.rgba.r * 299 + this.rgba.g * 587 + this.rgba.b * 114) / 1000;
-        return yiq < 128;
-    };
-    /**
      *	http://24ways.org/2010/calculating-color-contrast
      *  Return 'true' if lighter color otherwise 'false'
      */
@@ -298,34 +281,6 @@ var Color = /** @class */ (function () {
     Color.prototype.opposite = function () {
         return new Color(new RGBA(255 - this.rgba.r, 255 - this.rgba.g, 255 - this.rgba.b, this.rgba.a));
     };
-    Color.prototype.blend = function (c) {
-        var rgba = c.rgba;
-        // Convert to 0..1 opacity
-        var thisA = this.rgba.a;
-        var colorA = rgba.a;
-        var a = thisA + colorA * (1 - thisA);
-        if (a < 1.0e-6) {
-            return Color.transparent;
-        }
-        var r = this.rgba.r * thisA / a + rgba.r * colorA * (1 - thisA) / a;
-        var g = this.rgba.g * thisA / a + rgba.g * colorA * (1 - thisA) / a;
-        var b = this.rgba.b * thisA / a + rgba.b * colorA * (1 - thisA) / a;
-        return new Color(new RGBA(r, g, b, a));
-    };
-    Color.prototype.flatten = function () {
-        var backgrounds = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            backgrounds[_i] = arguments[_i];
-        }
-        var background = backgrounds.reduceRight(function (accumulator, color) {
-            return Color._flatten(color, accumulator);
-        });
-        return Color._flatten(this, background);
-    };
-    Color._flatten = function (foreground, background) {
-        var backgroundAlpha = 1 - foreground.rgba.a;
-        return new Color(new RGBA(backgroundAlpha * background.rgba.r + foreground.rgba.a * foreground.rgba.r, backgroundAlpha * background.rgba.g + foreground.rgba.a * foreground.rgba.g, backgroundAlpha * background.rgba.b + foreground.rgba.a * foreground.rgba.b));
-    };
     Color.prototype.toString = function () {
         return Color.Format.CSS.format(this);
     };
@@ -353,7 +308,6 @@ var Color = /** @class */ (function () {
     Color.black = new Color(new RGBA(0, 0, 0, 1));
     Color.red = new Color(new RGBA(255, 0, 0, 1));
     Color.blue = new Color(new RGBA(0, 0, 255, 1));
-    Color.green = new Color(new RGBA(0, 255, 0, 1));
     Color.cyan = new Color(new RGBA(0, 255, 255, 1));
     Color.lightgrey = new Color(new RGBA(211, 211, 211, 1));
     Color.transparent = new Color(new RGBA(0, 0, 0, 0));

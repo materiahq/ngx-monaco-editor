@@ -424,6 +424,21 @@ var TypeOperations = /** @class */ (function () {
             shouldPushStackElementAfter: false
         });
     };
+    TypeOperations._isBeforeClosingBrace = function (config, ch, characterAfter) {
+        var thisBraceIsSymmetric = (config.autoClosingPairsOpen[ch] === ch);
+        var isBeforeCloseBrace = false;
+        for (var otherCloseBrace in config.autoClosingPairsClose) {
+            var otherBraceIsSymmetric = (config.autoClosingPairsOpen[otherCloseBrace] === otherCloseBrace);
+            if (!thisBraceIsSymmetric && otherBraceIsSymmetric) {
+                continue;
+            }
+            if (characterAfter === otherCloseBrace) {
+                isBeforeCloseBrace = true;
+                break;
+            }
+        }
+        return isBeforeCloseBrace;
+    };
     TypeOperations._isAutoClosingOpenCharType = function (config, model, selections, ch) {
         if (!config.autoClosingBrackets || !config.autoClosingPairsOpen.hasOwnProperty(ch)) {
             return false;
@@ -447,18 +462,7 @@ var TypeOperations = /** @class */ (function () {
             // Only consider auto closing the pair if a space follows or if another autoclosed pair follows
             var characterAfter = lineText.charAt(position.column - 1);
             if (characterAfter) {
-                var thisBraceIsSymmetric = (config.autoClosingPairsOpen[ch] === ch);
-                var isBeforeCloseBrace = false;
-                for (var otherCloseBrace in config.autoClosingPairsClose) {
-                    var otherBraceIsSymmetric = (config.autoClosingPairsOpen[otherCloseBrace] === otherCloseBrace);
-                    if (!thisBraceIsSymmetric && otherBraceIsSymmetric) {
-                        continue;
-                    }
-                    if (characterAfter === otherCloseBrace) {
-                        isBeforeCloseBrace = true;
-                        break;
-                    }
-                }
+                var isBeforeCloseBrace = TypeOperations._isBeforeClosingBrace(config, ch, characterAfter);
                 if (!isBeforeCloseBrace && !/\s/.test(characterAfter)) {
                     return false;
                 }
@@ -498,6 +502,7 @@ var TypeOperations = /** @class */ (function () {
         if (!config.autoClosingBrackets || !config.surroundingPairs.hasOwnProperty(ch)) {
             return false;
         }
+        var isTypingAQuoteCharacter = (ch === '\'' || ch === '"');
         for (var i = 0, len = selections.length; i < len; i++) {
             var selection = selections[i];
             if (selection.isEmpty()) {
@@ -517,6 +522,14 @@ var TypeOperations = /** @class */ (function () {
             }
             if (selectionContainsOnlyWhitespace) {
                 return false;
+            }
+            if (isTypingAQuoteCharacter && selection.startLineNumber === selection.endLineNumber && selection.startColumn + 1 === selection.endColumn) {
+                var selectionText = model.getValueInRange(selection);
+                if ((selectionText === '\'' || selectionText === '"')) {
+                    // Typing a quote character on top of another quote character
+                    // => disable surround selection type
+                    return false;
+                }
             }
         }
         return true;
@@ -590,6 +603,69 @@ var TypeOperations = /** @class */ (function () {
             }
         }
         return null;
+    };
+    TypeOperations.compositionEndWithInterceptors = function (prevEditOperationType, config, model, selections) {
+        if (!config.autoClosingBrackets) {
+            return null;
+        }
+        var commands = [];
+        for (var i = 0; i < selections.length; i++) {
+            if (!selections[i].isEmpty()) {
+                continue;
+            }
+            var position = selections[i].getPosition();
+            var lineText = model.getLineContent(position.lineNumber);
+            var ch = lineText.charAt(position.column - 2);
+            if (config.autoClosingPairsClose.hasOwnProperty(ch)) { // first of all, it's a closing tag
+                if (ch === config.autoClosingPairsClose[ch] /** isEqualPair */) {
+                    var lineTextBeforeCursor = lineText.substr(0, position.column - 2);
+                    var chCntBefore = this._countNeedlesInHaystack(lineTextBeforeCursor, ch);
+                    if (chCntBefore % 2 === 1) {
+                        continue; // it pairs with the opening tag.
+                    }
+                }
+            }
+            // As we are not typing in a new character, so we don't need to run `_runAutoClosingCloseCharType`
+            // Next step, let's try to check if it's an open char.
+            if (config.autoClosingPairsOpen.hasOwnProperty(ch)) {
+                if ((ch === '\'' || ch === '"') && position.column > 2) {
+                    var wordSeparators = getMapForWordSeparators(config.wordSeparators);
+                    var characterBeforeCode = lineText.charCodeAt(position.column - 3);
+                    var characterBeforeType = wordSeparators.get(characterBeforeCode);
+                    if (characterBeforeType === 0 /* Regular */) {
+                        continue;
+                    }
+                }
+                var characterAfter = lineText.charAt(position.column - 1);
+                if (characterAfter) {
+                    var isBeforeCloseBrace = TypeOperations._isBeforeClosingBrace(config, ch, characterAfter);
+                    if (!isBeforeCloseBrace && !/\s/.test(characterAfter)) {
+                        continue;
+                    }
+                }
+                if (!model.isCheapToTokenize(position.lineNumber)) {
+                    // Do not force tokenization
+                    continue;
+                }
+                model.forceTokenization(position.lineNumber);
+                var lineTokens = model.getLineTokens(position.lineNumber);
+                var shouldAutoClosePair = false;
+                try {
+                    shouldAutoClosePair = LanguageConfigurationRegistry.shouldAutoClosePair(ch, lineTokens, position.column - 1);
+                }
+                catch (e) {
+                    onUnexpectedError(e);
+                }
+                if (shouldAutoClosePair) {
+                    var closeCharacter = config.autoClosingPairsOpen[ch];
+                    commands[i] = new ReplaceCommandWithOffsetCursorState(selections[i], closeCharacter, 0, -closeCharacter.length);
+                }
+            }
+        }
+        return new EditOperationResult(1 /* Typing */, commands, {
+            shouldPushStackElementBefore: true,
+            shouldPushStackElementAfter: false
+        });
     };
     TypeOperations.typeWithInterceptors = function (prevEditOperationType, config, model, selections, ch) {
         if (ch === '\n') {

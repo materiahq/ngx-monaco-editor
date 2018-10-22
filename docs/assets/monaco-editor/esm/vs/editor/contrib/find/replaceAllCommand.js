@@ -14,10 +14,10 @@ var ReplaceAllCommand = /** @class */ (function () {
         if (this._ranges.length > 0) {
             // Collect all edit operations
             var ops = [];
-            for (var i_1 = 0; i_1 < this._ranges.length; i_1++) {
+            for (var i = 0; i < this._ranges.length; i++) {
                 ops.push({
-                    range: this._ranges[i_1],
-                    text: this._replaceStrings[i_1]
+                    range: this._ranges[i],
+                    text: this._replaceStrings[i]
                 });
             }
             // Sort them in ascending order by range starts
@@ -27,15 +27,15 @@ var ReplaceAllCommand = /** @class */ (function () {
             // Merge operations that touch each other
             var resultOps = [];
             var previousOp = ops[0];
-            for (var i_2 = 1; i_2 < ops.length; i_2++) {
-                if (previousOp.range.endLineNumber === ops[i_2].range.startLineNumber && previousOp.range.endColumn === ops[i_2].range.startColumn) {
+            for (var i = 1; i < ops.length; i++) {
+                if (previousOp.range.endLineNumber === ops[i].range.startLineNumber && previousOp.range.endColumn === ops[i].range.startColumn) {
                     // These operations are one after another and can be merged
-                    previousOp.range = previousOp.range.plusRange(ops[i_2].range);
-                    previousOp.text = previousOp.text + ops[i_2].text;
+                    previousOp.range = previousOp.range.plusRange(ops[i].range);
+                    previousOp.text = previousOp.text + ops[i].text;
                 }
                 else {
                     resultOps.push(previousOp);
-                    previousOp = ops[i_2];
+                    previousOp = ops[i];
                 }
             }
             resultOps.push(previousOp);

@@ -39,8 +39,11 @@ var CodeActionContextMenu = /** @class */ (function () {
                 }
                 return at;
             },
-            getActions: function () { return actions; },
-            onHide: function () { _this._visible = false; },
+            getActions: function () { return TPromise.wrap(actions); },
+            onHide: function () {
+                _this._visible = false;
+                _this._editor.focus();
+            },
             autoSelectFirstItem: true
         });
     };

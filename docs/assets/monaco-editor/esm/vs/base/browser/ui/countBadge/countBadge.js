@@ -28,10 +28,6 @@ var CountBadge = /** @class */ (function () {
         this.count = count;
         this.render();
     };
-    CountBadge.prototype.setCountFormat = function (countFormat) {
-        this.countFormat = countFormat;
-        this.render();
-    };
     CountBadge.prototype.setTitleFormat = function (titleFormat) {
         this.titleFormat = titleFormat;
         this.render();

@@ -3,19 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 'use strict';
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-import * as nls from '../../../../nls.js';
-import { TPromise } from '../../../common/winjs.base.js';
-import { Action } from '../../../common/actions.js';
 import * as platform from '../../../common/platform.js';
 import * as errors from '../../../common/errors.js';
 import * as dom from '../../../browser/dom.js';
@@ -93,6 +80,9 @@ var DefaultController = /** @class */ (function () {
                 if (event.target.tagName && event.target.tagName.toLowerCase() === 'input') {
                     return false; // Ignore event if target is a form input field (avoids browser specific issues)
                 }
+                if (dom.findParentWithClass(event.target, 'scrollbar', 'monaco-tree')) {
+                    return false;
+                }
                 if (dom.findParentWithClass(event.target, 'monaco-action-bar', 'row')) { // TODO@Joao not very nice way of checking for the action bar (implicit knowledge)
                     return false; // Ignore event if target is over an action bar of the row
                 }
@@ -120,23 +110,22 @@ var DefaultController = /** @class */ (function () {
     };
     DefaultController.prototype.onLeftClick = function (tree, element, eventish, origin) {
         if (origin === void 0) { origin = 'mouse'; }
-        var payload = { origin: origin, originalEvent: eventish };
         var event = eventish;
-        var isDoubleClick = (origin === 'mouse' && event.detail === 2);
+        var payload = { origin: origin, originalEvent: eventish, didClickOnTwistie: this.isClickOnTwistie(event) };
         if (tree.getInput() === element) {
             tree.clearFocus(payload);
             tree.clearSelection(payload);
         }
         else {
-            var isMouseDown = eventish && event.browserEvent && event.browserEvent.type === 'mousedown';
-            if (!isMouseDown) {
-                eventish.preventDefault(); // we cannot preventDefault onMouseDown because this would break DND otherwise
+            var isSingleMouseDown = eventish && event.browserEvent && event.browserEvent.type === 'mousedown' && event.browserEvent.detail === 1;
+            if (!isSingleMouseDown) {
+                eventish.preventDefault(); // we cannot preventDefault onMouseDown with single click because this would break DND otherwise
             }
             eventish.stopPropagation();
             tree.domFocus();
             tree.setSelection([element], payload);
             tree.setFocus(element, payload);
-            if (this.openOnSingleClick || isDoubleClick || this.isClickOnTwistie(event)) {
+            if (this.shouldToggleExpansion(element, event, origin)) {
                 if (tree.isExpanded(element)) {
                     tree.collapse(element).done(null, errors.onUnexpectedError);
                 }
@@ -146,6 +135,10 @@ var DefaultController = /** @class */ (function () {
             }
         }
         return true;
+    };
+    DefaultController.prototype.shouldToggleExpansion = function (element, event, origin) {
+        var isDoubleClick = (origin === 'mouse' && event.detail === 2);
+        return this.openOnSingleClick || isDoubleClick || this.isClickOnTwistie(event);
     };
     DefaultController.prototype.setOpenMode = function (openMode) {
         this.options.openMode = openMode;
@@ -158,12 +151,16 @@ var DefaultController = /** @class */ (function () {
         configurable: true
     });
     DefaultController.prototype.isClickOnTwistie = function (event) {
-        var target = event.target;
-        // There is no way to find out if the ::before element is clicked where
-        // the twistie is drawn, but the <div class="content"> element in the
-        // tree item is the only thing we get back as target when the user clicks
-        // on the twistie.
-        return target && target.className === 'content' && dom.hasClass(target.parentElement, 'monaco-tree-row');
+        var element = event.target;
+        if (!dom.hasClass(element, 'content')) {
+            return false;
+        }
+        var twistieStyle = window.getComputedStyle(element, ':before');
+        if (twistieStyle.backgroundImage === 'none' || twistieStyle.display === 'none') {
+            return false;
+        }
+        var twistieWidth = parseInt(twistieStyle.width) + parseInt(twistieStyle.paddingRight);
+        return event.browserEvent.offsetX <= twistieWidth;
     };
     DefaultController.prototype.onContextMenu = function (tree, element, event) {
         if (event.target && event.target.tagName && event.target.tagName.toLowerCase() === 'input') {
@@ -367,15 +364,6 @@ var DefaultFilter = /** @class */ (function () {
     return DefaultFilter;
 }());
 export { DefaultFilter };
-var DefaultSorter = /** @class */ (function () {
-    function DefaultSorter() {
-    }
-    DefaultSorter.prototype.compare = function (tree, element, otherElement) {
-        return 0;
-    };
-    return DefaultSorter;
-}());
-export { DefaultSorter };
 var DefaultAccessibilityProvider = /** @class */ (function () {
     function DefaultAccessibilityProvider() {
     }
@@ -437,24 +425,3 @@ var DefaultTreestyler = /** @class */ (function () {
     return DefaultTreestyler;
 }());
 export { DefaultTreestyler };
-var CollapseAllAction = /** @class */ (function (_super) {
-    __extends(CollapseAllAction, _super);
-    function CollapseAllAction(viewer, enabled) {
-        var _this = _super.call(this, 'vs.tree.collapse', nls.localize('collapse', "Collapse"), 'monaco-tree-action collapse-all', enabled) || this;
-        _this.viewer = viewer;
-        return _this;
-    }
-    CollapseAllAction.prototype.run = function (context) {
-        if (this.viewer.getHighlight()) {
-            return TPromise.as(null); // Global action disabled if user is in edit mode from another action
-        }
-        this.viewer.collapseAll();
-        this.viewer.clearSelection();
-        this.viewer.clearFocus();
-        this.viewer.domFocus();
-        this.viewer.focusFirst();
-        return TPromise.as(null);
-    };
-    return CollapseAllAction;
-}(Action));
-export { CollapseAllAction };

@@ -11,6 +11,7 @@ import { RichEditBrackets } from './supports/richEditBrackets.js';
 import { Emitter } from '../../../base/common/event.js';
 import { onUnexpectedError } from '../../../base/common/errors.js';
 import * as strings from '../../../base/common/strings.js';
+import { toDisposable } from '../../../base/common/lifecycle.js';
 import { DEFAULT_WORD_REGEXP, ensureValidWordDefinition } from '../model/wordHelper.js';
 import { createScopedLineTokens } from './supports.js';
 import { Range } from '../core/range.js';
@@ -135,24 +136,15 @@ var LanguageConfigurationRegistryImpl = /** @class */ (function () {
         var current = new RichEditSupport(languageIdentifier, previous, configuration);
         this._entries[languageIdentifier.id] = current;
         this._onDidChange.fire({ languageIdentifier: languageIdentifier });
-        return {
-            dispose: function () {
-                if (_this._entries[languageIdentifier.id] === current) {
-                    _this._entries[languageIdentifier.id] = previous;
-                    _this._onDidChange.fire({ languageIdentifier: languageIdentifier });
-                }
+        return toDisposable(function () {
+            if (_this._entries[languageIdentifier.id] === current) {
+                _this._entries[languageIdentifier.id] = previous;
+                _this._onDidChange.fire({ languageIdentifier: languageIdentifier });
             }
-        };
+        });
     };
     LanguageConfigurationRegistryImpl.prototype._getRichEditSupport = function (languageId) {
         return this._entries[languageId] || null;
-    };
-    LanguageConfigurationRegistryImpl.prototype.getIndentationRules = function (languageId) {
-        var value = this._entries[languageId];
-        if (!value) {
-            return null;
-        }
-        return value.indentationRules || null;
     };
     // begin electricCharacter
     LanguageConfigurationRegistryImpl.prototype._getElectricCharacterSupport = function (languageId) {

@@ -36,7 +36,6 @@ import { ModelLinesTokens, ModelTokensChangedEventBuilder } from './textModelTok
 import { guessIndentation } from './indentationGuesser.js';
 import { EDITOR_MODEL_DEFAULTS } from '../config/editorOptions.js';
 import { TextModelSearch, SearchParams } from './textModelSearch.js';
-import { TPromise } from '../../../base/common/winjs.base.js';
 import { PieceTreeTextBufferBuilder } from './pieceTreeTextBuffer/pieceTreeTextBufferBuilder.js';
 function createTextBufferBuilder() {
     return new PieceTreeTextBufferBuilder();
@@ -44,38 +43,6 @@ function createTextBufferBuilder() {
 export function createTextBufferFactory(text) {
     var builder = createTextBufferBuilder();
     builder.acceptChunk(text);
-    return builder.finish();
-}
-export function createTextBufferFactoryFromStream(stream, filter) {
-    return new TPromise(function (c, e, p) {
-        var done = false;
-        var builder = createTextBufferBuilder();
-        stream.on('data', function (chunk) {
-            if (filter) {
-                chunk = filter(chunk);
-            }
-            builder.acceptChunk(chunk);
-        });
-        stream.on('error', function (error) {
-            if (!done) {
-                done = true;
-                e(error);
-            }
-        });
-        stream.on('end', function () {
-            if (!done) {
-                done = true;
-                c(builder.finish());
-            }
-        });
-    });
-}
-export function createTextBufferFactoryFromSnapshot(snapshot) {
-    var builder = createTextBufferBuilder();
-    var chunk;
-    while (typeof (chunk = snapshot.read()) === 'string') {
-        builder.acceptChunk(chunk);
-    }
     return builder.finish();
 }
 export function createTextBuffer(value, defaultEOL) {
@@ -96,39 +63,6 @@ function singleLetter(result) {
 }
 var LIMIT_FIND_COUNT = 999;
 export var LONG_LINE_BOUNDARY = 10000;
-var TextModelSnapshot = /** @class */ (function () {
-    function TextModelSnapshot(source) {
-        this._source = source;
-        this._eos = false;
-    }
-    TextModelSnapshot.prototype.read = function () {
-        if (this._eos) {
-            return null;
-        }
-        var result = [], resultCnt = 0, resultLength = 0;
-        do {
-            var tmp = this._source.read();
-            if (tmp === null) {
-                // end-of-stream
-                this._eos = true;
-                if (resultCnt === 0) {
-                    return null;
-                }
-                else {
-                    return result.join('');
-                }
-            }
-            if (tmp.length > 0) {
-                result[resultCnt++] = tmp;
-                resultLength += tmp.length;
-            }
-            if (resultLength >= 64 * 1024) {
-                return result.join('');
-            }
-        } while (true);
-    };
-    return TextModelSnapshot;
-}());
 var TextModel = /** @class */ (function (_super) {
     __extends(TextModel, _super);
     //#endregion
@@ -263,10 +197,6 @@ var TextModel = /** @class */ (function (_super) {
         if (this._isDisposed) {
             throw new Error('Model is disposed!');
         }
-    };
-    TextModel.prototype.equalsTextBuffer = function (other) {
-        this._assertNotDisposed();
-        return this._buffer.equals(other);
     };
     TextModel.prototype._emitContentChangedEvent = function (rawChange, change) {
         if (this._isDisposing) {
@@ -558,10 +488,6 @@ var TextModel = /** @class */ (function (_super) {
         }
         return fullModelValue;
     };
-    TextModel.prototype.createSnapshot = function (preserveBOM) {
-        if (preserveBOM === void 0) { preserveBOM = false; }
-        return new TextModelSnapshot(this._buffer.createSnapshot(preserveBOM));
-    };
     TextModel.prototype.getValueLength = function (eol, preserveBOM) {
         if (preserveBOM === void 0) { preserveBOM = false; }
         this._assertNotDisposed();
@@ -707,11 +633,17 @@ var TextModel = /** @class */ (function (_super) {
      * @param strict Do NOT allow a position inside a high-low surrogate pair
      */
     TextModel.prototype._isValidPosition = function (lineNumber, column, strict) {
+        if (isNaN(lineNumber)) {
+            return false;
+        }
         if (lineNumber < 1) {
             return false;
         }
         var lineCount = this._buffer.getLineCount();
         if (lineNumber > lineCount) {
+            return false;
+        }
+        if (isNaN(column)) {
             return false;
         }
         if (column < 1) {
@@ -735,8 +667,8 @@ var TextModel = /** @class */ (function (_super) {
      * @param strict Do NOT allow a position inside a high-low surrogate pair
      */
     TextModel.prototype._validatePosition = function (_lineNumber, _column, strict) {
-        var lineNumber = Math.floor(typeof _lineNumber === 'number' ? _lineNumber : 1);
-        var column = Math.floor(typeof _column === 'number' ? _column : 1);
+        var lineNumber = Math.floor((typeof _lineNumber === 'number' && !isNaN(_lineNumber)) ? _lineNumber : 1);
+        var column = Math.floor((typeof _column === 'number' && !isNaN(_column)) ? _column : 1);
         var lineCount = this._buffer.getLineCount();
         if (lineNumber < 1) {
             return new Position(1, 1);
@@ -900,6 +832,21 @@ var TextModel = /** @class */ (function (_super) {
     TextModel.prototype.pushStackElement = function () {
         this._commandManager.pushStackElement();
     };
+    TextModel.prototype.pushEOL = function (eol) {
+        var currentEOL = (this.getEOL() === '\n' ? model.EndOfLineSequence.LF : model.EndOfLineSequence.CRLF);
+        if (currentEOL === eol) {
+            return;
+        }
+        try {
+            this._onDidChangeDecorations.beginDeferredEmit();
+            this._eventEmitter.beginDeferredEmit();
+            this._commandManager.pushEOL(eol);
+        }
+        finally {
+            this._eventEmitter.endDeferredEmit();
+            this._onDidChangeDecorations.endDeferredEmit();
+        }
+    };
     TextModel.prototype.pushEditOperations = function (beforeCursorState, editOperations, cursorStateComputer) {
         try {
             this._onDidChangeDecorations.beginDeferredEmit();
@@ -959,6 +906,11 @@ var TextModel = /** @class */ (function (_super) {
                         if (trimLineNumber === editRange.startLineNumber && editRange.startColumn === maxLineColumn
                             && editRange.isEmpty() && editText && editText.length > 0 && editText.charAt(0) === '\n') {
                             // This edit inserts a new line (and maybe other text) after `trimLine`
+                            continue;
+                        }
+                        if (trimLineNumber === editRange.startLineNumber && editRange.startColumn === 1
+                            && editRange.isEmpty() && editText && editText.length > 0 && editText.charAt(editText.length - 1) === '\n') {
+                            // This edit inserts a new line (and maybe other text) before `trimLine`
                             continue;
                         }
                         // Looks like we can't trim this line as it would interfere with an incoming edit
@@ -1102,6 +1054,9 @@ var TextModel = /** @class */ (function (_super) {
             this._onDidChangeDecorations.endDeferredEmit();
         }
     };
+    TextModel.prototype.canUndo = function () {
+        return this._commandManager.canUndo();
+    };
     TextModel.prototype._redo = function () {
         this._isRedoing = true;
         var r = this._commandManager.redo();
@@ -1122,6 +1077,9 @@ var TextModel = /** @class */ (function (_super) {
             this._eventEmitter.endDeferredEmit();
             this._onDidChangeDecorations.endDeferredEmit();
         }
+    };
+    TextModel.prototype.canRedo = function () {
+        return this._commandManager.canRedo();
     };
     //#endregion
     //#region Decorations
@@ -1824,43 +1782,6 @@ var TextModel = /** @class */ (function (_super) {
         }
         return null;
     };
-    TextModel.prototype.findPrevBracket = function (_position) {
-        var position = this.validatePosition(_position);
-        var languageId = -1;
-        var modeBrackets = null;
-        for (var lineNumber = position.lineNumber; lineNumber >= 1; lineNumber--) {
-            var lineTokens = this._getLineTokens(lineNumber);
-            var tokenCount = lineTokens.getCount();
-            var lineText = this._buffer.getLineContent(lineNumber);
-            var tokenIndex = tokenCount - 1;
-            var searchStopOffset = -1;
-            if (lineNumber === position.lineNumber) {
-                tokenIndex = lineTokens.findTokenIndexAtOffset(position.column - 1);
-                searchStopOffset = position.column - 1;
-            }
-            for (; tokenIndex >= 0; tokenIndex--) {
-                var tokenLanguageId = lineTokens.getLanguageId(tokenIndex);
-                var tokenType = lineTokens.getStandardTokenType(tokenIndex);
-                var tokenStartOffset = lineTokens.getStartOffset(tokenIndex);
-                var tokenEndOffset = lineTokens.getEndOffset(tokenIndex);
-                if (searchStopOffset === -1) {
-                    searchStopOffset = tokenEndOffset;
-                }
-                if (languageId !== tokenLanguageId) {
-                    languageId = tokenLanguageId;
-                    modeBrackets = LanguageConfigurationRegistry.getBracketsSupport(languageId);
-                }
-                if (modeBrackets && !ignoreBracketsInToken(tokenType)) {
-                    var r = BracketsUtils.findPrevBracketInToken(modeBrackets.reversedRegex, lineNumber, lineText, tokenStartOffset, searchStopOffset);
-                    if (r) {
-                        return this._toFoundBracket(modeBrackets, r);
-                    }
-                }
-                searchStopOffset = -1;
-            }
-        }
-        return null;
-    };
     TextModel.prototype.findNextBracket = function (_position) {
         var position = this.validatePosition(_position);
         var languageId = -1;
@@ -2026,10 +1947,10 @@ var TextModel = /** @class */ (function (_super) {
         for (var distance = 0; goUp || goDown; distance++) {
             var upLineNumber = lineNumber - distance;
             var downLineNumber = lineNumber + distance;
-            if (upLineNumber < 1 || upLineNumber < minLineNumber) {
+            if (distance !== 0 && (upLineNumber < 1 || upLineNumber < minLineNumber)) {
                 goUp = false;
             }
-            if (downLineNumber > lineCount || downLineNumber > maxLineNumber) {
+            if (distance !== 0 && (downLineNumber > lineCount || downLineNumber > maxLineNumber)) {
                 goDown = false;
             }
             if (distance > 50000) {
@@ -2253,7 +2174,7 @@ var DecorationsTrees = /** @class */ (function () {
     return DecorationsTrees;
 }());
 function cleanClassName(className) {
-    return className.replace(/[^a-z0-9\-]/gi, ' ');
+    return className.replace(/[^a-z0-9\-_]/gi, ' ');
 }
 var ModelDecorationOverviewRulerOptions = /** @class */ (function () {
     function ModelDecorationOverviewRulerOptions(options) {

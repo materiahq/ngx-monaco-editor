@@ -30,7 +30,7 @@ import * as dom from '../../../base/browser/dom.js';
 import * as aria from '../../../base/browser/ui/aria/aria.js';
 import { SignatureHelpProviderRegistry } from '../../common/modes.js';
 import { ContentWidgetPositionPreference } from '../../browser/editorBrowser.js';
-import { RunOnceScheduler } from '../../../base/common/async.js';
+import { RunOnceScheduler, createCancelablePromise } from '../../../base/common/async.js';
 import { onUnexpectedError } from '../../../base/common/errors.js';
 import { Emitter, chain } from '../../../base/common/event.js';
 import { domEvent, stop } from '../../../base/browser/event.js';
@@ -61,6 +61,7 @@ var ParameterHintsModel = /** @class */ (function (_super) {
         _this._register(_this.editor.onDidChangeModel(function (e) { return _this.onModelChanged(); }));
         _this._register(_this.editor.onDidChangeModelLanguage(function (_) { return _this.onModelChanged(); }));
         _this._register(_this.editor.onDidChangeCursorSelection(function (e) { return _this.onCursorChange(e); }));
+        _this._register(_this.editor.onDidChangeModelContent(function (e) { return _this.onModelContentChange(); }));
         _this._register(SignatureHelpProviderRegistry.onDidChange(_this.onModelChanged, _this));
         _this.onEditorConfigurationChange();
         _this.onModelChanged();
@@ -91,9 +92,8 @@ var ParameterHintsModel = /** @class */ (function (_super) {
         if (this.provideSignatureHelpRequest) {
             this.provideSignatureHelpRequest.cancel();
         }
-        this.provideSignatureHelpRequest = provideSignatureHelp(this.editor.getModel(), this.editor.getPosition())
-            .then(null, onUnexpectedError)
-            .then(function (result) {
+        this.provideSignatureHelpRequest = createCancelablePromise(function (token) { return provideSignatureHelp(_this.editor.getModel(), _this.editor.getPosition(), token); });
+        this.provideSignatureHelpRequest.then(function (result) {
             if (!result || !result.signatures || result.signatures.length === 0) {
                 _this.cancel();
                 _this._onCancel.fire(void 0);
@@ -103,16 +103,14 @@ var ParameterHintsModel = /** @class */ (function (_super) {
             var event = { hints: result };
             _this._onHint.fire(event);
             return true;
-        });
+        }).catch(onUnexpectedError);
     };
     ParameterHintsModel.prototype.isTriggered = function () {
         return this.active || this.throttledDelayer.isScheduled();
     };
     ParameterHintsModel.prototype.onModelChanged = function () {
         var _this = this;
-        if (this.active) {
-            this.cancel();
-        }
+        this.cancel();
         this.triggerCharactersListeners = dispose(this.triggerCharactersListeners);
         var model = this.editor.getModel();
         if (!model) {
@@ -142,6 +140,11 @@ var ParameterHintsModel = /** @class */ (function (_super) {
             this.cancel();
         }
         else if (this.isTriggered()) {
+            this.trigger();
+        }
+    };
+    ParameterHintsModel.prototype.onModelContentChange = function () {
+        if (this.isTriggered()) {
             this.trigger();
         }
     };
@@ -283,12 +286,11 @@ var ParameterHintsWidget = /** @class */ (function () {
         if (activeParameter && activeParameter.documentation) {
             var documentation = $('span.documentation');
             if (typeof activeParameter.documentation === 'string') {
-                dom.removeClass(this.docs, 'markdown-docs');
                 documentation.textContent = activeParameter.documentation;
             }
             else {
-                dom.addClass(this.docs, 'markdown-docs');
                 var renderedContents = this.markdownRenderer.render(activeParameter.documentation);
+                dom.addClass(renderedContents.element, 'markdown-docs');
                 this.renderDisposeables.push(renderedContents);
                 documentation.appendChild(renderedContents.element);
             }
@@ -300,6 +302,7 @@ var ParameterHintsWidget = /** @class */ (function () {
         }
         else {
             var renderedContents = this.markdownRenderer.render(signature.documentation);
+            dom.addClass(renderedContents.element, 'markdown-docs');
             this.renderDisposeables.push(renderedContents);
             dom.append(this.docs, renderedContents.element);
         }
@@ -374,21 +377,24 @@ var ParameterHintsWidget = /** @class */ (function () {
     // }
     ParameterHintsWidget.prototype.next = function () {
         var length = this.hints.signatures.length;
-        if (length < 2) {
+        var last = (this.currentSignature % length) === (length - 1);
+        // If there is only one signature, or we're on last signature of list
+        if (length < 2 || last) {
             this.cancel();
             return false;
         }
-        this.currentSignature = (this.currentSignature + 1) % length;
+        this.currentSignature++;
         this.render();
         return true;
     };
     ParameterHintsWidget.prototype.previous = function () {
         var length = this.hints.signatures.length;
-        if (length < 2) {
+        var first = this.currentSignature === 0;
+        if (length < 2 || first) {
             this.cancel();
             return false;
         }
-        this.currentSignature = (this.currentSignature - 1 + length) % length;
+        this.currentSignature--;
         this.render();
         return true;
     };

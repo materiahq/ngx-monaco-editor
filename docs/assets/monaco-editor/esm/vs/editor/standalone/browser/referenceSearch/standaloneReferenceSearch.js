@@ -22,34 +22,26 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { IEditorService } from '../../../../platform/editor/common/editor.js';
-import { IInstantiationService, optional } from '../../../../platform/instantiation/common/instantiation.js';
+import { ICodeEditorService } from '../../../browser/services/codeEditorService.js';
+import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
 import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { registerEditorContribution } from '../../../browser/editorExtensions.js';
-import { ITextModelService } from '../../../common/services/resolverService.js';
-import { IThemeService } from '../../../../platform/theme/common/themeService.js';
-import { IEnvironmentService } from '../../../../platform/environment/common/environment.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { ReferencesController } from '../../../contrib/referenceSearch/referencesController.js';
 var StandaloneReferencesController = /** @class */ (function (_super) {
     __extends(StandaloneReferencesController, _super);
-    function StandaloneReferencesController(editor, contextKeyService, editorService, textModelResolverService, notificationService, instantiationService, contextService, storageService, themeService, configurationService, environmentService) {
-        return _super.call(this, true, editor, contextKeyService, editorService, textModelResolverService, notificationService, instantiationService, contextService, storageService, themeService, configurationService, environmentService) || this;
+    function StandaloneReferencesController(editor, contextKeyService, editorService, notificationService, instantiationService, storageService, configurationService) {
+        return _super.call(this, true, editor, contextKeyService, editorService, notificationService, instantiationService, storageService, configurationService) || this;
     }
     StandaloneReferencesController = __decorate([
         __param(1, IContextKeyService),
-        __param(2, IEditorService),
-        __param(3, ITextModelService),
-        __param(4, INotificationService),
-        __param(5, IInstantiationService),
-        __param(6, IWorkspaceContextService),
-        __param(7, IStorageService),
-        __param(8, IThemeService),
-        __param(9, IConfigurationService),
-        __param(10, optional(IEnvironmentService))
+        __param(2, ICodeEditorService),
+        __param(3, INotificationService),
+        __param(4, IInstantiationService),
+        __param(5, IStorageService),
+        __param(6, IConfigurationService)
     ], StandaloneReferencesController);
     return StandaloneReferencesController;
 }(ReferencesController));

@@ -30,7 +30,6 @@ import { ContextKeyExpr } from '../../../platform/contextkey/common/contextkey.j
 import { registerEditorAction, registerEditorContribution, EditorAction, EditorCommand, registerEditorCommand } from '../../browser/editorExtensions.js';
 import { ParameterHintsWidget } from './parameterHintsWidget.js';
 import { Context } from './provideSignatureHelp.js';
-import { KeybindingsRegistry } from '../../../platform/keybinding/common/keybindingsRegistry.js';
 var ParameterHintsController = /** @class */ (function () {
     function ParameterHintsController(editor, instantiationService) {
         this.editor = editor;
@@ -73,7 +72,8 @@ var TriggerParameterHintsAction = /** @class */ (function (_super) {
             precondition: EditorContextKeys.hasSignatureHelpProvider,
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 10 /* Space */
+                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 10 /* Space */,
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
@@ -88,7 +88,7 @@ var TriggerParameterHintsAction = /** @class */ (function (_super) {
 export { TriggerParameterHintsAction };
 registerEditorContribution(ParameterHintsController);
 registerEditorAction(TriggerParameterHintsAction);
-var weight = KeybindingsRegistry.WEIGHT.editorContrib(75);
+var weight = 100 /* EditorContrib */ + 75;
 var ParameterHintsCommand = EditorCommand.bindToContribution(ParameterHintsController.get);
 registerEditorCommand(new ParameterHintsCommand({
     id: 'closeParameterHints',

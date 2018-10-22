@@ -30,22 +30,19 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { List, isSelectionRangeChangeEvent, isSelectionSingleChangeEvent, DefaultStyleController } from '../../../base/browser/ui/list/listWidget.js';
+var _a;
 import { createDecorator, IInstantiationService } from '../../instantiation/common/instantiation.js';
-import { toDisposable, combinedDisposable, dispose, Disposable } from '../../../base/common/lifecycle.js';
-import { IContextKeyService, RawContextKey, ContextKeyExpr } from '../../contextkey/common/contextkey.js';
-import { PagedList } from '../../../base/browser/ui/list/listPaging.js';
+import { toDisposable, combinedDisposable, dispose } from '../../../base/common/lifecycle.js';
+import { IContextKeyService, RawContextKey } from '../../contextkey/common/contextkey.js';
 import { Tree } from '../../../base/parts/tree/browser/treeImpl.js';
 import { attachListStyler, defaultListStyles, computeStyles } from '../../theme/common/styler.js';
 import { IThemeService } from '../../theme/common/themeService.js';
-import { InputFocusedContextKey } from '../../workbench/common/contextkeys.js';
 import { IConfigurationService } from '../../configuration/common/configuration.js';
 import { localize } from '../../../nls.js';
 import { Registry } from '../../registry/common/platform.js';
 import { Extensions as ConfigurationExtensions } from '../../configuration/common/configurationRegistry.js';
 import { DefaultController, OpenMode, ClickBehavior, DefaultTreestyler } from '../../../base/parts/tree/browser/treeDefaults.js';
 import { isUndefinedOrNull } from '../../../base/common/types.js';
-import { Emitter } from '../../../base/common/event.js';
 import { createStyleSheet } from '../../../base/browser/dom.js';
 import { ScrollbarVisibility } from '../../../base/common/scrollable.js';
 export var IListService = createDecorator('listService');
@@ -93,14 +90,11 @@ var ListService = /** @class */ (function () {
 export { ListService };
 var RawWorkbenchListFocusContextKey = new RawContextKey('listFocus', true);
 export var WorkbenchListSupportsMultiSelectContextKey = new RawContextKey('listSupportsMultiselect', true);
-export var WorkbenchListFocusContextKey = ContextKeyExpr.and(RawWorkbenchListFocusContextKey, ContextKeyExpr.not(InputFocusedContextKey));
+export var WorkbenchListHasSelectionOrFocus = new RawContextKey('listHasSelectionOrFocus', false);
 export var WorkbenchListDoubleSelection = new RawContextKey('listDoubleSelection', false);
 export var WorkbenchListMultiSelection = new RawContextKey('listMultiSelection', false);
 function createScopedContextKeyService(contextKeyService, widget) {
     var result = contextKeyService.createScoped(widget.getHTMLElement());
-    if (widget instanceof List || widget instanceof PagedList) {
-        WorkbenchListSupportsMultiSelectContextKey.bindTo(result);
-    }
     RawWorkbenchListFocusContextKey.bindTo(result);
     return result;
 }
@@ -112,55 +106,6 @@ function useAltAsMultipleSelectionModifier(configurationService) {
 }
 function useSingleClickToOpen(configurationService) {
     return configurationService.getValue(openModeSettingKey) !== 'doubleClick';
-}
-var MultipleSelectionController = /** @class */ (function () {
-    function MultipleSelectionController(configurationService) {
-        this.configurationService = configurationService;
-    }
-    MultipleSelectionController.prototype.isSelectionSingleChangeEvent = function (event) {
-        if (useAltAsMultipleSelectionModifier(this.configurationService)) {
-            return event.browserEvent.altKey;
-        }
-        return isSelectionSingleChangeEvent(event);
-    };
-    MultipleSelectionController.prototype.isSelectionRangeChangeEvent = function (event) {
-        return isSelectionRangeChangeEvent(event);
-    };
-    return MultipleSelectionController;
-}());
-var WorkbenchOpenController = /** @class */ (function () {
-    function WorkbenchOpenController(configurationService, existingOpenController) {
-        this.configurationService = configurationService;
-        this.existingOpenController = existingOpenController;
-    }
-    WorkbenchOpenController.prototype.shouldOpen = function (event) {
-        if (event instanceof MouseEvent) {
-            var isDoubleClick = event.detail === 2;
-            if (!useSingleClickToOpen(this.configurationService) && !isDoubleClick) {
-                return false;
-            }
-            if (event.button === 0 /* left mouse button */ || event.button === 1 /* middle mouse button */) {
-                return this.existingOpenController ? this.existingOpenController.shouldOpen(event) : true;
-            }
-            return false;
-        }
-        return this.existingOpenController ? this.existingOpenController.shouldOpen(event) : true;
-    };
-    return WorkbenchOpenController;
-}());
-function handleListControllers(options, configurationService) {
-    if (options.multipleSelectionSupport !== false && !options.multipleSelectionController) {
-        options.multipleSelectionController = new MultipleSelectionController(configurationService);
-    }
-    options.openController = new WorkbenchOpenController(configurationService, options.openController);
-    return options;
-}
-var sharedListStyleSheet;
-function getSharedListStyleSheet() {
-    if (!sharedListStyleSheet) {
-        sharedListStyleSheet = createStyleSheet();
-    }
-    return sharedListStyleSheet;
 }
 var sharedTreeStyleSheet;
 function getSharedTreeStyleSheet() {
@@ -178,96 +123,6 @@ function handleTreeController(configuration, instantiationService) {
     }
     return configuration;
 }
-var WorkbenchList = /** @class */ (function (_super) {
-    __extends(WorkbenchList, _super);
-    function WorkbenchList(container, delegate, renderers, options, contextKeyService, listService, themeService, configurationService) {
-        var _this = _super.call(this, container, delegate, renderers, __assign({ keyboardSupport: false, selectOnMouseDown: true, styleController: new DefaultStyleController(getSharedListStyleSheet()) }, computeStyles(themeService.getTheme(), defaultListStyles), handleListControllers(options, configurationService))) || this;
-        _this.configurationService = configurationService;
-        _this.contextKeyService = createScopedContextKeyService(contextKeyService, _this);
-        _this.listDoubleSelection = WorkbenchListDoubleSelection.bindTo(_this.contextKeyService);
-        _this.listMultiSelection = WorkbenchListMultiSelection.bindTo(_this.contextKeyService);
-        _this._useAltAsMultipleSelectionModifier = useAltAsMultipleSelectionModifier(configurationService);
-        _this.disposables.push(combinedDisposable([
-            _this.contextKeyService,
-            listService.register(_this),
-            attachListStyler(_this, themeService),
-            _this.onSelectionChange(function () {
-                var selection = _this.getSelection();
-                _this.listMultiSelection.set(selection.length > 1);
-                _this.listDoubleSelection.set(selection.length === 2);
-            })
-        ]));
-        _this.registerListeners();
-        return _this;
-    }
-    WorkbenchList.prototype.registerListeners = function () {
-        var _this = this;
-        this.disposables.push(this.configurationService.onDidChangeConfiguration(function (e) {
-            if (e.affectsConfiguration(multiSelectModifierSettingKey)) {
-                _this._useAltAsMultipleSelectionModifier = useAltAsMultipleSelectionModifier(_this.configurationService);
-            }
-        }));
-    };
-    Object.defineProperty(WorkbenchList.prototype, "useAltAsMultipleSelectionModifier", {
-        get: function () {
-            return this._useAltAsMultipleSelectionModifier;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    WorkbenchList = __decorate([
-        __param(4, IContextKeyService),
-        __param(5, IListService),
-        __param(6, IThemeService),
-        __param(7, IConfigurationService)
-    ], WorkbenchList);
-    return WorkbenchList;
-}(List));
-export { WorkbenchList };
-var WorkbenchPagedList = /** @class */ (function (_super) {
-    __extends(WorkbenchPagedList, _super);
-    function WorkbenchPagedList(container, delegate, renderers, options, contextKeyService, listService, themeService, configurationService) {
-        var _this = _super.call(this, container, delegate, renderers, __assign({ keyboardSupport: false, selectOnMouseDown: true, styleController: new DefaultStyleController(getSharedListStyleSheet()) }, computeStyles(themeService.getTheme(), defaultListStyles), handleListControllers(options, configurationService))) || this;
-        _this.configurationService = configurationService;
-        _this.disposables = [];
-        _this.contextKeyService = createScopedContextKeyService(contextKeyService, _this);
-        _this._useAltAsMultipleSelectionModifier = useAltAsMultipleSelectionModifier(configurationService);
-        _this.disposables.push(combinedDisposable([
-            _this.contextKeyService,
-            listService.register(_this),
-            attachListStyler(_this, themeService)
-        ]));
-        _this.registerListeners();
-        return _this;
-    }
-    WorkbenchPagedList.prototype.registerListeners = function () {
-        var _this = this;
-        this.disposables.push(this.configurationService.onDidChangeConfiguration(function (e) {
-            if (e.affectsConfiguration(multiSelectModifierSettingKey)) {
-                _this._useAltAsMultipleSelectionModifier = useAltAsMultipleSelectionModifier(_this.configurationService);
-            }
-        }));
-    };
-    Object.defineProperty(WorkbenchPagedList.prototype, "useAltAsMultipleSelectionModifier", {
-        get: function () {
-            return this._useAltAsMultipleSelectionModifier;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    WorkbenchPagedList.prototype.dispose = function () {
-        _super.prototype.dispose.call(this);
-        this.disposables = dispose(this.disposables);
-    };
-    WorkbenchPagedList = __decorate([
-        __param(4, IContextKeyService),
-        __param(5, IListService),
-        __param(6, IThemeService),
-        __param(7, IConfigurationService)
-    ], WorkbenchPagedList);
-    return WorkbenchPagedList;
-}(PagedList));
-export { WorkbenchPagedList };
 var WorkbenchTree = /** @class */ (function (_super) {
     __extends(WorkbenchTree, _super);
     function WorkbenchTree(container, configuration, options, contextKeyService, listService, themeService, instantiationService, configurationService) {
@@ -278,6 +133,8 @@ var WorkbenchTree = /** @class */ (function (_super) {
         _this = _super.call(this, container, config, opts) || this;
         _this.disposables = [];
         _this.contextKeyService = createScopedContextKeyService(contextKeyService, _this);
+        WorkbenchListSupportsMultiSelectContextKey.bindTo(_this.contextKeyService);
+        _this.listHasSelectionOrFocus = WorkbenchListHasSelectionOrFocus.bindTo(_this.contextKeyService);
         _this.listDoubleSelection = WorkbenchListDoubleSelection.bindTo(_this.contextKeyService);
         _this.listMultiSelection = WorkbenchListMultiSelection.bindTo(_this.contextKeyService);
         _this._openOnSingleClick = useSingleClickToOpen(configurationService);
@@ -285,8 +142,15 @@ var WorkbenchTree = /** @class */ (function (_super) {
         _this.disposables.push(_this.contextKeyService, listService.register(_this), attachListStyler(_this, themeService));
         _this.disposables.push(_this.onDidChangeSelection(function () {
             var selection = _this.getSelection();
+            var focus = _this.getFocus();
+            _this.listHasSelectionOrFocus.set((selection && selection.length > 0) || !!focus);
             _this.listDoubleSelection.set(selection && selection.length === 2);
             _this.listMultiSelection.set(selection && selection.length > 1);
+        }));
+        _this.disposables.push(_this.onDidChangeFocus(function () {
+            var selection = _this.getSelection();
+            var focus = _this.getFocus();
+            _this.listHasSelectionOrFocus.set((selection && selection.length > 0) || !!focus);
         }));
         _this.disposables.push(configurationService.onDidChangeConfiguration(function (e) {
             if (e.affectsConfiguration(openModeSettingKey)) {
@@ -298,20 +162,6 @@ var WorkbenchTree = /** @class */ (function (_super) {
         }));
         return _this;
     }
-    Object.defineProperty(WorkbenchTree.prototype, "openOnSingleClick", {
-        get: function () {
-            return this._openOnSingleClick;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(WorkbenchTree.prototype, "useAltAsMultipleSelectionModifier", {
-        get: function () {
-            return this._useAltAsMultipleSelectionModifier;
-        },
-        enumerable: true,
-        configurable: true
-    });
     WorkbenchTree.prototype.dispose = function () {
         _super.prototype.dispose.call(this);
         this.disposables = dispose(this.disposables);
@@ -368,75 +218,6 @@ var WorkbenchTreeController = /** @class */ (function (_super) {
     return WorkbenchTreeController;
 }(DefaultController));
 export { WorkbenchTreeController };
-var TreeResourceNavigator = /** @class */ (function (_super) {
-    __extends(TreeResourceNavigator, _super);
-    function TreeResourceNavigator(tree, options) {
-        var _this = _super.call(this) || this;
-        _this.tree = tree;
-        _this.options = options;
-        _this._openResource = new Emitter();
-        _this.openResource = _this._openResource.event;
-        _this.registerListeners();
-        return _this;
-    }
-    TreeResourceNavigator.prototype.registerListeners = function () {
-        var _this = this;
-        if (this.options && this.options.openOnFocus) {
-            this._register(this.tree.onDidChangeFocus(function (e) { return _this.onFocus(e); }));
-        }
-        this._register(this.tree.onDidChangeSelection(function (e) { return _this.onSelection(e); }));
-    };
-    TreeResourceNavigator.prototype.onFocus = function (_a) {
-        var payload = _a.payload;
-        var element = this.tree.getFocus();
-        this.tree.setSelection([element], { fromFocus: true });
-        var originalEvent = payload && payload.originalEvent;
-        var isMouseEvent = payload && payload.origin === 'mouse';
-        var isDoubleClick = isMouseEvent && originalEvent && originalEvent.detail === 2;
-        var preventOpen = payload && payload.preventOpenOnFocus;
-        if (!preventOpen && (!isMouseEvent || this.tree.openOnSingleClick || isDoubleClick)) {
-            this._openResource.fire({
-                editorOptions: {
-                    preserveFocus: true,
-                    pinned: false,
-                    revealIfVisible: true
-                },
-                sideBySide: false,
-                element: element,
-                payload: payload
-            });
-        }
-    };
-    TreeResourceNavigator.prototype.onSelection = function (_a) {
-        var payload = _a.payload;
-        if (payload && payload.fromFocus) {
-            return;
-        }
-        var originalEvent = payload && payload.originalEvent;
-        var isMouseEvent = payload && payload.origin === 'mouse';
-        var isDoubleClick = isMouseEvent && originalEvent && originalEvent.detail === 2;
-        if (!isMouseEvent || this.tree.openOnSingleClick || isDoubleClick) {
-            if (isDoubleClick && originalEvent) {
-                originalEvent.preventDefault(); // focus moves to editor, we need to prevent default
-            }
-            var isFromKeyboard = payload && payload.origin === 'keyboard';
-            var sideBySide = (originalEvent && (originalEvent.ctrlKey || originalEvent.metaKey || originalEvent.altKey));
-            var preserveFocus = !((isFromKeyboard && (!payload || !payload.preserveFocus)) || isDoubleClick || (payload && payload.focusEditor));
-            this._openResource.fire({
-                editorOptions: {
-                    preserveFocus: preserveFocus,
-                    pinned: isDoubleClick,
-                    revealIfVisible: true
-                },
-                sideBySide: sideBySide,
-                element: this.tree.getSelection()[0],
-                payload: payload
-            });
-        }
-    };
-    return TreeResourceNavigator;
-}(Disposable));
-export { TreeResourceNavigator };
 var configurationRegistry = Registry.as(ConfigurationExtensions.Configuration);
 configurationRegistry.registerConfiguration({
     'id': 'workbench',
@@ -458,20 +239,16 @@ configurationRegistry.registerConfiguration({
                     '- `ctrlCmd` refers to a value the setting can take and should not be localized.',
                     '- `Control` and `Command` refer to the modifier keys Ctrl or Cmd on the keyboard and can be localized.'
                 ]
-            }, "The modifier to be used to add an item in trees and lists to a multi-selection with the mouse (for example in the explorer, open editors and scm view). `ctrlCmd` maps to `Control` on Windows and Linux and to `Command` on macOS. The 'Open to Side' mouse gestures - if supported - will adapt such that they do not conflict with the multiselect modifier.")
+            }, "The modifier to be used to add an item in trees and lists to a multi-selection with the mouse (for example in the explorer, open editors and scm view). The 'Open to Side' mouse gestures - if supported - will adapt such that they do not conflict with the multiselect modifier.")
         },
         _a[openModeSettingKey] = {
             'type': 'string',
             'enum': ['singleClick', 'doubleClick'],
-            'enumDescriptions': [
-                localize('openMode.singleClick', "Opens items on mouse single click."),
-                localize('openMode.doubleClick', "Open items on mouse double click.")
-            ],
             'default': 'singleClick',
             'description': localize({
                 key: 'openModeModifier',
                 comment: ['`singleClick` and `doubleClick` refers to a value the setting can take and should not be localized.']
-            }, "Controls how to open items in trees and lists using the mouse (if supported). Set to `singleClick` to open items with a single mouse click and `doubleClick` to only open via mouse double click. For parents with children in trees, this setting will control if a single click expands the parent or a double click. Note that some trees and lists might choose to ignore this setting if it is not applicable. ")
+            }, "Controls how to open items in trees and lists using the mouse (if supported). For parents with children in trees, this setting will control if a single click expands the parent or a double click. Note that some trees and lists might choose to ignore this setting if it is not applicable. ")
         },
         _a[horizontalScrollingKey] = {
             'type': 'boolean',
@@ -480,4 +257,3 @@ configurationRegistry.registerConfiguration({
         },
         _a)
 });
-var _a;

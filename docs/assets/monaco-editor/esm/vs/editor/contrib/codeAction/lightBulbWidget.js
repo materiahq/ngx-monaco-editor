@@ -10,6 +10,7 @@ import { dispose } from '../../../base/common/lifecycle.js';
 import './lightBulbWidget.css';
 import { ContentWidgetPositionPreference } from '../../browser/editorBrowser.js';
 import { TextModel } from '../../common/model/textModel.js';
+import { CodeActionKind } from './codeActionTrigger.js';
 var LightBulbWidget = /** @class */ (function () {
     function LightBulbWidget(editor) {
         var _this = this;
@@ -37,7 +38,7 @@ var LightBulbWidget = /** @class */ (function () {
             var _a = dom.getDomNodePagePosition(_this._domNode), top = _a.top, height = _a.height;
             var lineHeight = _this._editor.getConfiguration().lineHeight;
             var pad = Math.floor(lineHeight / 3);
-            if (_this._position.position.lineNumber < _this._model.position.lineNumber) {
+            if (_this._position && _this._position.position.lineNumber < _this._model.position.lineNumber) {
                 pad += lineHeight;
             }
             _this._onClick.fire({
@@ -96,14 +97,20 @@ var LightBulbWidget = /** @class */ (function () {
             this._futureFixes = new CancellationTokenSource();
             var token = this._futureFixes.token;
             this._model = value;
-            this._model.actions.done(function (fixes) {
+            var selection = this._model.rangeOrSelection;
+            this._model.actions.then(function (fixes) {
                 if (!token.isCancellationRequested && fixes && fixes.length > 0) {
-                    _this._show();
+                    if (selection.isEmpty() && fixes.every(function (fix) { return fix.kind && CodeActionKind.Refactor.contains(fix.kind); })) {
+                        _this.hide();
+                    }
+                    else {
+                        _this._show();
+                    }
                 }
                 else {
                     _this.hide();
                 }
-            }, function (err) {
+            }).catch(function (err) {
                 _this.hide();
             });
         },
@@ -127,6 +134,9 @@ var LightBulbWidget = /** @class */ (function () {
         }
         var lineNumber = this._model.position.lineNumber;
         var model = this._editor.getModel();
+        if (!model) {
+            return;
+        }
         var tabSize = model.getOptions().tabSize;
         var lineContent = model.getLineContent(lineNumber);
         var indent = TextModel.computeIndentLevel(lineContent, tabSize);

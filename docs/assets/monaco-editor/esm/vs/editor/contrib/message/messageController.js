@@ -33,7 +33,6 @@ import { ContentWidgetPositionPreference } from '../../browser/editorBrowser.js'
 import { IContextKeyService, RawContextKey } from '../../../platform/contextkey/common/contextkey.js';
 import { registerThemingParticipant, HIGH_CONTRAST } from '../../../platform/theme/common/themeService.js';
 import { inputValidationInfoBorder, inputValidationInfoBackground } from '../../../platform/theme/common/colorRegistry.js';
-import { KeybindingsRegistry } from '../../../platform/keybinding/common/keybindingsRegistry.js';
 var MessageController = /** @class */ (function (_super) {
     __extends(MessageController, _super);
     function MessageController(editor, contextKeyService) {
@@ -53,9 +52,6 @@ var MessageController = /** @class */ (function (_super) {
     MessageController.prototype.dispose = function () {
         _super.prototype.dispose.call(this);
         this._visible.reset();
-    };
-    MessageController.prototype.isVisible = function () {
-        return this._visible.get();
     };
     MessageController.prototype.showMessage = function (message, position) {
         var _this = this;
@@ -110,7 +106,7 @@ registerEditorCommand(new MessageCommand({
     precondition: MessageController.MESSAGE_VISIBLE,
     handler: function (c) { return c.closeMessage(); },
     kbOpts: {
-        weight: KeybindingsRegistry.WEIGHT.editorContrib(30),
+        weight: 100 /* EditorContrib */ + 30,
         primary: 9 /* Escape */
     }
 }));

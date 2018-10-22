@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -23,8 +22,8 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 import * as nls from '../../../nls.js';
-import { sequence, asWinJsPromise } from '../../../base/common/async.js';
-import { onUnexpectedExternalError } from '../../../base/common/errors.js';
+import { first2, createCancelablePromise } from '../../../base/common/async.js';
+import { onUnexpectedExternalError, onUnexpectedError } from '../../../base/common/errors.js';
 import { Range } from '../../common/core/range.js';
 import { registerEditorContribution, EditorAction, registerEditorAction, registerDefaultLanguageCommand } from '../../browser/editorExtensions.js';
 import { DocumentHighlightKind, DocumentHighlightProviderRegistry } from '../../common/modes.js';
@@ -35,8 +34,9 @@ import { CursorChangeReason } from '../../common/controller/cursorEvents.js';
 import { ModelDecorationOptions } from '../../common/model/textModel.js';
 import { IContextKeyService, RawContextKey } from '../../../platform/contextkey/common/contextkey.js';
 import { EditorContextKeys } from '../../common/editorContextKeys.js';
-import { firstIndex } from '../../../base/common/arrays.js';
+import { firstIndex, isFalsyOrEmpty } from '../../../base/common/arrays.js';
 import { TrackedRangeStickiness, OverviewRulerLane } from '../../common/model.js';
+import { CancellationToken } from '../../../base/common/cancellation.js';
 export var editorWordHighlight = registerColor('editor.wordHighlightBackground', { dark: '#575757B8', light: '#57575740', hc: null }, nls.localize('wordHighlight', 'Background color of a symbol during read-access, like reading a variable. The color must not be opaque to not hide underlying decorations.'), true);
 export var editorWordHighlightStrong = registerColor('editor.wordHighlightStrongBackground', { dark: '#004972B8', light: '#0e639c40', hc: null }, nls.localize('wordHighlightStrong', 'Background color of a symbol during write-access, like writing to a variable. The color must not be opaque to not hide underlying decorations.'), true);
 export var editorWordHighlightBorder = registerColor('editor.wordHighlightBorder', { light: null, dark: null, hc: activeContrastBorder }, nls.localize('wordHighlightBorder', 'Border color of a symbol during read-access, like reading a variable.'));
@@ -44,35 +44,17 @@ export var editorWordHighlightStrongBorder = registerColor('editor.wordHighlight
 export var overviewRulerWordHighlightForeground = registerColor('editorOverviewRuler.wordHighlightForeground', { dark: '#A0A0A0CC', light: '#A0A0A0CC', hc: '#A0A0A0CC' }, nls.localize('overviewRulerWordHighlightForeground', 'Overview ruler marker color for symbol highlights. The color must not be opaque to not hide underlying decorations.'), true);
 export var overviewRulerWordHighlightStrongForeground = registerColor('editorOverviewRuler.wordHighlightStrongForeground', { dark: '#C0A0C0CC', light: '#C0A0C0CC', hc: '#C0A0C0CC' }, nls.localize('overviewRulerWordHighlightStrongForeground', 'Overview ruler marker color for write-access symbol highlights. The color must not be opaque to not hide underlying decorations.'), true);
 export var ctxHasWordHighlights = new RawContextKey('hasWordHighlights', false);
-export function getOccurrencesAtPosition(model, position) {
+export function getOccurrencesAtPosition(model, position, token) {
     var orderedByScore = DocumentHighlightProviderRegistry.ordered(model);
-    var foundResult = false;
     // in order of score ask the occurrences provider
     // until someone response with a good result
     // (good = none empty array)
-    return sequence(orderedByScore.map(function (provider) {
-        return function () {
-            if (!foundResult) {
-                return asWinJsPromise(function (token) {
-                    return provider.provideDocumentHighlights(model, position, token);
-                }).then(function (data) {
-                    if (Array.isArray(data) && data.length > 0) {
-                        foundResult = true;
-                        return data;
-                    }
-                    return undefined;
-                }, function (err) {
-                    onUnexpectedExternalError(err);
-                    return undefined;
-                });
-            }
-            return undefined;
-        };
-    })).then(function (values) {
-        return values[0];
-    });
+    return first2(orderedByScore.map(function (provider) { return function () {
+        return Promise.resolve(provider.provideDocumentHighlights(model, position, token))
+            .then(undefined, onUnexpectedExternalError);
+    }; }), function (result) { return !isFalsyOrEmpty(result); });
 }
-registerDefaultLanguageCommand('_executeDocumentHighlights', getOccurrencesAtPosition);
+registerDefaultLanguageCommand('_executeDocumentHighlights', function (model, position) { return getOccurrencesAtPosition(model, position, CancellationToken.None); });
 var WordHighlighter = /** @class */ (function () {
     function WordHighlighter(editor, contextKeyService) {
         var _this = this;
@@ -269,16 +251,16 @@ var WordHighlighter = /** @class */ (function () {
             // case d)
             // Stop all previous actions and start fresh
             this._stopAll();
-            var myRequestId = ++this.workerRequestTokenId;
+            var myRequestId_1 = ++this.workerRequestTokenId;
             this.workerRequestCompleted = false;
-            this.workerRequest = getOccurrencesAtPosition(this.model, this.editor.getPosition());
+            this.workerRequest = createCancelablePromise(function (token) { return getOccurrencesAtPosition(_this.model, _this.editor.getPosition(), token); });
             this.workerRequest.then(function (data) {
-                if (myRequestId === _this.workerRequestTokenId) {
+                if (myRequestId_1 === _this.workerRequestTokenId) {
                     _this.workerRequestCompleted = true;
                     _this.workerRequestValue = data || [];
                     _this._beginRenderDecorations();
                 }
-            }).done();
+            }, onUnexpectedError);
         }
         this._lastWordRange = currentWordRange;
     };
@@ -422,7 +404,8 @@ var NextWordHighlightAction = /** @class */ (function (_super) {
             precondition: ctxHasWordHighlights,
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 65 /* F7 */
+                primary: 65 /* F7 */,
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
@@ -438,7 +421,8 @@ var PrevWordHighlightAction = /** @class */ (function (_super) {
             precondition: ctxHasWordHighlights,
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 1024 /* Shift */ | 65 /* F7 */
+                primary: 1024 /* Shift */ | 65 /* F7 */,
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }

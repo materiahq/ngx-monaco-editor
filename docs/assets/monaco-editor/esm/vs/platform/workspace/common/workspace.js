@@ -5,19 +5,29 @@
 'use strict';
 import URI from '../../../base/common/uri.js';
 import * as paths from '../../../base/common/paths.js';
-import * as resources from '../../../base/common/resources.js';
 import { createDecorator } from '../../instantiation/common/instantiation.js';
 import { TernarySearchTree } from '../../../base/common/map.js';
-import { isRawFileWorkspaceFolder, isRawUriWorkspaceFolder } from '../../workspaces/common/workspaces.js';
-import { coalesce, distinct } from '../../../base/common/arrays.js';
-import { isLinux } from '../../../base/common/platform.js';
 export var IWorkspaceContextService = createDecorator('contextService');
-export var WorkbenchState;
-(function (WorkbenchState) {
-    WorkbenchState[WorkbenchState["EMPTY"] = 1] = "EMPTY";
-    WorkbenchState[WorkbenchState["FOLDER"] = 2] = "FOLDER";
-    WorkbenchState[WorkbenchState["WORKSPACE"] = 3] = "WORKSPACE";
-})(WorkbenchState || (WorkbenchState = {}));
+export var IWorkspace;
+(function (IWorkspace) {
+    function isIWorkspace(thing) {
+        return thing && typeof thing === 'object'
+            && typeof thing.id === 'string'
+            && typeof thing.name === 'string'
+            && Array.isArray(thing.folders);
+    }
+    IWorkspace.isIWorkspace = isIWorkspace;
+})(IWorkspace || (IWorkspace = {}));
+export var IWorkspaceFolder;
+(function (IWorkspaceFolder) {
+    function isIWorkspaceFolder(thing) {
+        return thing && typeof thing === 'object'
+            && URI.isUri(thing.uri)
+            && typeof thing.name === 'string'
+            && typeof thing.toResource === 'function';
+    }
+    IWorkspaceFolder.isIWorkspaceFolder = isIWorkspaceFolder;
+})(IWorkspaceFolder || (IWorkspaceFolder = {}));
 var Workspace = /** @class */ (function () {
     function Workspace(_id, _name, folders, _configuration, _ctime) {
         if (_name === void 0) { _name = ''; }
@@ -30,13 +40,6 @@ var Workspace = /** @class */ (function () {
         this._foldersMap = TernarySearchTree.forPaths();
         this.folders = folders;
     }
-    Workspace.prototype.update = function (workspace) {
-        this._id = workspace.id;
-        this._name = workspace.name;
-        this._configuration = workspace.configuration;
-        this._ctime = workspace.ctime;
-        this.folders = workspace.folders;
-    };
     Object.defineProperty(Workspace.prototype, "folders", {
         get: function () {
             return this._folders;
@@ -51,13 +54,6 @@ var Workspace = /** @class */ (function () {
     Object.defineProperty(Workspace.prototype, "id", {
         get: function () {
             return this._id;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Workspace.prototype, "ctime", {
-        get: function () {
-            return this._ctime;
         },
         enumerable: true,
         configurable: true
@@ -117,46 +113,3 @@ var WorkspaceFolder = /** @class */ (function () {
     return WorkspaceFolder;
 }());
 export { WorkspaceFolder };
-export function toWorkspaceFolders(configuredFolders, relativeTo) {
-    var workspaceFolders = parseWorkspaceFolders(configuredFolders, relativeTo);
-    return ensureUnique(coalesce(workspaceFolders))
-        .map(function (_a, index) {
-        var uri = _a.uri, raw = _a.raw, name = _a.name;
-        return new WorkspaceFolder({ uri: uri, name: name || resources.basenameOrAuthority(uri), index: index }, raw);
-    });
-}
-function parseWorkspaceFolders(configuredFolders, relativeTo) {
-    return configuredFolders.map(function (configuredFolder, index) {
-        var uri;
-        if (isRawFileWorkspaceFolder(configuredFolder)) {
-            uri = toUri(configuredFolder.path, relativeTo);
-        }
-        else if (isRawUriWorkspaceFolder(configuredFolder)) {
-            try {
-                uri = URI.parse(configuredFolder.uri);
-            }
-            catch (e) {
-                console.warn(e);
-                // ignore
-            }
-        }
-        if (!uri) {
-            return void 0;
-        }
-        return new WorkspaceFolder({ uri: uri, name: configuredFolder.name, index: index }, configuredFolder);
-    });
-}
-function toUri(path, relativeTo) {
-    if (path) {
-        if (paths.isAbsolute(path)) {
-            return URI.file(path);
-        }
-        if (relativeTo) {
-            return relativeTo.with({ path: paths.join(relativeTo.path, path) });
-        }
-    }
-    return null;
-}
-function ensureUnique(folders) {
-    return distinct(folders, function (folder) { return isLinux ? folder.uri.toString() : folder.uri.toString().toLowerCase(); });
-}

@@ -273,6 +273,7 @@ var ViewModel = /** @class */ (function (_super) {
                 eventsCollector.emit(new viewEvents.ViewDecorationsChangedEvent());
                 this.decorations.onLineMappingChanged();
                 this.viewLayout.onFlushed(this.getLineCount());
+                this.viewLayout.onHeightMaybeChanged();
             }
         }
         finally {
@@ -412,7 +413,7 @@ var ViewModel = /** @class */ (function (_super) {
         var lineData = this.lines.getViewLineData(lineNumber);
         var allInlineDecorations = this.decorations.getDecorationsViewportData(visibleRange).inlineDecorations;
         var inlineDecorations = allInlineDecorations[lineNumber - visibleRange.startLineNumber];
-        return new ViewLineRenderingData(lineData.minColumn, lineData.maxColumn, lineData.content, mightContainRTL, mightContainNonBasicASCII, lineData.tokens, inlineDecorations, tabSize);
+        return new ViewLineRenderingData(lineData.minColumn, lineData.maxColumn, lineData.content, lineData.continuesWithWrappedLine, mightContainRTL, mightContainNonBasicASCII, lineData.tokens, inlineDecorations, tabSize);
     };
     ViewModel.prototype.getViewLineData = function (lineNumber) {
         return this.lines.getViewLineData(lineNumber);

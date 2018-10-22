@@ -23,7 +23,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 import { IntervalTimer, ShallowCancelThenPromise, wireCancellationToken } from '../../../base/common/async.js';
-import { Disposable, dispose } from '../../../base/common/lifecycle.js';
+import { Disposable, dispose, toDisposable } from '../../../base/common/lifecycle.js';
 import { TPromise } from '../../../base/common/winjs.base.js';
 import { SimpleWorkerClient, logOnceWebWorkerWarning } from '../../../base/common/worker/simpleWorker.js';
 import { DefaultWorkerFactory } from '../../../base/worker/defaultWorkerFactory.js';
@@ -45,7 +45,7 @@ function canSyncModel(modelService, resource) {
     if (!model) {
         return false;
     }
-    if (model.isTooLargeForTokenization()) {
+    if (model.isTooLargeForSyncing()) {
         return false;
     }
     return true;
@@ -76,12 +76,6 @@ var EditorWorkerServiceImpl = /** @class */ (function (_super) {
     };
     EditorWorkerServiceImpl.prototype.computeDiff = function (original, modified, ignoreTrimWhitespace) {
         return this._workerManager.withWorker().then(function (client) { return client.computeDiff(original, modified, ignoreTrimWhitespace); });
-    };
-    EditorWorkerServiceImpl.prototype.canComputeDirtyDiff = function (original, modified) {
-        return (canSyncModel(this._modelService, original) && canSyncModel(this._modelService, modified));
-    };
-    EditorWorkerServiceImpl.prototype.computeDirtyDiff = function (original, modified, ignoreTrimWhitespace) {
-        return this._workerManager.withWorker().then(function (client) { return client.computeDirtyDiff(original, modified, ignoreTrimWhitespace); });
     };
     EditorWorkerServiceImpl.prototype.computeMoreMinimalEdits = function (resource, edits) {
         if (!Array.isArray(edits) || edits.length === 0) {
@@ -233,7 +227,7 @@ var EditorModelManager = /** @class */ (function (_super) {
         if (!model) {
             return;
         }
-        if (model.isTooLargeForTokenization()) {
+        if (model.isTooLargeForSyncing()) {
             return;
         }
         var modelUrl = resource.toString();
@@ -250,11 +244,9 @@ var EditorModelManager = /** @class */ (function (_super) {
         toDispose.push(model.onWillDispose(function () {
             _this._stopModelSync(modelUrl);
         }));
-        toDispose.push({
-            dispose: function () {
-                _this._proxy.acceptRemovedModel(modelUrl);
-            }
-        });
+        toDispose.push(toDisposable(function () {
+            _this._proxy.acceptRemovedModel(modelUrl);
+        }));
         this._syncedModels[modelUrl] = toDispose;
     };
     EditorModelManager.prototype._stopModelSync = function (modelUrl) {
@@ -326,11 +318,6 @@ var EditorWorkerClient = /** @class */ (function (_super) {
     EditorWorkerClient.prototype.computeDiff = function (original, modified, ignoreTrimWhitespace) {
         return this._withSyncedResources([original, modified]).then(function (proxy) {
             return proxy.computeDiff(original.toString(), modified.toString(), ignoreTrimWhitespace);
-        });
-    };
-    EditorWorkerClient.prototype.computeDirtyDiff = function (original, modified, ignoreTrimWhitespace) {
-        return this._withSyncedResources([original, modified]).then(function (proxy) {
-            return proxy.computeDirtyDiff(original.toString(), modified.toString(), ignoreTrimWhitespace);
         });
     };
     EditorWorkerClient.prototype.computeMoreMinimalEdits = function (resource, edits) {

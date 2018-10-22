@@ -8,14 +8,19 @@ import { TextModel } from '../../common/model/textModel.js';
 import { TPromise } from '../../../base/common/winjs.base.js';
 import { LanguageConfigurationRegistry } from '../../common/modes/languageConfigurationRegistry.js';
 var MAX_FOLDING_REGIONS_FOR_INDENT_LIMIT = 5000;
+export var ID_INDENT_PROVIDER = 'indent';
 var IndentRangeProvider = /** @class */ (function () {
-    function IndentRangeProvider() {
+    function IndentRangeProvider(editorModel) {
+        this.editorModel = editorModel;
+        this.id = ID_INDENT_PROVIDER;
     }
-    IndentRangeProvider.prototype.compute = function (editorModel, cancelationToken) {
-        var foldingRules = LanguageConfigurationRegistry.getFoldingRules(editorModel.getLanguageIdentifier().id);
+    IndentRangeProvider.prototype.dispose = function () {
+    };
+    IndentRangeProvider.prototype.compute = function (cancelationToken) {
+        var foldingRules = LanguageConfigurationRegistry.getFoldingRules(this.editorModel.getLanguageIdentifier().id);
         var offSide = foldingRules && foldingRules.offSide;
         var markers = foldingRules && foldingRules.markers;
-        return TPromise.as(computeRanges(editorModel, offSide, markers));
+        return TPromise.as(computeRanges(this.editorModel, offSide, markers));
     };
     return IndentRangeProvider;
 }());
@@ -67,13 +72,13 @@ var RangesCollector = /** @class */ (function () {
             }
             var tabSize = model.getOptions().tabSize;
             // reverse and create arrays of the exact length
-            var startIndexes = new Uint32Array(entries);
-            var endIndexes = new Uint32Array(entries);
+            var startIndexes = new Uint32Array(this._foldingRangesLimit);
+            var endIndexes = new Uint32Array(this._foldingRangesLimit);
             for (var i = this._length - 1, k = 0; i >= 0; i--) {
                 var startIndex = this._startIndexes[i];
                 var lineContent = model.getLineContent(startIndex);
                 var indent = TextModel.computeIndentLevel(lineContent, tabSize);
-                if (indent < maxIndent) {
+                if (indent < maxIndent || (indent === maxIndent && entries++ < this._foldingRangesLimit)) {
                     startIndexes[k] = startIndex;
                     endIndexes[k] = this._endIndexes[i];
                     k++;

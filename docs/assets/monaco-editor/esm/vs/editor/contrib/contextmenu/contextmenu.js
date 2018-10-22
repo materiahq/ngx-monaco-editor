@@ -128,7 +128,9 @@ var ContextMenuController = /** @class */ (function () {
         // Disable hover
         var oldHoverSetting = this._editor.getConfiguration().contribInfo.hover;
         this._editor.updateOptions({
-            hover: false
+            hover: {
+                enabled: false
+            }
         });
         var menuPosition = forcedPosition;
         if (!menuPosition) {
@@ -205,7 +207,8 @@ var ShowContextMenu = /** @class */ (function (_super) {
             precondition: null,
             kbOpts: {
                 kbExpr: EditorContextKeys.textInputFocus,
-                primary: 1024 /* Shift */ | 68 /* F10 */
+                primary: 1024 /* Shift */ | 68 /* F10 */,
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }

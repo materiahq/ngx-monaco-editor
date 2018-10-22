@@ -47,9 +47,6 @@ var PieceTreeTextBufferFactory = /** @class */ (function () {
         }
         return new PieceTreeTextBuffer(chunks, this._bom, eol, this._containsRTL, this._isBasicASCII, this._normalizeEOL);
     };
-    PieceTreeTextBufferFactory.prototype.getFirstLineText = function (lengthLimit) {
-        return this._chunks[0].buffer.substr(0, 100).split(/\r\n|\r|\n/)[0];
-    };
     return PieceTreeTextBufferFactory;
 }());
 export { PieceTreeTextBufferFactory };

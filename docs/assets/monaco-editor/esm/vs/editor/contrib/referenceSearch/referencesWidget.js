@@ -37,8 +37,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
         while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
                 case 0: case 1: t = op; break;
                 case 4: _.label++; return { value: op[1], done: false };
@@ -60,7 +60,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 import './media/referencesWidget.css';
 import * as nls from '../../../nls.js';
 import { onUnexpectedError } from '../../../base/common/errors.js';
-import { getPathLabel } from '../../../base/common/labels.js';
 import { Emitter } from '../../../base/common/event.js';
 import { dispose } from '../../../base/common/lifecycle.js';
 import { Schemas } from '../../../base/common/network.js';
@@ -72,7 +71,7 @@ import * as dom from '../../../base/browser/dom.js';
 import { Sash } from '../../../base/browser/ui/sash/sash.js';
 import { CountBadge } from '../../../base/browser/ui/countBadge/countBadge.js';
 import { FileLabel } from '../../../base/browser/ui/iconLabel/iconLabel.js';
-import { optional } from '../../../platform/instantiation/common/instantiation.js';
+import { IInstantiationService, optional } from '../../../platform/instantiation/common/instantiation.js';
 import { IWorkspaceContextService } from '../../../platform/workspace/common/workspace.js';
 import { Range } from '../../common/core/range.js';
 import { TextModel, ModelDecorationOptions } from '../../common/model/textModel.js';
@@ -89,6 +88,8 @@ import { TrackedRangeStickiness } from '../../common/model.js';
 import { WorkbenchTree, WorkbenchTreeController } from '../../../platform/list/browser/listService.js';
 import { RawContextKey } from '../../../platform/contextkey/common/contextkey.js';
 import { ClickBehavior } from '../../../base/parts/tree/browser/treeDefaults.js';
+import { IUriDisplayService } from '../../../platform/uriDisplay/common/uriDisplay.js';
+import { dirname, basenameOrAuthority } from '../../../base/common/resources.js';
 var DecorationsManager = /** @class */ (function () {
     function DecorationsManager(_editor, _model) {
         var _this = this;
@@ -528,14 +529,13 @@ export var ctxReferenceWidgetSearchTreeFocused = new RawContextKey('referenceSea
  */
 var ReferenceWidget = /** @class */ (function (_super) {
     __extends(ReferenceWidget, _super);
-    function ReferenceWidget(editor, _defaultTreeKeyboardSupport, layoutData, _textModelResolverService, _contextService, themeService, _instantiationService, _environmentService) {
+    function ReferenceWidget(editor, _defaultTreeKeyboardSupport, layoutData, themeService, _textModelResolverService, _instantiationService, _uriDisplay) {
         var _this = _super.call(this, editor, { showFrame: false, showArrow: true, isResizeable: true, isAccessible: true }) || this;
         _this._defaultTreeKeyboardSupport = _defaultTreeKeyboardSupport;
         _this.layoutData = layoutData;
         _this._textModelResolverService = _textModelResolverService;
-        _this._contextService = _contextService;
         _this._instantiationService = _instantiationService;
-        _this._environmentService = _environmentService;
+        _this._uriDisplay = _uriDisplay;
         _this._disposeOnNewModel = [];
         _this._callOnDispose = [];
         _this._onDidSelectReference = new Emitter();
@@ -749,15 +749,15 @@ var ReferenceWidget = /** @class */ (function (_super) {
         return undefined;
     };
     ReferenceWidget.prototype._revealReference = function (reference, revealParent) {
-        return __awaiter(this, void 0, TPromise, function () {
-            var _this = this;
+        return __awaiter(this, void 0, void 0, function () {
             var promise;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         // Update widget header
                         if (reference.uri.scheme !== Schemas.inMemory) {
-                            this.setTitle(reference.name, getPathLabel(reference.directory, this._contextService, this._environmentService));
+                            this.setTitle(basenameOrAuthority(reference.uri), this._uriDisplay.getLabel(dirname(reference.uri), false));
                         }
                         else {
                             this.setTitle(nls.localize('peekView.alternateTitle', "References"));
@@ -795,6 +795,12 @@ var ReferenceWidget = /** @class */ (function (_super) {
             });
         });
     };
+    ReferenceWidget = __decorate([
+        __param(3, IThemeService),
+        __param(4, ITextModelService),
+        __param(5, IInstantiationService),
+        __param(6, IUriDisplayService)
+    ], ReferenceWidget);
     return ReferenceWidget;
 }(PeekViewWidget));
 export { ReferenceWidget };

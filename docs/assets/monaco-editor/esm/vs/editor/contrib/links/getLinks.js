@@ -11,6 +11,7 @@ import { LinkProviderRegistry } from '../../common/modes.js';
 import { asWinJsPromise } from '../../../base/common/async.js';
 import { CommandsRegistry } from '../../../platform/commands/common/commands.js';
 import { IModelService } from '../../common/services/modelService.js';
+import { CancellationToken } from '../../../base/common/cancellation.js';
 var Link = /** @class */ (function () {
     function Link(link, provider) {
         this._link = link;
@@ -61,33 +62,37 @@ var Link = /** @class */ (function () {
     return Link;
 }());
 export { Link };
-export function getLinks(model) {
+export function getLinks(model, token) {
     var links = [];
     // ask all providers for links in parallel
     var promises = LinkProviderRegistry.ordered(model).reverse().map(function (provider) {
-        return asWinJsPromise(function (token) { return provider.provideLinks(model, token); }).then(function (result) {
+        return Promise.resolve(provider.provideLinks(model, token)).then(function (result) {
             if (Array.isArray(result)) {
                 var newLinks = result.map(function (link) { return new Link(link, provider); });
                 links = union(links, newLinks);
             }
         }, onUnexpectedExternalError);
     });
-    return TPromise.join(promises).then(function () {
+    return Promise.all(promises).then(function () {
         return links;
     });
 }
 function union(oldLinks, newLinks) {
     // reunite oldLinks with newLinks and remove duplicates
-    var result = [], oldIndex, oldLen, newIndex, newLen, oldLink, newLink, comparisonResult;
+    var result = [];
+    var oldIndex;
+    var oldLen;
+    var newIndex;
+    var newLen;
     for (oldIndex = 0, newIndex = 0, oldLen = oldLinks.length, newLen = newLinks.length; oldIndex < oldLen && newIndex < newLen;) {
-        oldLink = oldLinks[oldIndex];
-        newLink = newLinks[newIndex];
+        var oldLink = oldLinks[oldIndex];
+        var newLink = newLinks[newIndex];
         if (Range.areIntersectingOrTouching(oldLink.range, newLink.range)) {
             // Remove the oldLink
             oldIndex++;
             continue;
         }
-        comparisonResult = Range.compareRangesUsingStarts(oldLink.range, newLink.range);
+        var comparisonResult = Range.compareRangesUsingStarts(oldLink.range, newLink.range);
         if (comparisonResult < 0) {
             // oldLink is before
             result.push(oldLink);
@@ -120,5 +125,5 @@ CommandsRegistry.registerCommand('_executeLinkProvider', function (accessor) {
     if (!model) {
         return undefined;
     }
-    return getLinks(model);
+    return getLinks(model, CancellationToken.None);
 });

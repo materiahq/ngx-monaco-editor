@@ -23,10 +23,6 @@ var EditorModesRegistry = /** @class */ (function () {
         this._languages.push(def);
         this._onDidAddLanguages.fire([def]);
     };
-    EditorModesRegistry.prototype.registerLanguages = function (def) {
-        this._languages = this._languages.concat(def);
-        this._onDidAddLanguages.fire(def);
-    };
     EditorModesRegistry.prototype.getLanguages = function () {
         return this._languages.slice(0);
     };

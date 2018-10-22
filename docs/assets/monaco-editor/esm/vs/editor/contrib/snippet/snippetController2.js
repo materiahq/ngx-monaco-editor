@@ -20,7 +20,6 @@ import { EditorContextKeys } from '../../common/editorContextKeys.js';
 import { showSimpleSuggestions } from '../suggest/suggest.js';
 import { Selection } from '../../common/core/selection.js';
 import { repeat } from '../../../base/common/strings.js';
-import { KeybindingsRegistry } from '../../../platform/keybinding/common/keybindingsRegistry.js';
 import { ILogService } from '../../../platform/log/common/log.js';
 var SnippetController2 = /** @class */ (function () {
     function SnippetController2(_editor, _logService, contextKeyService) {
@@ -163,11 +162,8 @@ var SnippetController2 = /** @class */ (function () {
         this._session.next();
         this._updateState();
     };
-    SnippetController2.prototype.getSessionEnclosingRange = function () {
-        if (this._session) {
-            return this._session.getEnclosingRange();
-        }
-        return undefined;
+    SnippetController2.prototype.isInSnippet = function () {
+        return this._inSnippet.get();
     };
     SnippetController2.InSnippetMode = new RawContextKey('inSnippetMode', false);
     SnippetController2.HasNextTabstop = new RawContextKey('hasNextTabstop', false);
@@ -186,7 +182,7 @@ registerEditorCommand(new CommandCtor({
     precondition: ContextKeyExpr.and(SnippetController2.InSnippetMode, SnippetController2.HasNextTabstop),
     handler: function (ctrl) { return ctrl.next(); },
     kbOpts: {
-        weight: KeybindingsRegistry.WEIGHT.editorContrib(30),
+        weight: 100 /* EditorContrib */ + 30,
         kbExpr: EditorContextKeys.editorTextFocus,
         primary: 2 /* Tab */
     }
@@ -196,7 +192,7 @@ registerEditorCommand(new CommandCtor({
     precondition: ContextKeyExpr.and(SnippetController2.InSnippetMode, SnippetController2.HasPrevTabstop),
     handler: function (ctrl) { return ctrl.prev(); },
     kbOpts: {
-        weight: KeybindingsRegistry.WEIGHT.editorContrib(30),
+        weight: 100 /* EditorContrib */ + 30,
         kbExpr: EditorContextKeys.editorTextFocus,
         primary: 1024 /* Shift */ | 2 /* Tab */
     }
@@ -206,7 +202,7 @@ registerEditorCommand(new CommandCtor({
     precondition: SnippetController2.InSnippetMode,
     handler: function (ctrl) { return ctrl.cancel(); },
     kbOpts: {
-        weight: KeybindingsRegistry.WEIGHT.editorContrib(30),
+        weight: 100 /* EditorContrib */ + 30,
         kbExpr: EditorContextKeys.editorTextFocus,
         primary: 9 /* Escape */,
         secondary: [1024 /* Shift */ | 9 /* Escape */]

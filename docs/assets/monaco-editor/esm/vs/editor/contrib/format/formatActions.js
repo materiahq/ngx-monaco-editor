@@ -31,7 +31,7 @@ import { ContextKeyExpr } from '../../../platform/contextkey/common/contextkey.j
 import { registerEditorAction, EditorAction, registerEditorContribution } from '../../browser/editorExtensions.js';
 import { OnTypeFormattingEditProviderRegistry, DocumentRangeFormattingEditProviderRegistry } from '../../common/modes.js';
 import { getOnTypeFormattingEdits, getDocumentFormattingEdits, getDocumentRangeFormattingEdits, NoProviderError } from './format.js';
-import { EditOperationsCommand } from './formatCommand.js';
+import { FormattingEdit } from './formattingEdit.js';
 import { CommandsRegistry } from '../../../platform/commands/common/commands.js';
 import { ICodeEditorService } from '../../browser/services/codeEditorService.js';
 import { IEditorWorkerService } from '../../common/services/editorWorkerService.js';
@@ -116,7 +116,9 @@ var FormatOnType = /** @class */ (function () {
         if (this.editor.getSelections().length > 1) {
             return;
         }
-        var model = this.editor.getModel(), position = this.editor.getPosition(), canceled = false;
+        var model = this.editor.getModel();
+        var position = this.editor.getPosition();
+        var canceled = false;
         // install a listener that checks if edits happens before the
         // position on which we format right now. If so, we won't
         // apply the format edits
@@ -149,7 +151,7 @@ var FormatOnType = /** @class */ (function () {
             if (canceled || isFalsyOrEmpty(edits)) {
                 return;
             }
-            EditOperationsCommand.executeAsCommand(_this.editor, edits);
+            FormattingEdit.execute(_this.editor, edits);
             alertFormattingEdits(edits);
         }, function (err) {
             unbind.dispose();
@@ -217,7 +219,7 @@ var FormatOnPaste = /** @class */ (function () {
             if (!state.validate(_this.editor) || isFalsyOrEmpty(edits)) {
                 return;
             }
-            EditOperationsCommand.execute(_this.editor, edits);
+            FormattingEdit.execute(_this.editor, edits);
             alertFormattingEdits(edits);
         });
     };
@@ -254,7 +256,7 @@ var AbstractFormatAction = /** @class */ (function (_super) {
             if (!state.validate(editor) || isFalsyOrEmpty(edits)) {
                 return;
             }
-            EditOperationsCommand.execute(editor, edits);
+            FormattingEdit.execute(editor, edits);
             alertFormattingEdits(edits);
             editor.focus();
         }, function (err) {
@@ -284,7 +286,8 @@ var FormatDocumentAction = /** @class */ (function (_super) {
                 kbExpr: EditorContextKeys.editorTextFocus,
                 primary: 1024 /* Shift */ | 512 /* Alt */ | 36 /* KEY_F */,
                 // secondary: [KeyChord(KeyMod.CtrlCmd | KeyCode.KEY_K, KeyMod.CtrlCmd | KeyCode.KEY_D)],
-                linux: { primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 39 /* KEY_I */ }
+                linux: { primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 39 /* KEY_I */ },
+                weight: 100 /* EditorContrib */
             },
             menuOpts: {
                 when: EditorContextKeys.hasDocumentFormattingProvider,
@@ -314,7 +317,8 @@ var FormatSelectionAction = /** @class */ (function (_super) {
             precondition: ContextKeyExpr.and(EditorContextKeys.writable, EditorContextKeys.hasNonEmptySelection),
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: KeyChord(2048 /* CtrlCmd */ | 41 /* KEY_K */, 2048 /* CtrlCmd */ | 36 /* KEY_F */)
+                primary: KeyChord(2048 /* CtrlCmd */ | 41 /* KEY_K */, 2048 /* CtrlCmd */ | 36 /* KEY_F */),
+                weight: 100 /* EditorContrib */
             },
             menuOpts: {
                 when: ContextKeyExpr.and(EditorContextKeys.hasDocumentSelectionFormattingProvider, EditorContextKeys.hasNonEmptySelection),

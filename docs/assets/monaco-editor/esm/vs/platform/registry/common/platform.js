@@ -15,9 +15,6 @@ var RegistryImpl = /** @class */ (function () {
         Assert.ok(!this.data.hasOwnProperty(id), 'There is already an extension with this id');
         this.data[id] = data;
     };
-    RegistryImpl.prototype.knows = function (id) {
-        return this.data.hasOwnProperty(id);
-    };
     RegistryImpl.prototype.as = function (id) {
         return this.data[id] || null;
     };

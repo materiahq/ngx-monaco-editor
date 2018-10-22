@@ -25,20 +25,6 @@ var ContextMenuEvent = /** @class */ (function () {
     ContextMenuEvent.prototype.stopPropagation = function () {
         // no-op
     };
-    Object.defineProperty(ContextMenuEvent.prototype, "posx", {
-        get: function () {
-            return this._posx;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(ContextMenuEvent.prototype, "posy", {
-        get: function () {
-            return this._posy;
-        },
-        enumerable: true,
-        configurable: true
-    });
     Object.defineProperty(ContextMenuEvent.prototype, "target", {
         get: function () {
             return this._target;
@@ -91,15 +77,3 @@ export var DragOverBubble;
     DragOverBubble[DragOverBubble["BUBBLE_DOWN"] = 0] = "BUBBLE_DOWN";
     DragOverBubble[DragOverBubble["BUBBLE_UP"] = 1] = "BUBBLE_UP";
 })(DragOverBubble || (DragOverBubble = {}));
-export var DRAG_OVER_REJECT = { accept: false };
-export var DRAG_OVER_ACCEPT = { accept: true };
-export var DRAG_OVER_ACCEPT_BUBBLE_UP = { accept: true, bubble: DragOverBubble.BUBBLE_UP };
-export var DRAG_OVER_ACCEPT_BUBBLE_DOWN = function (autoExpand) {
-    if (autoExpand === void 0) { autoExpand = false; }
-    return ({ accept: true, bubble: DragOverBubble.BUBBLE_DOWN, autoExpand: autoExpand });
-};
-export var DRAG_OVER_ACCEPT_BUBBLE_UP_COPY = { accept: true, bubble: DragOverBubble.BUBBLE_UP, effect: DragOverEffect.COPY };
-export var DRAG_OVER_ACCEPT_BUBBLE_DOWN_COPY = function (autoExpand) {
-    if (autoExpand === void 0) { autoExpand = false; }
-    return ({ accept: true, bubble: DragOverBubble.BUBBLE_DOWN, effect: DragOverEffect.COPY, autoExpand: autoExpand });
-};

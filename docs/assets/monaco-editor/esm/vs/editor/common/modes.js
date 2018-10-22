@@ -81,6 +81,14 @@ export var SuggestTriggerKind;
     SuggestTriggerKind[SuggestTriggerKind["TriggerForIncompleteCompletions"] = 2] = "TriggerForIncompleteCompletions";
 })(SuggestTriggerKind || (SuggestTriggerKind = {}));
 /**
+ * @internal
+ */
+export var CodeActionTrigger;
+(function (CodeActionTrigger) {
+    CodeActionTrigger[CodeActionTrigger["Automatic"] = 1] = "Automatic";
+    CodeActionTrigger[CodeActionTrigger["Manual"] = 2] = "Manual";
+})(CodeActionTrigger || (CodeActionTrigger = {}));
+/**
  * A document highlight kind.
  */
 export var DocumentHighlightKind;
@@ -162,7 +170,7 @@ export var symbolKindToCssClass = (function () {
     _fromMapping[SymbolKind.Operator] = 'operator';
     _fromMapping[SymbolKind.TypeParameter] = 'type-parameter';
     return function toCssClassName(kind) {
-        return _fromMapping[kind] || 'property';
+        return "symbol-icon " + (_fromMapping[kind] || 'property');
     };
 })();
 var FoldingRangeKind = /** @class */ (function () {
@@ -190,12 +198,6 @@ var FoldingRangeKind = /** @class */ (function () {
     return FoldingRangeKind;
 }());
 export { FoldingRangeKind };
-/**
- * @internal
- */
-export function isResourceFileEdit(thing) {
-    return isObject(thing) && (Boolean(thing.newUri) || Boolean(thing.oldUri));
-}
 /**
  * @internal
  */

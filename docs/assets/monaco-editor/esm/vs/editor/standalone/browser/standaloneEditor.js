@@ -9,14 +9,13 @@ import { ContentWidgetPositionPreference, OverlayWidgetPositionPreference, Mouse
 import { StandaloneEditor, StandaloneDiffEditor } from './standaloneCodeEditor.js';
 import { ScrollbarVisibility } from '../../../base/common/scrollable.js';
 import { DynamicStandaloneServices, StaticServices } from './standaloneServices.js';
-import { OpenerService } from '../../../platform/opener/browser/openerService.js';
+import { OpenerService } from '../../browser/services/openerService.js';
 import { IOpenerService } from '../../../platform/opener/common/opener.js';
 import { Colorizer } from './colorizer.js';
-import { SimpleEditorService, SimpleEditorModelResolverService } from './simpleServices.js';
+import { SimpleEditorModelResolverService } from './simpleServices.js';
 import * as modes from '../../common/modes.js';
 import { createWebWorker as actualCreateWebWorker } from '../../common/services/webWorker.js';
 import { DiffNavigator } from '../../browser/widget/diffNavigator.js';
-import { IEditorService } from '../../../platform/editor/common/editor.js';
 import { ICommandService } from '../../../platform/commands/common/commands.js';
 import { IContextViewService } from '../../../platform/contextview/browser/contextView.js';
 import { IInstantiationService } from '../../../platform/instantiation/common/instantiation.js';
@@ -32,26 +31,18 @@ import * as editorOptions from '../../common/config/editorOptions.js';
 import { CursorChangeReason } from '../../common/controller/cursorEvents.js';
 import { OverviewRulerLane, EndOfLinePreference, DefaultEndOfLine, EndOfLineSequence, TrackedRangeStickiness, TextModelResolvedOptions, FindMatch } from '../../common/model.js';
 import { INotificationService } from '../../../platform/notification/common/notification.js';
+import { IConfigurationService } from '../../../platform/configuration/common/configuration.js';
 function withAllStandaloneServices(domElement, override, callback) {
     var services = new DynamicStandaloneServices(domElement, override);
-    // The editorService is a lovely beast. It needs to point back to the code editor instance...
-    var simpleEditorService = null;
-    if (!services.has(IEditorService)) {
-        simpleEditorService = new SimpleEditorService();
-        services.set(IEditorService, simpleEditorService);
-    }
     var simpleEditorModelResolverService = null;
     if (!services.has(ITextModelService)) {
         simpleEditorModelResolverService = new SimpleEditorModelResolverService();
         services.set(ITextModelService, simpleEditorModelResolverService);
     }
     if (!services.has(IOpenerService)) {
-        services.set(IOpenerService, new OpenerService(services.get(IEditorService), services.get(ICommandService)));
+        services.set(IOpenerService, new OpenerService(services.get(ICodeEditorService), services.get(ICommandService)));
     }
     var result = callback(services);
-    if (simpleEditorService) {
-        simpleEditorService.setEditor(result);
-    }
     if (simpleEditorModelResolverService) {
         simpleEditorModelResolverService.setEditor(result);
     }
@@ -64,7 +55,7 @@ function withAllStandaloneServices(domElement, override, callback) {
  */
 export function create(domElement, options, override) {
     return withAllStandaloneServices(domElement, override, function (services) {
-        return new StandaloneEditor(domElement, options, services, services.get(IInstantiationService), services.get(ICodeEditorService), services.get(ICommandService), services.get(IContextKeyService), services.get(IKeybindingService), services.get(IContextViewService), services.get(IStandaloneThemeService), services.get(INotificationService));
+        return new StandaloneEditor(domElement, options, services, services.get(IInstantiationService), services.get(ICodeEditorService), services.get(ICommandService), services.get(IContextKeyService), services.get(IKeybindingService), services.get(IContextViewService), services.get(IStandaloneThemeService), services.get(INotificationService), services.get(IConfigurationService));
     });
 }
 /**
@@ -84,7 +75,7 @@ export function onDidCreateEditor(listener) {
  */
 export function createDiffEditor(domElement, options, override) {
     return withAllStandaloneServices(domElement, override, function (services) {
-        return new StandaloneDiffEditor(domElement, options, services, services.get(IInstantiationService), services.get(IContextKeyService), services.get(IKeybindingService), services.get(IContextViewService), services.get(IEditorWorkerService), services.get(ICodeEditorService), services.get(IStandaloneThemeService), services.get(INotificationService));
+        return new StandaloneDiffEditor(domElement, options, services, services.get(IInstantiationService), services.get(IContextKeyService), services.get(IKeybindingService), services.get(IContextViewService), services.get(IEditorWorkerService), services.get(ICodeEditorService), services.get(IStandaloneThemeService), services.get(INotificationService), services.get(IConfigurationService));
     });
 }
 export function createDiffNavigator(diffEditor, opts) {
@@ -113,8 +104,8 @@ export function createModel(value, language, uri) {
 /**
  * Change the language for a model.
  */
-export function setModelLanguage(model, language) {
-    StaticServices.modelService.get().setMode(model, StaticServices.modeService.get().getOrCreateMode(language));
+export function setModelLanguage(model, languageId) {
+    StaticServices.modelService.get().setMode(model, StaticServices.modeService.get().getOrCreateMode(languageId));
 }
 /**
  * Set the markers for a model.
@@ -199,14 +190,14 @@ export function colorizeModelLine(model, lineNumber, tabSize) {
 /**
  * @internal
  */
-function getSafeTokenizationSupport(languageId) {
-    var tokenizationSupport = modes.TokenizationRegistry.get(languageId);
+function getSafeTokenizationSupport(language) {
+    var tokenizationSupport = modes.TokenizationRegistry.get(language);
     if (tokenizationSupport) {
         return tokenizationSupport;
     }
     return {
         getInitialState: function () { return NULL_STATE; },
-        tokenize: function (line, state, deltaOffset) { return nullTokenize(languageId, line, state, deltaOffset); },
+        tokenize: function (line, state, deltaOffset) { return nullTokenize(language, line, state, deltaOffset); },
         tokenize2: undefined,
     };
 }
@@ -230,7 +221,7 @@ export function tokenize(text, languageId) {
     return result;
 }
 /**
- * Define a new theme.
+ * Define a new theme or updte an existing theme.
  */
 export function defineTheme(themeName, themeData) {
     StaticServices.standaloneThemeService.get().defineTheme(themeName, themeData);

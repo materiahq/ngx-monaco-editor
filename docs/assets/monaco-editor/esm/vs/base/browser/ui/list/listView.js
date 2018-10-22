@@ -29,14 +29,6 @@ function canUseTranslate3d() {
     if (browser.getZoomLevel() !== 0) {
         return false;
     }
-    // see https://github.com/Microsoft/vscode/issues/24483
-    if (browser.isChromev56) {
-        var pixelRatio = browser.getPixelRatio();
-        if (Math.floor(pixelRatio) !== pixelRatio) {
-            // Not an integer
-            return false;
-        }
-    }
     return true;
 }
 var DefaultOptions = {
@@ -44,9 +36,9 @@ var DefaultOptions = {
     verticalScrollMode: ScrollbarVisibility.Auto
 };
 var ListView = /** @class */ (function () {
-    function ListView(container, delegate, renderers, options) {
+    function ListView(container, virtualDelegate, renderers, options) {
         if (options === void 0) { options = DefaultOptions; }
-        this.delegate = delegate;
+        this.virtualDelegate = virtualDelegate;
         this.renderers = new Map();
         this.splicing = false;
         this.items = [];
@@ -105,6 +97,7 @@ var ListView = /** @class */ (function () {
     ListView.prototype._splice = function (start, deleteCount, elements) {
         var _this = this;
         if (elements === void 0) { elements = []; }
+        var _a, _b;
         var previousRenderRange = this.getRenderRange(this.lastRenderTop, this.lastRenderHeight);
         var deleteRange = { start: start, end: start + deleteCount };
         var removeRange = intersect(previousRenderRange, deleteRange);
@@ -117,8 +110,8 @@ var ListView = /** @class */ (function () {
         var inserted = elements.map(function (element) { return ({
             id: String(_this.itemId++),
             element: element,
-            size: _this.delegate.getHeight(element),
-            templateId: _this.delegate.getTemplateId(element),
+            size: _this.virtualDelegate.getHeight(element),
+            templateId: _this.virtualDelegate.getTemplateId(element),
             row: null
         }); });
         (_a = this.rangeMap).splice.apply(_a, [start, deleteCount].concat(inserted));
@@ -151,7 +144,6 @@ var ListView = /** @class */ (function () {
         this.rowsContainer.style.height = scrollHeight + "px";
         this.scrollableElement.setScrollDimensions({ scrollHeight: scrollHeight });
         return deleted.map(function (i) { return i.element; });
-        var _a, _b;
     };
     Object.defineProperty(ListView.prototype, "length", {
         get: function () {
@@ -250,6 +242,10 @@ var ListView = /** @class */ (function () {
     };
     ListView.prototype.removeItemFromDOM = function (index) {
         var item = this.items[index];
+        var renderer = this.renderers.get(item.templateId);
+        if (renderer.disposeElement) {
+            renderer.disposeElement(item.element, index, item.row.templateData);
+        }
         this.cache.release(item.row);
         item.row = null;
     };
@@ -290,42 +286,10 @@ var ListView = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(ListView.prototype, "onMouseUp", {
-        get: function () {
-            var _this = this;
-            return filterEvent(mapEvent(domEvent(this.domNode, 'mouseup'), function (e) { return _this.toMouseEvent(e); }), function (e) { return e.index >= 0; });
-        },
-        enumerable: true,
-        configurable: true
-    });
     Object.defineProperty(ListView.prototype, "onMouseDown", {
         get: function () {
             var _this = this;
             return filterEvent(mapEvent(domEvent(this.domNode, 'mousedown'), function (e) { return _this.toMouseEvent(e); }), function (e) { return e.index >= 0; });
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(ListView.prototype, "onMouseOver", {
-        get: function () {
-            var _this = this;
-            return filterEvent(mapEvent(domEvent(this.domNode, 'mouseover'), function (e) { return _this.toMouseEvent(e); }), function (e) { return e.index >= 0; });
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(ListView.prototype, "onMouseMove", {
-        get: function () {
-            var _this = this;
-            return filterEvent(mapEvent(domEvent(this.domNode, 'mousemove'), function (e) { return _this.toMouseEvent(e); }), function (e) { return e.index >= 0; });
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(ListView.prototype, "onMouseOut", {
-        get: function () {
-            var _this = this;
-            return filterEvent(mapEvent(domEvent(this.domNode, 'mouseout'), function (e) { return _this.toMouseEvent(e); }), function (e) { return e.index >= 0; });
         },
         enumerable: true,
         configurable: true
@@ -373,7 +337,13 @@ var ListView = /** @class */ (function () {
         return { browserEvent: browserEvent, index: index, element: element };
     };
     ListView.prototype.onScroll = function (e) {
-        this.render(e.scrollTop, e.height);
+        try {
+            this.render(e.scrollTop, e.height);
+        }
+        catch (err) {
+            console.log('Got bad scroll event:', e);
+            throw err;
+        }
     };
     ListView.prototype.onTouchChange = function (event) {
         event.preventDefault();
@@ -460,7 +430,17 @@ var ListView = /** @class */ (function () {
     };
     // Dispose
     ListView.prototype.dispose = function () {
-        this.items = null;
+        if (this.items) {
+            for (var _i = 0, _a = this.items; _i < _a.length; _i++) {
+                var item = _a[_i];
+                if (item.row) {
+                    var renderer = this.renderers.get(item.row.templateId);
+                    renderer.disposeTemplate(item.row.templateData);
+                    item.row = null;
+                }
+            }
+            this.items = null;
+        }
         if (this._domNode && this._domNode.parentElement) {
             this._domNode.parentNode.removeChild(this._domNode);
             this._domNode = null;
@@ -475,19 +455,7 @@ var ListView = /** @class */ (function () {
     ], ListView.prototype, "onMouseDblClick", null);
     __decorate([
         memoize
-    ], ListView.prototype, "onMouseUp", null);
-    __decorate([
-        memoize
     ], ListView.prototype, "onMouseDown", null);
-    __decorate([
-        memoize
-    ], ListView.prototype, "onMouseOver", null);
-    __decorate([
-        memoize
-    ], ListView.prototype, "onMouseMove", null);
-    __decorate([
-        memoize
-    ], ListView.prototype, "onMouseOut", null);
     __decorate([
         memoize
     ], ListView.prototype, "onContextMenu", null);

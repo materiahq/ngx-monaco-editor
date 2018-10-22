@@ -13,6 +13,7 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+import * as nls from '../../../nls.js';
 import { Position } from '../../common/core/position.js';
 import { Range } from '../../common/core/range.js';
 import * as editorCommon from '../../common/editorCommon.js';
@@ -22,15 +23,14 @@ import { CursorMoveCommands, CursorMove as CursorMove_ } from '../../common/cont
 import { registerEditorCommand, EditorCommand, Command } from '../editorExtensions.js';
 import { ColumnSelection } from '../../common/controller/cursorColumnSelection.js';
 import { EditorContextKeys } from '../../common/editorContextKeys.js';
-import { KeybindingsRegistry } from '../../../platform/keybinding/common/keybindingsRegistry.js';
 var H = editorCommon.Handler;
-import { ICodeEditorService, getCodeEditor } from '../services/codeEditorService.js';
+import { ICodeEditorService } from '../services/codeEditorService.js';
 import { ContextKeyExpr } from '../../../platform/contextkey/common/contextkey.js';
 import * as types from '../../../base/common/types.js';
-import { IEditorService } from '../../../platform/editor/common/editor.js';
 import { TypeOperations } from '../../common/controller/cursorTypeOperations.js';
 import { DeleteOperations } from '../../common/controller/cursorDeleteOperations.js';
-var CORE_WEIGHT = KeybindingsRegistry.WEIGHT.editorCore();
+import { MenuId } from '../../../platform/actions/common/actions.js';
+var CORE_WEIGHT = 0 /* EditorCore */;
 var CoreEditorCommand = /** @class */ (function (_super) {
     __extends(CoreEditorCommand, _super);
     function CoreEditorCommand() {
@@ -591,9 +591,6 @@ export var CoreNavigationCommands;
         }
         class_4.prototype.runCoreEditorCommand = function (cursors, args) {
             var context = cursors.context;
-            if (context.config.readOnly) {
-                return;
-            }
             var newState;
             if (args.wholeLine) {
                 newState = CursorMoveCommands.line(context, cursors.getPrimaryCursor(), false, args.position, args.viewPosition);
@@ -638,9 +635,6 @@ export var CoreNavigationCommands;
         }
         class_5.prototype.runCoreEditorCommand = function (cursors, args) {
             var context = cursors.context;
-            if (context.config.readOnly) {
-                return;
-            }
             var lastAddedCursorIndex = cursors.getLastAddedCursorIndex();
             var newStates = cursors.getAll().slice(0);
             newStates[lastAddedCursorIndex] = CursorMoveCommands.moveTo(context, newStates[lastAddedCursorIndex], true, args.position, args.viewPosition);
@@ -1053,9 +1047,6 @@ export var CoreNavigationCommands;
         }
         class_12.prototype.runCoreEditorCommand = function (cursors, args) {
             var context = cursors.context;
-            if (context.config.readOnly) {
-                return;
-            }
             var lastAddedCursorIndex = cursors.getLastAddedCursorIndex();
             var newStates = cursors.getAll().slice(0);
             var lastAddedState = newStates[lastAddedCursorIndex];
@@ -1099,10 +1090,6 @@ export var CoreNavigationCommands;
             return _this;
         }
         LastCursorLineCommand.prototype.runCoreEditorCommand = function (cursors, args) {
-            var context = cursors.context;
-            if (context.config.readOnly) {
-                return;
-            }
             var lastAddedCursorIndex = cursors.getLastAddedCursorIndex();
             var newStates = cursors.getAll().slice(0);
             newStates[lastAddedCursorIndex] = CursorMoveCommands.line(cursors.context, newStates[lastAddedCursorIndex], this._inSelectionMode, args.position, args.viewPosition);
@@ -1378,13 +1365,8 @@ export var CoreEditingCommands;
 function findFocusedEditor(accessor) {
     return accessor.get(ICodeEditorService).getFocusedCodeEditor();
 }
-function getWorkbenchActiveEditor(accessor) {
-    var editorService = accessor.get(IEditorService);
-    var activeEditor = editorService.getActiveEditor && editorService.getActiveEditor();
-    return getCodeEditor(activeEditor);
-}
 function registerCommand(command) {
-    KeybindingsRegistry.registerCommandAndKeybindingRule(command.toCommandAndKeybindingRule(CORE_WEIGHT));
+    command.register();
 }
 /**
  * A command that will:
@@ -1403,7 +1385,7 @@ var EditorOrNativeTextInputCommand = /** @class */ (function (_super) {
     EditorOrNativeTextInputCommand.prototype.runCommand = function (accessor, args) {
         var focusedEditor = findFocusedEditor(accessor);
         // Only if editor text focus (i.e. not if editor has widget focus).
-        if (focusedEditor && focusedEditor.isFocused()) {
+        if (focusedEditor && focusedEditor.hasTextFocus()) {
             return this._runEditorHandler(focusedEditor, args);
         }
         // Ignore this action when user is focused on an element that allows for entering text
@@ -1412,8 +1394,8 @@ var EditorOrNativeTextInputCommand = /** @class */ (function (_super) {
             document.execCommand(this._inputHandler);
             return;
         }
-        // Redirecting to last active editor
-        var activeEditor = getWorkbenchActiveEditor(accessor);
+        // Redirecting to active editor
+        var activeEditor = accessor.get(ICodeEditorService).getActiveCodeEditor();
         if (activeEditor) {
             activeEditor.focus();
             return this._runEditorHandler(activeEditor, args);
@@ -1458,11 +1440,17 @@ registerCommand(new EditorOrNativeTextInputCommand({
     editorHandler: CoreNavigationCommands.SelectAll,
     inputHandler: 'selectAll',
     id: 'editor.action.selectAll',
-    precondition: null,
+    precondition: EditorContextKeys.textInputFocus,
     kbOpts: {
         weight: CORE_WEIGHT,
         kbExpr: null,
         primary: 2048 /* CtrlCmd */ | 31 /* KEY_A */
+    },
+    menubarOpts: {
+        menuId: MenuId.MenubarSelectionMenu,
+        group: '1_basic',
+        title: nls.localize({ key: 'miSelectAll', comment: ['&& denotes a mnemonic'] }, "&&Select All"),
+        order: 1
     }
 }));
 registerCommand(new EditorOrNativeTextInputCommand({
@@ -1474,6 +1462,12 @@ registerCommand(new EditorOrNativeTextInputCommand({
         weight: CORE_WEIGHT,
         kbExpr: EditorContextKeys.textInputFocus,
         primary: 2048 /* CtrlCmd */ | 56 /* KEY_Z */
+    },
+    menubarOpts: {
+        menuId: MenuId.MenubarEditMenu,
+        group: '1_do',
+        title: nls.localize({ key: 'miUndo', comment: ['&& denotes a mnemonic'] }, "&&Undo"),
+        order: 1
     }
 }));
 registerCommand(new EditorHandlerCommand('default:' + H.Undo, H.Undo));
@@ -1488,6 +1482,12 @@ registerCommand(new EditorOrNativeTextInputCommand({
         primary: 2048 /* CtrlCmd */ | 55 /* KEY_Y */,
         secondary: [2048 /* CtrlCmd */ | 1024 /* Shift */ | 56 /* KEY_Z */],
         mac: { primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 56 /* KEY_Z */ }
+    },
+    menubarOpts: {
+        menuId: MenuId.MenubarEditMenu,
+        group: '1_do',
+        title: nls.localize({ key: 'miRedo', comment: ['&& denotes a mnemonic'] }, "&&Redo"),
+        order: 2
     }
 }));
 registerCommand(new EditorHandlerCommand('default:' + H.Redo, H.Redo));

@@ -2,22 +2,23 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { Emitter, debounceEvent } from '../../../base/common/event.js';
+import { createCancelablePromise } from '../../../base/common/async.js';
+import { debounceEvent, Emitter } from '../../../base/common/event.js';
 import { dispose } from '../../../base/common/lifecycle.js';
 import { TPromise } from '../../../base/common/winjs.base.js';
 import { Range } from '../../common/core/range.js';
-import { Selection } from '../../common/core/selection.js';
 import { CodeActionProviderRegistry } from '../../common/modes.js';
 import { RawContextKey } from '../../../platform/contextkey/common/contextkey.js';
 import { getCodeActions } from './codeAction.js';
 export var SUPPORTED_CODE_ACTIONS = new RawContextKey('supportedCodeAction', '');
 var CodeActionOracle = /** @class */ (function () {
-    function CodeActionOracle(_editor, _markerService, _signalChange, delay) {
+    function CodeActionOracle(_editor, _markerService, _signalChange, delay, _progressService) {
         if (delay === void 0) { delay = 250; }
         var _this = this;
         this._editor = _editor;
         this._markerService = _markerService;
         this._signalChange = _signalChange;
+        this._progressService = _progressService;
         this._disposables = [];
         this._disposables.push(debounceEvent(this._markerService.onMarkerChanged, function (last, cur) { return last ? last.concat(cur) : cur; }, delay / 2)(function (e) { return _this._onMarkerChanges(e); }), debounceEvent(this._editor.onDidChangeCursorPosition, function (last, cur) { return cur; }, delay)(function (e) { return _this._onCursorChange(); }));
     }
@@ -25,11 +26,8 @@ var CodeActionOracle = /** @class */ (function () {
         this._disposables = dispose(this._disposables);
     };
     CodeActionOracle.prototype.trigger = function (trigger) {
-        var rangeOrSelection = this._getRangeOfMarker() || this._getRangeOfSelectionUnlessWhitespaceEnclosed();
-        if (!rangeOrSelection && trigger.type === 'manual') {
-            rangeOrSelection = this._editor.getSelection();
-        }
-        return this._createEventAndSignalChange(trigger, rangeOrSelection);
+        var selection = this._getRangeOfSelectionUnlessWhitespaceEnclosed(trigger);
+        return this._createEventAndSignalChange(trigger, selection);
     };
     CodeActionOracle.prototype._onMarkerChanges = function (resources) {
         var uri = this._editor.getModel().uri;
@@ -44,8 +42,7 @@ var CodeActionOracle = /** @class */ (function () {
     CodeActionOracle.prototype._onCursorChange = function () {
         this.trigger({ type: 'auto' });
     };
-    CodeActionOracle.prototype._getRangeOfMarker = function () {
-        var selection = this._editor.getSelection();
+    CodeActionOracle.prototype._getRangeOfMarker = function (selection) {
         var model = this._editor.getModel();
         for (var _i = 0, _a = this._markerService.read({ resource: model.uri }); _i < _a.length; _i++) {
             var marker = _a[_i];
@@ -55,10 +52,10 @@ var CodeActionOracle = /** @class */ (function () {
         }
         return undefined;
     };
-    CodeActionOracle.prototype._getRangeOfSelectionUnlessWhitespaceEnclosed = function () {
+    CodeActionOracle.prototype._getRangeOfSelectionUnlessWhitespaceEnclosed = function (trigger) {
         var model = this._editor.getModel();
         var selection = this._editor.getSelection();
-        if (selection.isEmpty()) {
+        if (selection.isEmpty() && !(trigger.filter && trigger.filter.includeSourceActions)) {
             var _a = selection.getPosition(), lineNumber = _a.lineNumber, column = _a.column;
             var line = model.getLineContent(lineNumber);
             if (line.length === 0) {
@@ -86,26 +83,28 @@ var CodeActionOracle = /** @class */ (function () {
         }
         return selection;
     };
-    CodeActionOracle.prototype._createEventAndSignalChange = function (trigger, rangeOrSelection) {
-        if (!rangeOrSelection) {
+    CodeActionOracle.prototype._createEventAndSignalChange = function (trigger, selection) {
+        if (!selection) {
             // cancel
             this._signalChange({
                 trigger: trigger,
-                range: undefined,
+                rangeOrSelection: undefined,
                 position: undefined,
                 actions: undefined,
             });
             return TPromise.as(undefined);
         }
         else {
-            // actual
-            var model = this._editor.getModel();
-            var range = model.validateRange(rangeOrSelection);
-            var position = rangeOrSelection instanceof Selection ? rangeOrSelection.getPosition() : rangeOrSelection.getStartPosition();
-            var actions = getCodeActions(model, range, trigger && trigger.filter);
+            var model_1 = this._editor.getModel();
+            var markerRange = this._getRangeOfMarker(selection);
+            var position = markerRange ? markerRange.getStartPosition() : selection.getStartPosition();
+            var actions = createCancelablePromise(function (token) { return getCodeActions(model_1, selection, trigger, token); });
+            if (this._progressService && trigger.type === 'manual') {
+                this._progressService.showWhile(TPromise.wrap(actions), 250);
+            }
             this._signalChange({
                 trigger: trigger,
-                range: range,
+                rangeOrSelection: selection,
                 position: position,
                 actions: actions
             });
@@ -116,8 +115,9 @@ var CodeActionOracle = /** @class */ (function () {
 }());
 export { CodeActionOracle };
 var CodeActionModel = /** @class */ (function () {
-    function CodeActionModel(editor, markerService, contextKeyService) {
+    function CodeActionModel(editor, markerService, contextKeyService, _progressService) {
         var _this = this;
+        this._progressService = _progressService;
         this._onDidChangeFixes = new Emitter();
         this._disposables = [];
         this._editor = editor;
@@ -157,7 +157,7 @@ var CodeActionModel = /** @class */ (function () {
                 }
             }
             this._supportedCodeActions.set(supportedActions.join(' '));
-            this._codeActionOracle = new CodeActionOracle(this._editor, this._markerService, function (p) { return _this._onDidChangeFixes.fire(p); });
+            this._codeActionOracle = new CodeActionOracle(this._editor, this._markerService, function (p) { return _this._onDidChangeFixes.fire(p); }, undefined, this._progressService);
             this._codeActionOracle.trigger({ type: 'auto' });
         }
         else {

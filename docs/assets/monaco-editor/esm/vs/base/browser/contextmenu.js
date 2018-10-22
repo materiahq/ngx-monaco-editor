@@ -13,14 +13,14 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-import { Action } from '../common/actions.js';
+import { SubmenuAction } from './ui/menu/menu.js';
 var ContextSubMenu = /** @class */ (function (_super) {
     __extends(ContextSubMenu, _super);
     function ContextSubMenu(label, entries) {
-        var _this = _super.call(this, 'contextsubmenu', label, '', true) || this;
+        var _this = _super.call(this, label, entries, 'contextsubmenu') || this;
         _this.entries = entries;
         return _this;
     }
     return ContextSubMenu;
-}(Action));
+}(SubmenuAction));
 export { ContextSubMenu };

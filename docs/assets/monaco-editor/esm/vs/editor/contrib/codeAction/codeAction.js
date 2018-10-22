@@ -2,30 +2,37 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { isFalsyOrEmpty, mergeSort, flatten } from '../../../base/common/arrays.js';
+import { flatten, isFalsyOrEmpty, mergeSort } from '../../../base/common/arrays.js';
 import { asWinJsPromise } from '../../../base/common/async.js';
-import { illegalArgument, onUnexpectedExternalError } from '../../../base/common/errors.js';
+import { CancellationToken } from '../../../base/common/cancellation.js';
+import { illegalArgument, isPromiseCanceledError, onUnexpectedExternalError } from '../../../base/common/errors.js';
 import URI from '../../../base/common/uri.js';
-import { TPromise } from '../../../base/common/winjs.base.js';
 import { registerLanguageCommand } from '../../browser/editorExtensions.js';
 import { Range } from '../../common/core/range.js';
-import { CodeActionProviderRegistry } from '../../common/modes.js';
+import { CodeActionProviderRegistry, CodeActionTrigger as CodeActionTriggerKind } from '../../common/modes.js';
 import { IModelService } from '../../common/services/modelService.js';
 import { CodeActionKind } from './codeActionTrigger.js';
-export function getCodeActions(model, range, filter) {
-    var codeActionContext = { only: filter && filter.kind ? filter.kind.value : undefined };
+export function getCodeActions(model, rangeOrSelection, trigger, token) {
+    if (token === void 0) { token = CancellationToken.None; }
+    var codeActionContext = {
+        only: trigger && trigger.filter && trigger.filter.kind ? trigger.filter.kind.value : undefined,
+        trigger: trigger && trigger.type === 'manual' ? CodeActionTriggerKind.Manual : CodeActionTriggerKind.Automatic
+    };
     var promises = CodeActionProviderRegistry.all(model).map(function (support) {
-        return asWinJsPromise(function (token) { return support.provideCodeActions(model, range, codeActionContext, token); }).then(function (providedCodeActions) {
+        return asWinJsPromise(function (token) { return support.provideCodeActions(model, rangeOrSelection, codeActionContext, token); }).then(function (providedCodeActions) {
             if (!Array.isArray(providedCodeActions)) {
                 return [];
             }
-            return providedCodeActions.filter(function (action) { return isValidAction(filter, action); });
+            return providedCodeActions.filter(function (action) { return isValidAction(trigger && trigger.filter, action); });
         }, function (err) {
+            if (isPromiseCanceledError(err)) {
+                throw err;
+            }
             onUnexpectedExternalError(err);
             return [];
         });
     });
-    return TPromise.join(promises)
+    return Promise.all(promises)
         .then(flatten)
         .then(function (allCodeActions) { return mergeSort(allCodeActions, codeActionsComparator); });
 }
@@ -70,5 +77,5 @@ registerLanguageCommand('_executeCodeActionProvider', function (accessor, args) 
     if (!model) {
         throw illegalArgument();
     }
-    return getCodeActions(model, model.validateRange(range));
+    return getCodeActions(model, model.validateRange(range), { type: 'manual', filter: { includeSourceActions: true } });
 });

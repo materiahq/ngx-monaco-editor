@@ -27,15 +27,13 @@ import { IInstantiationService } from '../../../platform/instantiation/common/in
 import { ICommandService } from '../../../platform/commands/common/commands.js';
 import { IContextKeyService } from '../../../platform/contextkey/common/contextkey.js';
 import { ICodeEditorService } from '../services/codeEditorService.js';
-import { CodeEditor } from '../codeEditor.js';
+import { CodeEditorWidget } from './codeEditorWidget.js';
 import { IThemeService } from '../../../platform/theme/common/themeService.js';
-import { DiffEditorWidget } from './diffEditorWidget.js';
-import { IEditorWorkerService } from '../../common/services/editorWorkerService.js';
 import { INotificationService } from '../../../platform/notification/common/notification.js';
 var EmbeddedCodeEditorWidget = /** @class */ (function (_super) {
     __extends(EmbeddedCodeEditorWidget, _super);
     function EmbeddedCodeEditorWidget(domElement, options, parentEditor, instantiationService, codeEditorService, commandService, contextKeyService, themeService, notificationService) {
-        var _this = _super.call(this, domElement, parentEditor.getRawConfiguration(), instantiationService, codeEditorService, commandService, contextKeyService, themeService, notificationService) || this;
+        var _this = _super.call(this, domElement, parentEditor.getRawConfiguration(), {}, instantiationService, codeEditorService, commandService, contextKeyService, themeService, notificationService) || this;
         _this._parentEditor = parentEditor;
         _this._overwriteOptions = options;
         // Overwrite parent's options
@@ -63,38 +61,5 @@ var EmbeddedCodeEditorWidget = /** @class */ (function (_super) {
         __param(8, INotificationService)
     ], EmbeddedCodeEditorWidget);
     return EmbeddedCodeEditorWidget;
-}(CodeEditor));
+}(CodeEditorWidget));
 export { EmbeddedCodeEditorWidget };
-var EmbeddedDiffEditorWidget = /** @class */ (function (_super) {
-    __extends(EmbeddedDiffEditorWidget, _super);
-    function EmbeddedDiffEditorWidget(domElement, options, parentEditor, editorWorkerService, contextKeyService, instantiationService, codeEditorService, themeService, notificationService) {
-        var _this = _super.call(this, domElement, parentEditor.getRawConfiguration(), editorWorkerService, contextKeyService, instantiationService, codeEditorService, themeService, notificationService) || this;
-        _this._parentEditor = parentEditor;
-        _this._overwriteOptions = options;
-        // Overwrite parent's options
-        _super.prototype.updateOptions.call(_this, _this._overwriteOptions);
-        _this._register(parentEditor.onDidChangeConfiguration(function (e) { return _this._onParentConfigurationChanged(e); }));
-        return _this;
-    }
-    EmbeddedDiffEditorWidget.prototype.getParentEditor = function () {
-        return this._parentEditor;
-    };
-    EmbeddedDiffEditorWidget.prototype._onParentConfigurationChanged = function (e) {
-        _super.prototype.updateOptions.call(this, this._parentEditor.getRawConfiguration());
-        _super.prototype.updateOptions.call(this, this._overwriteOptions);
-    };
-    EmbeddedDiffEditorWidget.prototype.updateOptions = function (newOptions) {
-        objects.mixin(this._overwriteOptions, newOptions, true);
-        _super.prototype.updateOptions.call(this, this._overwriteOptions);
-    };
-    EmbeddedDiffEditorWidget = __decorate([
-        __param(3, IEditorWorkerService),
-        __param(4, IContextKeyService),
-        __param(5, IInstantiationService),
-        __param(6, ICodeEditorService),
-        __param(7, IThemeService),
-        __param(8, INotificationService)
-    ], EmbeddedDiffEditorWidget);
-    return EmbeddedDiffEditorWidget;
-}(DiffEditorWidget));
-export { EmbeddedDiffEditorWidget };

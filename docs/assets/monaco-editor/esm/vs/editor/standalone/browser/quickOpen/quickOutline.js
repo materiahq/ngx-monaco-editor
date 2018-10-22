@@ -95,7 +95,8 @@ var QuickOutlineAction = /** @class */ (function (_super) {
             precondition: EditorContextKeys.hasDocumentSymbolProvider,
             kbOpts: {
                 kbExpr: EditorContextKeys.focus,
-                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 45 /* KEY_O */
+                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 45 /* KEY_O */,
+                weight: 100 /* EditorContrib */
             },
             menuOpts: {
                 group: 'navigation',
@@ -111,10 +112,10 @@ var QuickOutlineAction = /** @class */ (function (_super) {
         }
         // Resolve outline
         return getDocumentSymbols(model).then(function (result) {
-            if (result.entries.length === 0) {
+            if (result.length === 0) {
                 return;
             }
-            _this._run(editor, result.entries);
+            _this._run(editor, result);
         });
     };
     QuickOutlineAction.prototype._run = function (editor, result) {
@@ -135,8 +136,8 @@ var QuickOutlineAction = /** @class */ (function (_super) {
             }
         });
     };
-    QuickOutlineAction.prototype.symbolEntry = function (name, type, description, location, highlights, editor, decorator) {
-        return new SymbolEntry(name, type, description, Range.lift(location.range), highlights, editor, decorator);
+    QuickOutlineAction.prototype.symbolEntry = function (name, type, description, range, highlights, editor, decorator) {
+        return new SymbolEntry(name, type, description, Range.lift(range), highlights, editor, decorator);
     };
     QuickOutlineAction.prototype.toQuickOpenEntries = function (editor, flattened, searchValue) {
         var controller = this.getController(editor);
@@ -158,7 +159,7 @@ var QuickOutlineAction = /** @class */ (function (_super) {
                     description = element.containerName;
                 }
                 // Add
-                results.push(this.symbolEntry(label, symbolKindToCssClass(element.kind), description, element.location, highlights, editor, controller));
+                results.push(this.symbolEntry(label, symbolKindToCssClass(element.kind), description, element.range, highlights, editor, controller));
             }
         }
         // Sort properly if actually searching

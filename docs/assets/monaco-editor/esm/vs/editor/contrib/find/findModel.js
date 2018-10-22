@@ -17,7 +17,6 @@ import { CursorChangeReason } from '../../common/controller/cursorEvents.js';
 import { RawContextKey } from '../../../platform/contextkey/common/contextkey.js';
 import { EndOfLinePreference } from '../../common/model.js';
 export var CONTEXT_FIND_WIDGET_VISIBLE = new RawContextKey('findWidgetVisible', false);
-export var CONTEXT_FIND_WIDGET_NOT_VISIBLE = CONTEXT_FIND_WIDGET_VISIBLE.toNegated();
 // Keep ContextKey use of 'Focussed' to not break when clauses
 export var CONTEXT_FIND_INPUT_FOCUSED = new RawContextKey('findInputFocussed', false);
 export var CONTEXT_REPLACE_INPUT_FOCUSED = new RawContextKey('replaceInputFocussed', false);
@@ -37,12 +36,6 @@ export var ToggleSearchScopeKeybinding = {
     primary: 512 /* Alt */ | 42 /* KEY_L */,
     mac: { primary: 2048 /* CtrlCmd */ | 512 /* Alt */ | 42 /* KEY_L */ }
 };
-export var ShowPreviousFindTermKeybinding = {
-    primary: 512 /* Alt */ | 16 /* UpArrow */
-};
-export var ShowNextFindTermKeybinding = {
-    primary: 512 /* Alt */ | 18 /* DownArrow */
-};
 export var FIND_IDS = {
     StartFindAction: 'actions.find',
     StartFindWithSelection: 'actions.findWithSelection',
@@ -58,9 +51,7 @@ export var FIND_IDS = {
     ToggleSearchScopeCommand: 'toggleFindInSelection',
     ReplaceOneAction: 'editor.action.replaceOne',
     ReplaceAllAction: 'editor.action.replaceAll',
-    SelectAllMatchesAction: 'editor.action.selectAllMatches',
-    ShowPreviousFindTermAction: 'find.history.showPrevious',
-    ShowNextFindTermAction: 'find.history.showNext'
+    SelectAllMatchesAction: 'editor.action.selectAllMatches'
 };
 export var MATCHES_LIMIT = 19999;
 var RESEARCH_DELAY = 240;

@@ -40,8 +40,8 @@ var LinesLayout = /** @class */ (function () {
      * @param heightInPx The height of the whitespace, in pixels.
      * @return An id that can be used later to mutate or delete the whitespace
      */
-    LinesLayout.prototype.insertWhitespace = function (afterLineNumber, ordinal, heightInPx) {
-        return this._whitespaces.insertWhitespace(afterLineNumber, ordinal, heightInPx);
+    LinesLayout.prototype.insertWhitespace = function (afterLineNumber, ordinal, heightInPx, minWidth) {
+        return this._whitespaces.insertWhitespace(afterLineNumber, ordinal, heightInPx, minWidth);
     };
     /**
      * Change properties associated with a certain whitespace.
@@ -114,11 +114,8 @@ var LinesLayout = /** @class */ (function () {
     LinesLayout.prototype.getWhitespaceAccumulatedHeightBeforeLineNumber = function (lineNumber) {
         return this._whitespaces.getAccumulatedHeightBeforeLineNumber(lineNumber);
     };
-    /**
-     * Returns if there is any whitespace in the document.
-     */
-    LinesLayout.prototype.hasWhitespace = function () {
-        return this._whitespaces.getCount() > 0;
+    LinesLayout.prototype.getWhitespaceMinWidth = function () {
+        return this._whitespaces.getMinWidth();
     };
     /**
      * Check if `verticalOffset` is below all lines.

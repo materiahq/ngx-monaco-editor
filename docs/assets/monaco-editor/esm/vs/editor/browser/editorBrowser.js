@@ -113,14 +113,3 @@ export function isCodeEditor(thing) {
         return false;
     }
 }
-/**
- *@internal
- */
-export function isDiffEditor(thing) {
-    if (thing && typeof thing.getEditorType === 'function') {
-        return thing.getEditorType() === editorCommon.EditorType.IDiffEditor;
-    }
-    else {
-        return false;
-    }
-}

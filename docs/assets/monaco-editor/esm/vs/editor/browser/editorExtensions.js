@@ -30,52 +30,63 @@ import { ITelemetryService } from '../../platform/telemetry/common/telemetry.js'
 import { Position } from '../common/core/position.js';
 import { IModelService } from '../common/services/modelService.js';
 import { MenuId, MenuRegistry } from '../../platform/actions/common/actions.js';
-import { IEditorService } from '../../platform/editor/common/editor.js';
 import { IContextKeyService, ContextKeyExpr } from '../../platform/contextkey/common/contextkey.js';
-import { ICodeEditorService, getCodeEditor } from './services/codeEditorService.js';
+import { ICodeEditorService } from './services/codeEditorService.js';
 var Command = /** @class */ (function () {
     function Command(opts) {
         this.id = opts.id;
         this.precondition = opts.precondition;
         this._kbOpts = opts.kbOpts;
+        this._menubarOpts = opts.menubarOpts;
         this._description = opts.description;
     }
-    Command.prototype.toCommandAndKeybindingRule = function (defaultWeight) {
+    Command.prototype.register = function () {
         var _this = this;
-        var kbOpts = this._kbOpts || { primary: 0 };
-        var kbWhen = kbOpts.kbExpr;
-        if (this.precondition) {
-            if (kbWhen) {
-                kbWhen = ContextKeyExpr.and(kbWhen, this.precondition);
-            }
-            else {
-                kbWhen = this.precondition;
-            }
+        if (this._menubarOpts) {
+            MenuRegistry.appendMenuItem(this._menubarOpts.menuId, {
+                group: this._menubarOpts.group,
+                command: {
+                    id: this.id,
+                    title: this._menubarOpts.title,
+                },
+                when: this._menubarOpts.when,
+                order: this._menubarOpts.order
+            });
         }
-        var weight = (typeof kbOpts.weight === 'number' ? kbOpts.weight : defaultWeight);
-        return {
-            id: this.id,
-            handler: function (accessor, args) { return _this.runCommand(accessor, args); },
-            weight: weight,
-            when: kbWhen,
-            primary: kbOpts.primary,
-            secondary: kbOpts.secondary,
-            win: kbOpts.win,
-            linux: kbOpts.linux,
-            mac: kbOpts.mac,
-            description: this._description
-        };
+        if (this._kbOpts) {
+            var kbWhen = this._kbOpts.kbExpr;
+            if (this.precondition) {
+                if (kbWhen) {
+                    kbWhen = ContextKeyExpr.and(kbWhen, this.precondition);
+                }
+                else {
+                    kbWhen = this.precondition;
+                }
+            }
+            KeybindingsRegistry.registerCommandAndKeybindingRule({
+                id: this.id,
+                handler: function (accessor, args) { return _this.runCommand(accessor, args); },
+                weight: this._kbOpts.weight,
+                when: kbWhen,
+                primary: this._kbOpts.primary,
+                secondary: this._kbOpts.secondary,
+                win: this._kbOpts.win,
+                linux: this._kbOpts.linux,
+                mac: this._kbOpts.mac,
+                description: this._description
+            });
+        }
+        else {
+            CommandsRegistry.registerCommand({
+                id: this.id,
+                handler: function (accessor, args) { return _this.runCommand(accessor, args); },
+                description: this._description
+            });
+        }
     };
     return Command;
 }());
 export { Command };
-//#endregion Command
-//#region EditorCommand
-function getWorkbenchActiveEditor(accessor) {
-    var editorService = accessor.get(IEditorService);
-    var activeEditor = editorService.getActiveEditor && editorService.getActiveEditor();
-    return getCodeEditor(activeEditor);
-}
 var EditorCommand = /** @class */ (function (_super) {
     __extends(EditorCommand, _super);
     function EditorCommand() {
@@ -104,12 +115,8 @@ var EditorCommand = /** @class */ (function (_super) {
     EditorCommand.prototype.runCommand = function (accessor, args) {
         var _this = this;
         var codeEditorService = accessor.get(ICodeEditorService);
-        // Find the editor with text focus
-        var editor = codeEditorService.getFocusedCodeEditor();
-        if (!editor) {
-            // Fallback to use what the workbench considers the active editor
-            editor = getWorkbenchActiveEditor(accessor);
-        }
+        // Find the editor with text focus or active
+        var editor = codeEditorService.getFocusedCodeEditor() || codeEditorService.getActiveCodeEditor();
         if (!editor) {
             // well, at least we tried...
             return;
@@ -135,19 +142,19 @@ var EditorAction = /** @class */ (function (_super) {
         _this.menuOpts = opts.menuOpts;
         return _this;
     }
-    EditorAction.prototype.toMenuItem = function () {
-        if (!this.menuOpts) {
-            return null;
+    EditorAction.prototype.register = function () {
+        if (this.menuOpts) {
+            MenuRegistry.appendMenuItem(MenuId.EditorContext, {
+                command: {
+                    id: this.id,
+                    title: this.label
+                },
+                when: ContextKeyExpr.and(this.precondition, this.menuOpts.when),
+                group: this.menuOpts.group,
+                order: this.menuOpts.order
+            });
         }
-        return {
-            command: {
-                id: this.id,
-                title: this.label
-            },
-            when: ContextKeyExpr.and(this.precondition, this.menuOpts.when),
-            group: this.menuOpts.group,
-            order: this.menuOpts.order
-        };
+        _super.prototype.register.call(this);
     };
     EditorAction.prototype.runEditorCommand = function (accessor, editor, args) {
         this.reportTelemetry(accessor, editor);
@@ -232,11 +239,7 @@ var EditorContributionRegistry = /** @class */ (function () {
         this.editorContributions.push(ctor);
     };
     EditorContributionRegistry.prototype.registerEditorAction = function (action) {
-        var menuItem = action.toMenuItem();
-        if (menuItem) {
-            MenuRegistry.appendMenuItem(MenuId.EditorContext, menuItem);
-        }
-        KeybindingsRegistry.registerCommandAndKeybindingRule(action.toCommandAndKeybindingRule(KeybindingsRegistry.WEIGHT.editorContrib()));
+        action.register();
         this.editorActions.push(action);
     };
     EditorContributionRegistry.prototype.getEditorContributions = function () {
@@ -246,7 +249,7 @@ var EditorContributionRegistry = /** @class */ (function () {
         return this.editorActions.slice(0);
     };
     EditorContributionRegistry.prototype.registerEditorCommand = function (editorCommand) {
-        KeybindingsRegistry.registerCommandAndKeybindingRule(editorCommand.toCommandAndKeybindingRule(KeybindingsRegistry.WEIGHT.editorContrib()));
+        editorCommand.register();
         this.editorCommands[editorCommand.id] = editorCommand;
     };
     EditorContributionRegistry.prototype.getEditorCommand = function (commandId) {

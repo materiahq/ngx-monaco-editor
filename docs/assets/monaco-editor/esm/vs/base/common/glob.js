@@ -8,9 +8,6 @@ import * as strings from './strings.js';
 import * as paths from './paths.js';
 import { LRUCache } from './map.js';
 import { TPromise } from './winjs.base.js';
-export function getEmptyExpression() {
-    return Object.create(null);
-}
 var GLOBSTAR = '**';
 var GLOB_SPLIT = '/';
 var PATH_REGEX = '[/\\\\]'; // any slash or backslash
@@ -322,11 +319,11 @@ function toRegExp(pattern) {
         return NULL;
     }
 }
-export function match(arg1, path, siblingsFn) {
+export function match(arg1, path, hasSibling) {
     if (!arg1 || !path) {
         return false;
     }
-    return parse(arg1)(path, undefined, siblingsFn);
+    return parse(arg1)(path, undefined, hasSibling);
 }
 export function parse(arg1, options) {
     if (options === void 0) { options = {}; }
@@ -357,22 +354,6 @@ export function isRelativePattern(obj) {
     var rp = obj;
     return rp && typeof rp.base === 'string' && typeof rp.pattern === 'string' && typeof rp.pathToRelative === 'function';
 }
-/**
- * Same as `parse`, but the ParsedExpression is guaranteed to return a Promise
- */
-export function parseToAsync(expression, options) {
-    var parsedExpression = parse(expression, options);
-    return function (path, basename, siblingsFn) {
-        var result = parsedExpression(path, basename, siblingsFn);
-        return result instanceof TPromise ? result : TPromise.as(result);
-    };
-}
-export function getBasenameTerms(patternOrExpression) {
-    return patternOrExpression.allBasenames || [];
-}
-export function getPathTerms(patternOrExpression) {
-    return patternOrExpression.allPaths || [];
-}
 function parsedExpression(expression, options) {
     var parsedPatterns = aggregateBasenameMatches(Object.getOwnPropertyNames(expression)
         .map(function (pattern) { return parseExpressionPattern(pattern, expression[pattern], options); })
@@ -385,7 +366,7 @@ function parsedExpression(expression, options) {
         if (n === 1) {
             return parsedPatterns[0];
         }
-        var resultExpression_1 = function (path, basename, siblingsFn) {
+        var resultExpression_1 = function (path, basename) {
             for (var i = 0, n_2 = parsedPatterns.length; i < n_2; i++) {
                 // Pattern matches path
                 var result = parsedPatterns[i](path, basename);
@@ -405,33 +386,20 @@ function parsedExpression(expression, options) {
         }
         return resultExpression_1;
     }
-    var resultExpression = function (path, basename, siblingsFn) {
-        var siblingsPattern;
-        var siblingsResolved = !siblingsFn;
-        function siblingsToSiblingsPattern(siblings) {
-            if (siblings && siblings.length) {
+    var resultExpression = function (path, basename, hasSibling) {
+        var name;
+        for (var i = 0, n_3 = parsedPatterns.length; i < n_3; i++) {
+            // Pattern matches path
+            var parsedPattern = parsedPatterns[i];
+            if (parsedPattern.requiresSiblings && hasSibling) {
                 if (!basename) {
                     basename = paths.basename(path);
                 }
-                var name_1 = basename.substr(0, basename.length - paths.extname(path).length);
-                return { siblings: siblings, name: name_1 };
+                if (!name) {
+                    name = basename.substr(0, basename.length - paths.extname(path).length);
+                }
             }
-            return undefined;
-        }
-        function siblingsPatternFn() {
-            // Resolve siblings only once
-            if (!siblingsResolved) {
-                siblingsResolved = true;
-                var siblings = siblingsFn();
-                siblingsPattern = TPromise.is(siblings) ?
-                    siblings.then(siblingsToSiblingsPattern) :
-                    siblingsToSiblingsPattern(siblings);
-            }
-            return siblingsPattern;
-        }
-        for (var i = 0, n_3 = parsedPatterns.length; i < n_3; i++) {
-            // Pattern matches path
-            var result = parsedPatterns[i](path, basename, siblingsPatternFn);
+            var result = parsedPattern(path, basename, name, hasSibling);
             if (result) {
                 return result;
             }
@@ -464,26 +432,15 @@ function parseExpressionPattern(pattern, value, options) {
     if (value) {
         var when_1 = value.when;
         if (typeof when_1 === 'string') {
-            var siblingsPatternToMatchingPattern_1 = function (siblingsPattern) {
-                var clausePattern = when_1.replace('$(basename)', siblingsPattern.name);
-                if (siblingsPattern.siblings.indexOf(clausePattern) !== -1) {
-                    return pattern;
-                }
-                else {
-                    return null; // pattern does not match in the end because the when clause is not satisfied
-                }
-            };
-            var result = function (path, basename, siblingsPatternFn) {
-                if (!parsedPattern(path, basename)) {
+            var result = function (path, basename, name, hasSibling) {
+                if (!hasSibling || !parsedPattern(path, basename)) {
                     return null;
                 }
-                var siblingsPattern = siblingsPatternFn();
-                if (!siblingsPattern) {
-                    return null; // pattern is malformed or we don't have siblings
-                }
-                return TPromise.is(siblingsPattern) ?
-                    siblingsPattern.then(siblingsPatternToMatchingPattern_1) :
-                    siblingsPatternToMatchingPattern_1(siblingsPattern);
+                var clausePattern = when_1.replace('$(basename)', name);
+                var matched = hasSibling(clausePattern);
+                return TPromise.is(matched) ?
+                    matched.then(function (m) { return m ? pattern : null; }) :
+                    matched ? pattern : null;
             };
             result.requiresSiblings = true;
             return result;

@@ -46,7 +46,8 @@ var LineCommentCommand = /** @class */ (function () {
      * Also, build up several offsets and lengths useful in the generation of editor operations.
      */
     LineCommentCommand._analyzeLines = function (type, model, lines, startLineNumber) {
-        var lineData, lineContentStartOffset, commentStrEndOffset, i, lineCount, lineNumber, shouldRemoveComments, lineContent, onlyWhitespaceLines = true;
+        var onlyWhitespaceLines = true;
+        var shouldRemoveComments;
         if (type === 0 /* Toggle */) {
             shouldRemoveComments = true;
         }
@@ -56,11 +57,11 @@ var LineCommentCommand = /** @class */ (function () {
         else {
             shouldRemoveComments = true;
         }
-        for (i = 0, lineCount = lines.length; i < lineCount; i++) {
-            lineData = lines[i];
-            lineNumber = startLineNumber + i;
-            lineContent = model.getLineContent(lineNumber);
-            lineContentStartOffset = strings.firstNonWhitespaceIndex(lineContent);
+        for (var i = 0, lineCount = lines.length; i < lineCount; i++) {
+            var lineData = lines[i];
+            var lineNumber = startLineNumber + i;
+            var lineContent = model.getLineContent(lineNumber);
+            var lineContentStartOffset = strings.firstNonWhitespaceIndex(lineContent);
             if (lineContentStartOffset === -1) {
                 // Empty or whitespace only line
                 if (type === 0 /* Toggle */) {
@@ -91,7 +92,7 @@ var LineCommentCommand = /** @class */ (function () {
                 }
             }
             if (shouldRemoveComments) {
-                commentStrEndOffset = lineContentStartOffset + lineData.commentStrLength;
+                var commentStrEndOffset = lineContentStartOffset + lineData.commentStrLength;
                 if (commentStrEndOffset < lineContent.length && lineContent.charCodeAt(commentStrEndOffset) === 32 /* Space */) {
                     lineData.commentStrLength += 1;
                 }
@@ -101,7 +102,7 @@ var LineCommentCommand = /** @class */ (function () {
             // For only whitespace lines, we insert comments
             shouldRemoveComments = false;
             // Also, no longer ignore them
-            for (i = 0, lineCount = lines.length; i < lineCount; i++) {
+            for (var i = 0, lineCount = lines.length; i < lineCount; i++) {
                 lines[i].ignore = false;
             }
         }
@@ -245,9 +246,9 @@ var LineCommentCommand = /** @class */ (function () {
      * Generate edit operations in the remove line comment case
      */
     LineCommentCommand._createRemoveLineCommentsOperations = function (lines, startLineNumber) {
-        var i, len, lineData, res = [];
-        for (i = 0, len = lines.length; i < len; i++) {
-            lineData = lines[i];
+        var res = [];
+        for (var i = 0, len = lines.length; i < len; i++) {
+            var lineData = lines[i];
             if (lineData.ignore) {
                 continue;
             }
@@ -259,9 +260,9 @@ var LineCommentCommand = /** @class */ (function () {
      * Generate edit operations in the add line comment case
      */
     LineCommentCommand._createAddLineCommentsOperations = function (lines, startLineNumber) {
-        var i, len, lineData, res = [];
-        for (i = 0, len = lines.length; i < len; i++) {
-            lineData = lines[i];
+        var res = [];
+        for (var i = 0, len = lines.length; i < len; i++) {
+            var lineData = lines[i];
             if (lineData.ignore) {
                 continue;
             }
@@ -280,27 +281,29 @@ var LineCommentCommand = /** @class */ (function () {
      * Adjust insertion points to have them vertically aligned in the add line comment case
      */
     LineCommentCommand._normalizeInsertionPoint = function (model, lines, startLineNumber, tabSize) {
-        var minVisibleColumn = Number.MAX_VALUE, i, len, lineContent, j, lenJ, currentVisibleColumn;
-        for (i = 0, len = lines.length; i < len; i++) {
+        var minVisibleColumn = Number.MAX_VALUE;
+        var j;
+        var lenJ;
+        for (var i = 0, len = lines.length; i < len; i++) {
             if (lines[i].ignore) {
                 continue;
             }
-            lineContent = model.getLineContent(startLineNumber + i);
-            currentVisibleColumn = 0;
-            for (j = 0, lenJ = lines[i].commentStrOffset; currentVisibleColumn < minVisibleColumn && j < lenJ; j++) {
-                currentVisibleColumn = LineCommentCommand.nextVisibleColumn(currentVisibleColumn, tabSize, lineContent.charCodeAt(j) === 9 /* Tab */, 1);
+            var lineContent = model.getLineContent(startLineNumber + i);
+            var currentVisibleColumn = 0;
+            for (var j_1 = 0, lenJ_1 = lines[i].commentStrOffset; currentVisibleColumn < minVisibleColumn && j_1 < lenJ_1; j_1++) {
+                currentVisibleColumn = LineCommentCommand.nextVisibleColumn(currentVisibleColumn, tabSize, lineContent.charCodeAt(j_1) === 9 /* Tab */, 1);
             }
             if (currentVisibleColumn < minVisibleColumn) {
                 minVisibleColumn = currentVisibleColumn;
             }
         }
         minVisibleColumn = Math.floor(minVisibleColumn / tabSize) * tabSize;
-        for (i = 0, len = lines.length; i < len; i++) {
+        for (var i = 0, len = lines.length; i < len; i++) {
             if (lines[i].ignore) {
                 continue;
             }
-            lineContent = model.getLineContent(startLineNumber + i);
-            currentVisibleColumn = 0;
+            var lineContent = model.getLineContent(startLineNumber + i);
+            var currentVisibleColumn = 0;
             for (j = 0, lenJ = lines[i].commentStrOffset; currentVisibleColumn < minVisibleColumn && j < lenJ; j++) {
                 currentVisibleColumn = LineCommentCommand.nextVisibleColumn(currentVisibleColumn, tabSize, lineContent.charCodeAt(j) === 9 /* Tab */, 1);
             }

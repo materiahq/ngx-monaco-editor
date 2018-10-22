@@ -35,24 +35,6 @@ var NodeList = /** @class */ (function (_super) {
     function NodeList() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    Object.defineProperty(NodeList.prototype, "start", {
-        get: function () {
-            return this.hasChildren
-                ? this.children[0].start
-                : this.parent.start;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(NodeList.prototype, "end", {
-        get: function () {
-            return this.hasChildren
-                ? this.children[this.children.length - 1].end
-                : this.parent.end;
-        },
-        enumerable: true,
-        configurable: true
-    });
     Object.defineProperty(NodeList.prototype, "hasChildren", {
         get: function () {
             return this.children && this.children.length > 0;
@@ -96,20 +78,6 @@ var Block = /** @class */ (function (_super) {
         _this.elements.parent = _this;
         return _this;
     }
-    Object.defineProperty(Block.prototype, "start", {
-        get: function () {
-            return this.open.start;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Block.prototype, "end", {
-        get: function () {
-            return this.close.end;
-        },
-        enumerable: true,
-        configurable: true
-    });
     return Block;
 }(Node));
 export { Block };
@@ -270,7 +238,8 @@ var TokenTreeBuilder = /** @class */ (function () {
         return ret;
     };
     TokenTreeBuilder.prototype._line = function () {
-        var node = new NodeList(), lineNumber;
+        var node = new NodeList();
+        var lineNumber;
         // capture current linenumber
         this._peek(function (info) {
             lineNumber = info.range.startLineNumber;
@@ -297,7 +266,8 @@ var TokenTreeBuilder = /** @class */ (function () {
         return newNode(this._currentToken);
     };
     TokenTreeBuilder.prototype._block = function () {
-        var bracketType, accepted;
+        var bracketType;
+        var accepted;
         accepted = this._accept(function (token) {
             bracketType = token.bracketType;
             return token.bracket === 1 /* Open */;

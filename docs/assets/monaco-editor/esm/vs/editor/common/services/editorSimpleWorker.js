@@ -235,22 +235,8 @@ var BaseEditorSimpleWorker = /** @class */ (function () {
         var originalLines = original.getLinesContent();
         var modifiedLines = modified.getLinesContent();
         var diffComputer = new DiffComputer(originalLines, modifiedLines, {
+            shouldComputeCharChanges: true,
             shouldPostProcessCharChanges: true,
-            shouldIgnoreTrimWhitespace: ignoreTrimWhitespace,
-            shouldMakePrettyDiff: true
-        });
-        return TPromise.as(diffComputer.computeDiff());
-    };
-    BaseEditorSimpleWorker.prototype.computeDirtyDiff = function (originalUrl, modifiedUrl, ignoreTrimWhitespace) {
-        var original = this._getModel(originalUrl);
-        var modified = this._getModel(modifiedUrl);
-        if (!original || !modified) {
-            return null;
-        }
-        var originalLines = original.getLinesContent();
-        var modifiedLines = modified.getLinesContent();
-        var diffComputer = new DiffComputer(originalLines, modifiedLines, {
-            shouldPostProcessCharChanges: false,
             shouldIgnoreTrimWhitespace: ignoreTrimWhitespace,
             shouldMakePrettyDiff: true
         });
@@ -384,18 +370,26 @@ var BaseEditorSimpleWorker = /** @class */ (function () {
             }
             return TPromise.as(methods);
         }
-        return new TPromise(function (c, e) {
-            require([moduleId], function (foreignModule) {
-                _this._foreignModule = foreignModule.create(ctx, createData);
-                var methods = [];
-                for (var prop in _this._foreignModule) {
-                    if (typeof _this._foreignModule[prop] === 'function') {
-                        methods.push(prop);
-                    }
-                }
-                c(methods);
-            }, e);
-        });
+        // ESM-comment-begin
+        // 		return new TPromise<any>((c, e) => {
+        // 			require([moduleId], (foreignModule: { create: IForeignModuleFactory }) => {
+        // 				this._foreignModule = foreignModule.create(ctx, createData);
+        // 
+        // 				let methods: string[] = [];
+        // 				for (let prop in this._foreignModule) {
+        // 					if (typeof this._foreignModule[prop] === 'function') {
+        // 						methods.push(prop);
+        // 					}
+        // 				}
+        // 
+        // 				c(methods);
+        // 
+        // 			}, e);
+        // 		});
+        // ESM-comment-end
+        // ESM-uncomment-begin
+        return TPromise.wrapError(new Error("Unexpected usage"));
+        // ESM-uncomment-end
     };
     // foreign method request
     BaseEditorSimpleWorker.prototype.fmr = function (method, args) {

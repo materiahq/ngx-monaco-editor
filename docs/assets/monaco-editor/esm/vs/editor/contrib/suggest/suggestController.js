@@ -39,7 +39,6 @@ import { SnippetController2 } from '../snippet/snippetController2.js';
 import { Context as SuggestContext } from './suggest.js';
 import { SuggestModel } from './suggestModel.js';
 import { SuggestWidget } from './suggestWidget.js';
-import { KeybindingsRegistry } from '../../../platform/keybinding/common/keybindingsRegistry.js';
 import { SuggestMemories } from './suggestMemory.js';
 var AcceptOnCharacterOracle = /** @class */ (function () {
     function AcceptOnCharacterOracle(editor, widget, accept) {
@@ -171,17 +170,19 @@ var SuggestController = /** @class */ (function () {
         }
     };
     SuggestController.prototype._onDidSelectItem = function (event) {
+        var _a;
         if (!event || !event.item) {
             this._model.cancel();
             return;
         }
-        var _a = event.item, suggestion = _a.suggestion, position = _a.position;
+        var _b = event.item, suggestion = _b.suggestion, position = _b.position;
         var editorColumn = this._editor.getPosition().column;
         var columnDelta = editorColumn - position.column;
+        // pushing undo stops *before* additional text edits and
+        // *after* the main edit
+        this._editor.pushUndoStop();
         if (Array.isArray(suggestion.additionalTextEdits)) {
-            this._editor.pushUndoStop();
             this._editor.executeEdits('suggestController.additionalTextEdits', suggestion.additionalTextEdits.map(function (edit) { return EditOperation.replace(Range.lift(edit.range), edit.text); }));
-            this._editor.pushUndoStop();
         }
         // keep item in memory
         this._memory.memorize(this._editor.getModel(), this._editor.getPosition(), event.item);
@@ -189,7 +190,8 @@ var SuggestController = /** @class */ (function () {
         if (suggestion.snippetType !== 'textmate') {
             insertText = SnippetParser.escape(insertText);
         }
-        SnippetController2.get(this._editor).insert(insertText, suggestion.overwriteBefore + columnDelta, suggestion.overwriteAfter);
+        SnippetController2.get(this._editor).insert(insertText, suggestion.overwriteBefore + columnDelta, suggestion.overwriteAfter, false, false);
+        this._editor.pushUndoStop();
         if (!suggestion.command) {
             // done
             this._model.cancel();
@@ -200,11 +202,10 @@ var SuggestController = /** @class */ (function () {
         }
         else {
             // exec command, done
-            (_b = this._commandService).executeCommand.apply(_b, [suggestion.command.id].concat(suggestion.command.arguments)).done(undefined, onUnexpectedError);
+            (_a = this._commandService).executeCommand.apply(_a, [suggestion.command.id].concat(suggestion.command.arguments)).done(undefined, onUnexpectedError);
             this._model.cancel();
         }
         this._alertCompletionItem(event.item);
-        var _b;
     };
     SuggestController.prototype._alertCompletionItem = function (_a) {
         var suggestion = _a.suggestion;
@@ -288,7 +289,8 @@ var TriggerSuggestAction = /** @class */ (function (_super) {
             kbOpts: {
                 kbExpr: EditorContextKeys.textInputFocus,
                 primary: 2048 /* CtrlCmd */ | 10 /* Space */,
-                mac: { primary: 256 /* WinCtrl */ | 10 /* Space */ }
+                mac: { primary: 256 /* WinCtrl */ | 10 /* Space */ },
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
@@ -305,7 +307,7 @@ var TriggerSuggestAction = /** @class */ (function (_super) {
 export { TriggerSuggestAction };
 registerEditorContribution(SuggestController);
 registerEditorAction(TriggerSuggestAction);
-var weight = KeybindingsRegistry.WEIGHT.editorContrib(90);
+var weight = 100 /* EditorContrib */ + 90;
 var SuggestCommand = EditorCommand.bindToContribution(SuggestController.get);
 registerEditorCommand(new SuggestCommand({
     id: 'acceptSelectedSuggestion',

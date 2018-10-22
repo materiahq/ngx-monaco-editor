@@ -15,32 +15,13 @@ var __extends = (this && this.__extends) || (function () {
 })();
 import * as nls from '../../../../nls.js';
 import { TPromise } from '../../../common/winjs.base.js';
-import * as types from '../../../common/types.js';
 import { IconLabel } from '../../../browser/ui/iconLabel/iconLabel.js';
-import { compareAnything } from '../../../common/comparers.js';
 import { ActionBar } from '../../../browser/ui/actionbar/actionbar.js';
 import { HighlightedLabel } from '../../../browser/ui/highlightedlabel/highlightedLabel.js';
 import * as DOM from '../../../browser/dom.js';
 import { KeybindingLabel } from '../../../browser/ui/keybindingLabel/keybindingLabel.js';
 import { OS } from '../../../common/platform.js';
 var IDS = 0;
-var QuickOpenItemAccessorClass = /** @class */ (function () {
-    function QuickOpenItemAccessorClass() {
-    }
-    QuickOpenItemAccessorClass.prototype.getItemLabel = function (entry) {
-        return entry.getLabel();
-    };
-    QuickOpenItemAccessorClass.prototype.getItemDescription = function (entry) {
-        return entry.getDescription();
-    };
-    QuickOpenItemAccessorClass.prototype.getItemPath = function (entry) {
-        var resource = entry.getResource();
-        return resource ? resource.fsPath : void 0;
-    };
-    return QuickOpenItemAccessorClass;
-}());
-export { QuickOpenItemAccessorClass };
-export var QuickOpenItemAccessor = new QuickOpenItemAccessorClass();
 var QuickOpenEntry = /** @class */ (function () {
     function QuickOpenEntry(highlights) {
         if (highlights === void 0) { highlights = []; }
@@ -70,7 +51,9 @@ var QuickOpenEntry = /** @class */ (function () {
      * The label of the entry to use when a screen reader wants to read about the entry
      */
     QuickOpenEntry.prototype.getAriaLabel = function () {
-        return this.getLabel();
+        return [this.getLabel(), this.getDescription(), this.getDetail()]
+            .filter(function (s) { return !!s; })
+            .join(', ');
     };
     /**
      * Detail information about the entry that is optional and can be shown below the label
@@ -109,23 +92,10 @@ var QuickOpenEntry = /** @class */ (function () {
         return null;
     };
     /**
-     * A resource for this entry. Resource URIs can be used to compare different kinds of entries and group
-     * them together.
-     */
-    QuickOpenEntry.prototype.getResource = function () {
-        return null;
-    };
-    /**
      * Allows to reuse the same model while filtering. Hidden entries will not show up in the viewer.
      */
     QuickOpenEntry.prototype.isHidden = function () {
         return this.hidden;
-    };
-    /**
-     * Allows to reuse the same model while filtering. Hidden entries will not show up in the viewer.
-     */
-    QuickOpenEntry.prototype.setHidden = function (hidden) {
-        this.hidden = hidden;
     };
     /**
      * Allows to set highlight ranges that should show up for the entry label and optionally description if set.
@@ -148,14 +118,6 @@ var QuickOpenEntry = /** @class */ (function () {
      * The context parameter provides additional context information how the run was triggered.
      */
     QuickOpenEntry.prototype.run = function (mode, context) {
-        return false;
-    };
-    /**
-     * Determines if this quick open entry should merge with the editor history in quick open. If set to true
-     * and the resource of this entry is the same as the resource for an editor history, it will not show up
-     * because it is considered to be a duplicate of an editor history.
-     */
-    QuickOpenEntry.prototype.mergeWithEditorHistory = function () {
         return false;
     };
     return QuickOpenEntry;
@@ -200,17 +162,11 @@ var QuickOpenEntryGroup = /** @class */ (function (_super) {
     QuickOpenEntryGroup.prototype.getDetail = function () {
         return this.entry ? this.entry.getDetail() : _super.prototype.getDetail.call(this);
     };
-    QuickOpenEntryGroup.prototype.getResource = function () {
-        return this.entry ? this.entry.getResource() : _super.prototype.getResource.call(this);
-    };
     QuickOpenEntryGroup.prototype.getIcon = function () {
         return this.entry ? this.entry.getIcon() : _super.prototype.getIcon.call(this);
     };
     QuickOpenEntryGroup.prototype.getDescription = function () {
         return this.entry ? this.entry.getDescription() : _super.prototype.getDescription.call(this);
-    };
-    QuickOpenEntryGroup.prototype.getEntry = function () {
-        return this.entry;
     };
     QuickOpenEntryGroup.prototype.getHighlights = function () {
         return this.entry ? this.entry.getHighlights() : _super.prototype.getHighlights.call(this);
@@ -220,9 +176,6 @@ var QuickOpenEntryGroup = /** @class */ (function (_super) {
     };
     QuickOpenEntryGroup.prototype.setHighlights = function (labelHighlights, descriptionHighlights, detailHighlights) {
         this.entry ? this.entry.setHighlights(labelHighlights, descriptionHighlights, detailHighlights) : _super.prototype.setHighlights.call(this, labelHighlights, descriptionHighlights, detailHighlights);
-    };
-    QuickOpenEntryGroup.prototype.setHidden = function (hidden) {
-        this.entry ? this.entry.setHidden(hidden) : _super.prototype.setHidden.call(this, hidden);
     };
     QuickOpenEntryGroup.prototype.run = function (mode, context) {
         return this.entry ? this.entry.run(mode, context) : _super.prototype.run.call(this, mode, context);
@@ -238,15 +191,6 @@ var NoActionProvider = /** @class */ (function () {
     };
     NoActionProvider.prototype.getActions = function (tree, element) {
         return TPromise.as(null);
-    };
-    NoActionProvider.prototype.hasSecondaryActions = function (tree, element) {
-        return false;
-    };
-    NoActionProvider.prototype.getSecondaryActions = function (tree, element) {
-        return TPromise.as(null);
-    };
-    NoActionProvider.prototype.getActionItem = function (tree, element, action) {
-        return null;
     };
     return NoActionProvider;
 }());
@@ -443,33 +387,6 @@ var QuickOpenModel = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    /**
-     * Adds entries that should show up in the quick open viewer.
-     */
-    QuickOpenModel.prototype.addEntries = function (entries) {
-        if (types.isArray(entries)) {
-            this._entries = this._entries.concat(entries);
-        }
-    };
-    /**
-     * Set the entries that should show up in the quick open viewer.
-     */
-    QuickOpenModel.prototype.setEntries = function (entries) {
-        if (types.isArray(entries)) {
-            this._entries = entries;
-        }
-    };
-    /**
-     * Get the entries that should show up in the quick open viewer.
-     *
-     * @visibleOnly optional parameter to only return visible entries
-     */
-    QuickOpenModel.prototype.getEntries = function (visibleOnly) {
-        if (visibleOnly) {
-            return this._entries.filter(function (e) { return !e.isHidden(); });
-        }
-        return this._entries;
-    };
     QuickOpenModel.prototype.getId = function (entry) {
         return entry.getId();
     };
@@ -492,31 +409,3 @@ var QuickOpenModel = /** @class */ (function () {
     return QuickOpenModel;
 }());
 export { QuickOpenModel };
-/**
- * A good default sort implementation for quick open entries respecting highlight information
- * as well as associated resources.
- */
-export function compareEntries(elementA, elementB, lookFor) {
-    // Give matches with label highlights higher priority over
-    // those with only description highlights
-    var labelHighlightsA = elementA.getHighlights()[0] || [];
-    var labelHighlightsB = elementB.getHighlights()[0] || [];
-    if (labelHighlightsA.length && !labelHighlightsB.length) {
-        return -1;
-    }
-    if (!labelHighlightsA.length && labelHighlightsB.length) {
-        return 1;
-    }
-    // Fallback to the full path if labels are identical and we have associated resources
-    var nameA = elementA.getLabel();
-    var nameB = elementB.getLabel();
-    if (nameA === nameB) {
-        var resourceA = elementA.getResource();
-        var resourceB = elementB.getResource();
-        if (resourceA && resourceB) {
-            nameA = resourceA.fsPath;
-            nameB = resourceB.fsPath;
-        }
-    }
-    return compareAnything(nameA, nameB, lookFor);
-}

@@ -37,7 +37,8 @@ var JumpToBracketAction = /** @class */ (function (_super) {
             precondition: null,
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 88 /* US_BACKSLASH */
+                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 88 /* US_BACKSLASH */,
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
@@ -95,7 +96,13 @@ var BracketMatchingController = /** @class */ (function (_super) {
             }
             _this._updateBracketsSoon.schedule();
         }));
-        _this._register(editor.onDidChangeModel(function (e) { _this._decorations = []; _this._updateBracketsSoon.schedule(); }));
+        _this._register(editor.onDidChangeModelContent(function (e) {
+            _this._updateBracketsSoon.schedule();
+        }));
+        _this._register(editor.onDidChangeModel(function (e) {
+            _this._decorations = [];
+            _this._updateBracketsSoon.schedule();
+        }));
         _this._register(editor.onDidChangeModelLanguageConfiguration(function (e) {
             _this._lastBracketsData = [];
             _this._updateBracketsSoon.schedule();

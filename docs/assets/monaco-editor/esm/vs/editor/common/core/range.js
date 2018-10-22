@@ -261,6 +261,21 @@ var Range = /** @class */ (function () {
         return true;
     };
     /**
+     * Test if the two ranges are intersecting. If the ranges are touching it returns true.
+     */
+    Range.areIntersecting = function (a, b) {
+        // Check if `a` is before `b`
+        if (a.endLineNumber < b.startLineNumber || (a.endLineNumber === b.startLineNumber && a.endColumn <= b.startColumn)) {
+            return false;
+        }
+        // Check if `b` is before `a`
+        if (b.endLineNumber < a.startLineNumber || (b.endLineNumber === a.startLineNumber && b.endColumn <= a.startColumn)) {
+            return false;
+        }
+        // These ranges must intersect
+        return true;
+    };
+    /**
      * A function that compares ranges, useful for sorting ranges
      * It will first compare ranges on the startPosition and then on the endPosition
      */

@@ -65,24 +65,18 @@ export function guessIndentation(source, defaultTabSize, defaultInsertSpaces) {
     var ALLOWED_TAB_SIZE_GUESSES = [2, 4, 6, 8]; // limit guesses for `tabSize` to 2, 4, 6 or 8.
     var MAX_ALLOWED_TAB_SIZE_GUESS = 8; // max(2,4,6,8) = 8
     var spacesDiffCount = [0, 0, 0, 0, 0, 0, 0, 0, 0]; // `tabSize` scores
-    var _loop_1 = function (lineNumber) {
+    for (var lineNumber = 1; lineNumber <= linesCount; lineNumber++) {
         var currentLineLength = source.getLineLength(lineNumber);
         var currentLineText = source.getLineContent(lineNumber);
-        var charCodeAt = void 0;
-        if (currentLineLength > 65536) {
-            // if the text buffer is chunk based, so long lines are cons-string, v8 will flattern the string when we check charCode.
-            // checking charCode on chunks directly is cheaper.
-            charCodeAt = function (offset) { return source.getLineCharCode(lineNumber, offset); };
-        }
-        else {
-            charCodeAt = function (offset) { return currentLineText.charCodeAt(offset); };
-        }
+        // if the text buffer is chunk based, so long lines are cons-string, v8 will flattern the string when we check charCode.
+        // checking charCode on chunks directly is cheaper.
+        var useCurrentLineText = (currentLineLength <= 65536);
         var currentLineHasContent = false; // does `currentLineText` contain non-whitespace chars
         var currentLineIndentation = 0; // index at which `currentLineText` contains the first non-whitespace char
         var currentLineSpacesCount = 0; // count of spaces found in `currentLineText` indentation
         var currentLineTabsCount = 0; // count of tabs found in `currentLineText` indentation
         for (var j = 0, lenJ = currentLineLength; j < lenJ; j++) {
-            var charCode = charCodeAt(j);
+            var charCode = (useCurrentLineText ? currentLineText.charCodeAt(j) : source.getLineCharCode(lineNumber, j));
             if (charCode === 9 /* Tab */) {
                 currentLineTabsCount++;
             }
@@ -98,7 +92,7 @@ export function guessIndentation(source, defaultTabSize, defaultInsertSpaces) {
         }
         // Ignore empty or only whitespace lines
         if (!currentLineHasContent) {
-            return "continue";
+            continue;
         }
         if (currentLineTabsCount > 0) {
             linesIndentedWithTabsCount++;
@@ -112,14 +106,6 @@ export function guessIndentation(source, defaultTabSize, defaultInsertSpaces) {
         }
         previousLineText = currentLineText;
         previousLineIndentation = currentLineIndentation;
-    };
-    for (var lineNumber = 1; lineNumber <= linesCount; lineNumber++) {
-        _loop_1(lineNumber);
-    }
-    // Take into account the last line as well
-    var deltaSpacesCount = spacesDiff(previousLineText, previousLineIndentation, '', 0);
-    if (deltaSpacesCount <= MAX_ALLOWED_TAB_SIZE_GUESS) {
-        spacesDiffCount[deltaSpacesCount]++;
     }
     var insertSpaces = defaultInsertSpaces;
     if (linesIndentedWithTabsCount !== linesIndentedWithSpacesCount) {

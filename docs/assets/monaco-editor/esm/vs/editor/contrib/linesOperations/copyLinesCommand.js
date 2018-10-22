@@ -42,7 +42,10 @@ var CopyLinesCommand = /** @class */ (function () {
     CopyLinesCommand.prototype.computeCursorState = function (model, helper) {
         var result = helper.getTrackedSelection(this._selectionId);
         if (this._startLineNumberDelta !== 0 || this._endLineNumberDelta !== 0) {
-            var startLineNumber = result.startLineNumber, startColumn = result.startColumn, endLineNumber = result.endLineNumber, endColumn = result.endColumn;
+            var startLineNumber = result.startLineNumber;
+            var startColumn = result.startColumn;
+            var endLineNumber = result.endLineNumber;
+            var endColumn = result.endColumn;
             if (this._startLineNumberDelta !== 0) {
                 startLineNumber = startLineNumber + this._startLineNumberDelta;
                 startColumn = 1;

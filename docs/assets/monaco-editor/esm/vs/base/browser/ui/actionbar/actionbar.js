@@ -18,7 +18,6 @@ import * as platform from '../../../common/platform.js';
 import * as nls from '../../../../nls.js';
 import * as lifecycle from '../../../common/lifecycle.js';
 import { $ } from '../../builder.js';
-import { SelectBox } from '../selectBox/selectBox.js';
 import { Action, ActionRunner } from '../../../common/actions.js';
 import * as DOM from '../../dom.js';
 import * as types from '../../../common/types.js';
@@ -61,13 +60,6 @@ var BaseActionItem = /** @class */ (function () {
             this._updateTooltip();
         }
     };
-    Object.defineProperty(BaseActionItem.prototype, "callOnDispose", {
-        get: function () {
-            return this._callOnDispose;
-        },
-        enumerable: true,
-        configurable: true
-    });
     Object.defineProperty(BaseActionItem.prototype, "actionRunner", {
         get: function () {
             return this._actionRunner;
@@ -129,7 +121,7 @@ var BaseActionItem = /** @class */ (function () {
     BaseActionItem.prototype.onClick = function (event) {
         DOM.EventHelper.stop(event, true);
         var context;
-        if (types.isUndefinedOrNull(this._context)) {
+        if (types.isUndefinedOrNull(this._context) || !types.isObject(this._context)) {
             context = event;
         }
         else {
@@ -137,16 +129,6 @@ var BaseActionItem = /** @class */ (function () {
             context.event = event;
         }
         this._actionRunner.run(this._action, context);
-    };
-    BaseActionItem.prototype.focus = function () {
-        if (this.builder) {
-            this.builder.domFocus();
-        }
-    };
-    BaseActionItem.prototype.blur = function () {
-        if (this.builder) {
-            this.builder.domBlur();
-        }
     };
     BaseActionItem.prototype._updateEnabled = function () {
         // implement in subclass
@@ -221,10 +203,6 @@ var ActionItem = /** @class */ (function (_super) {
         this._updateTooltip();
         this._updateEnabled();
         this._updateChecked();
-    };
-    ActionItem.prototype.focus = function () {
-        _super.prototype.focus.call(this);
-        this.$e.domFocus();
     };
     ActionItem.prototype._updateLabel = function () {
         if (this.options.label) {
@@ -391,13 +369,40 @@ var ActionBar = /** @class */ (function () {
         this.actionsList = document.createElement('ul');
         this.actionsList.className = 'actions-container';
         if (this.options.isMenu) {
-            this.actionsList.setAttribute('role', 'menubar');
+            this.actionsList.setAttribute('role', 'menu');
         }
         else {
             this.actionsList.setAttribute('role', 'toolbar');
         }
         if (this.options.ariaLabel) {
             this.actionsList.setAttribute('aria-label', this.options.ariaLabel);
+        }
+        if (this.options.isMenu) {
+            this.domNode.tabIndex = 0;
+            $(this.domNode).on(DOM.EventType.MOUSE_OUT, function (e) {
+                var relatedTarget = e.relatedTarget;
+                if (!DOM.isAncestor(relatedTarget, _this.domNode)) {
+                    _this.focusedItem = undefined;
+                    _this.updateFocus();
+                    e.stopPropagation();
+                }
+            });
+            $(this.actionsList).on(DOM.EventType.MOUSE_OVER, function (e) {
+                var target = e.target;
+                if (!target || !DOM.isAncestor(target, _this.actionsList) || target === _this.actionsList) {
+                    return;
+                }
+                while (target.parentElement !== _this.actionsList) {
+                    target = target.parentElement;
+                }
+                if (DOM.hasClass(target, 'action-item')) {
+                    var lastFocusedItem = _this.focusedItem;
+                    _this.setFocusedItem(target);
+                    if (lastFocusedItem !== _this.focusedItem) {
+                        _this.updateFocus();
+                    }
+                }
+            });
         }
         this.domNode.appendChild(this.actionsList);
         container.appendChild(this.domNode);
@@ -430,12 +435,13 @@ var ActionBar = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    ActionBar.prototype.setAriaLabel = function (label) {
-        if (label) {
-            this.actionsList.setAttribute('aria-label', label);
-        }
-        else {
-            this.actionsList.removeAttribute('aria-label');
+    ActionBar.prototype.setFocusedItem = function (element) {
+        for (var i = 0; i < this.actionsList.children.length; i++) {
+            var elem = this.actionsList.children[i];
+            if (element === elem) {
+                this.focusedItem = i;
+                break;
+            }
         }
     };
     ActionBar.prototype.updateFocusedItem = function () {
@@ -454,19 +460,6 @@ var ActionBar = /** @class */ (function () {
         set: function (context) {
             this._context = context;
             this.items.forEach(function (i) { return i.setActionContext(context); });
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(ActionBar.prototype, "actionRunner", {
-        get: function () {
-            return this._actionRunner;
-        },
-        set: function (actionRunner) {
-            if (actionRunner) {
-                this._actionRunner = actionRunner;
-                this.items.forEach(function (item) { return item.actionRunner = actionRunner; });
-            }
         },
         enumerable: true,
         configurable: true
@@ -500,46 +493,31 @@ var ActionBar = /** @class */ (function () {
             item.render(actionItemElement);
             if (index === null || index < 0 || index >= _this.actionsList.children.length) {
                 _this.actionsList.appendChild(actionItemElement);
+                _this.items.push(item);
             }
             else {
-                _this.actionsList.insertBefore(actionItemElement, _this.actionsList.children[index++]);
+                _this.actionsList.insertBefore(actionItemElement, _this.actionsList.children[index]);
+                _this.items.splice(index, 0, item);
+                index++;
             }
-            _this.items.push(item);
         });
-    };
-    ActionBar.prototype.getWidth = function (index) {
-        if (index >= 0 && index < this.actionsList.children.length) {
-            return this.actionsList.children.item(index).clientWidth;
-        }
-        return 0;
-    };
-    ActionBar.prototype.getHeight = function (index) {
-        if (index >= 0 && index < this.actionsList.children.length) {
-            return this.actionsList.children.item(index).clientHeight;
-        }
-        return 0;
-    };
-    ActionBar.prototype.pull = function (index) {
-        if (index >= 0 && index < this.items.length) {
-            this.items.splice(index, 1);
-            this.actionsList.removeChild(this.actionsList.childNodes[index]);
-        }
     };
     ActionBar.prototype.clear = function () {
         this.items = lifecycle.dispose(this.items);
         $(this.actionsList).empty();
-    };
-    ActionBar.prototype.length = function () {
-        return this.items.length;
     };
     ActionBar.prototype.isEmpty = function () {
         return this.items.length === 0;
     };
     ActionBar.prototype.focus = function (selectFirst) {
         if (selectFirst && typeof this.focusedItem === 'undefined') {
-            this.focusedItem = 0;
+            // Focus the first enabled item
+            this.focusedItem = this.items.length - 1;
+            this.focusNext();
         }
-        this.updateFocus();
+        else {
+            this.updateFocus();
+        }
     };
     ActionBar.prototype.focusNext = function () {
         if (typeof this.focusedItem === 'undefined') {
@@ -577,14 +555,18 @@ var ActionBar = /** @class */ (function () {
     ActionBar.prototype.updateFocus = function (fromRight) {
         if (typeof this.focusedItem === 'undefined') {
             this.domNode.focus();
-            return;
         }
         for (var i = 0; i < this.items.length; i++) {
             var item = this.items[i];
             var actionItem = item;
             if (i === this.focusedItem) {
-                if (types.isFunction(actionItem.focus)) {
-                    actionItem.focus(fromRight);
+                if (types.isFunction(actionItem.isEnabled)) {
+                    if (actionItem.isEnabled() && types.isFunction(actionItem.focus)) {
+                        actionItem.focus(fromRight);
+                    }
+                    else {
+                        this.domNode.focus();
+                    }
                 }
             }
             else {
@@ -629,48 +611,3 @@ var ActionBar = /** @class */ (function () {
     return ActionBar;
 }());
 export { ActionBar };
-var SelectActionItem = /** @class */ (function (_super) {
-    __extends(SelectActionItem, _super);
-    function SelectActionItem(ctx, action, options, selected, contextViewProvider) {
-        var _this = _super.call(this, ctx, action) || this;
-        _this.selectBox = new SelectBox(options, selected, contextViewProvider);
-        _this.toDispose = [];
-        _this.toDispose.push(_this.selectBox);
-        _this.registerListeners();
-        return _this;
-    }
-    SelectActionItem.prototype.setOptions = function (options, selected, disabled) {
-        this.selectBox.setOptions(options, selected, disabled);
-    };
-    SelectActionItem.prototype.select = function (index) {
-        this.selectBox.select(index);
-    };
-    SelectActionItem.prototype.registerListeners = function () {
-        var _this = this;
-        this.toDispose.push(this.selectBox.onDidSelect(function (e) {
-            _this.actionRunner.run(_this._action, _this.getActionContext(e.selected)).done();
-        }));
-    };
-    SelectActionItem.prototype.getActionContext = function (option) {
-        return option;
-    };
-    SelectActionItem.prototype.focus = function () {
-        if (this.selectBox) {
-            this.selectBox.focus();
-        }
-    };
-    SelectActionItem.prototype.blur = function () {
-        if (this.selectBox) {
-            this.selectBox.blur();
-        }
-    };
-    SelectActionItem.prototype.render = function (container) {
-        this.selectBox.render(container);
-    };
-    SelectActionItem.prototype.dispose = function () {
-        this.toDispose = lifecycle.dispose(this.toDispose);
-        _super.prototype.dispose.call(this);
-    };
-    return SelectActionItem;
-}(BaseActionItem));
-export { SelectActionItem };

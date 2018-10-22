@@ -18,7 +18,7 @@ import * as dom from '../../dom.js';
 import { HighlightedLabel } from '../highlightedlabel/highlightedLabel.js';
 import * as paths from '../../../common/paths.js';
 import { getPathLabel, getBaseLabel } from '../../../common/labels.js';
-import { combinedDisposable } from '../../../common/lifecycle.js';
+import { Disposable } from '../../../common/lifecycle.js';
 var FastLabelNode = /** @class */ (function () {
     function FastLabelNode(_element) {
         this._element = _element;
@@ -84,36 +84,26 @@ var FastLabelNode = /** @class */ (function () {
     };
     return FastLabelNode;
 }());
-var IconLabel = /** @class */ (function () {
+var IconLabel = /** @class */ (function (_super) {
+    __extends(IconLabel, _super);
     function IconLabel(container, options) {
-        var _this = this;
-        this.domNode = new FastLabelNode(dom.append(container, dom.$('.monaco-icon-label')));
-        this.labelDescriptionContainer = new FastLabelNode(dom.append(this.domNode.element, dom.$('.monaco-icon-label-description-container')));
+        var _this = _super.call(this) || this;
+        _this.domNode = _this._register(new FastLabelNode(dom.append(container, dom.$('.monaco-icon-label'))));
+        _this.labelDescriptionContainer = _this._register(new FastLabelNode(dom.append(_this.domNode.element, dom.$('.monaco-icon-label-description-container'))));
         if (options && options.supportHighlights) {
-            this.labelNode = new HighlightedLabel(dom.append(this.labelDescriptionContainer.element, dom.$('a.label-name')));
+            _this.labelNode = _this._register(new HighlightedLabel(dom.append(_this.labelDescriptionContainer.element, dom.$('a.label-name'))));
         }
         else {
-            this.labelNode = new FastLabelNode(dom.append(this.labelDescriptionContainer.element, dom.$('a.label-name')));
+            _this.labelNode = _this._register(new FastLabelNode(dom.append(_this.labelDescriptionContainer.element, dom.$('a.label-name'))));
         }
         if (options && options.supportDescriptionHighlights) {
-            this.descriptionNodeFactory = function () { return new HighlightedLabel(dom.append(_this.labelDescriptionContainer.element, dom.$('span.label-description'))); };
+            _this.descriptionNodeFactory = function () { return _this._register(new HighlightedLabel(dom.append(_this.labelDescriptionContainer.element, dom.$('span.label-description')))); };
         }
         else {
-            this.descriptionNodeFactory = function () { return new FastLabelNode(dom.append(_this.labelDescriptionContainer.element, dom.$('span.label-description'))); };
+            _this.descriptionNodeFactory = function () { return _this._register(new FastLabelNode(dom.append(_this.labelDescriptionContainer.element, dom.$('span.label-description')))); };
         }
+        return _this;
     }
-    Object.defineProperty(IconLabel.prototype, "element", {
-        get: function () {
-            return this.domNode.element;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    IconLabel.prototype.onClick = function (callback) {
-        return combinedDisposable([
-            dom.addDisposableListener(this.labelDescriptionContainer.element, dom.EventType.CLICK, function (e) { return callback(e); }),
-        ]);
-    };
     IconLabel.prototype.setValue = function (label, description, options) {
         var classes = ['monaco-icon-label'];
         if (options) {
@@ -152,15 +142,8 @@ var IconLabel = /** @class */ (function () {
             }
         }
     };
-    IconLabel.prototype.dispose = function () {
-        this.domNode.dispose();
-        this.labelNode.dispose();
-        if (this.descriptionNode) {
-            this.descriptionNode.dispose();
-        }
-    };
     return IconLabel;
-}());
+}(Disposable));
 export { IconLabel };
 var FileLabel = /** @class */ (function (_super) {
     __extends(FileLabel, _super);
@@ -171,7 +154,7 @@ var FileLabel = /** @class */ (function (_super) {
     }
     FileLabel.prototype.setFile = function (file, provider, userHome) {
         var parent = paths.dirname(file.fsPath);
-        this.setValue(getBaseLabel(file), parent && parent !== '.' ? getPathLabel(parent, provider, userHome) : '', { title: file.fsPath });
+        this.setValue(getBaseLabel(file), parent && parent !== '.' ? getPathLabel(parent, userHome, provider) : '', { title: file.fsPath });
     };
     return FileLabel;
 }(IconLabel));

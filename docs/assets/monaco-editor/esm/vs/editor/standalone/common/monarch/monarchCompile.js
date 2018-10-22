@@ -24,8 +24,7 @@ function isArrayOf(elemType, obj) {
     if (!(Array.isArray(obj))) {
         return false;
     }
-    var idx;
-    for (idx in obj) {
+    for (var idx in obj) {
         if (obj.hasOwnProperty(idx)) {
             if (!(elemType(obj[idx]))) {
                 return false;
@@ -159,8 +158,8 @@ function createGuard(lexer, ruleName, tkey, val) {
     else if (op === '~' || op === '!~') {
         if (pat.indexOf('$') < 0) {
             // precompile regular expression
-            var re = compileRegExp(lexer, '^' + pat + '$');
-            tester = function (s) { return (op === '~' ? re.test(s) : !re.test(s)); };
+            var re_1 = compileRegExp(lexer, '^' + pat + '$');
+            tester = function (s) { return (op === '~' ? re_1.test(s) : !re_1.test(s)); };
         }
         else {
             tester = function (s, id, matches, state) {
@@ -171,13 +170,13 @@ function createGuard(lexer, ruleName, tkey, val) {
     }
     else { // if (op==='==' || op==='!=') {
         if (pat.indexOf('$') < 0) {
-            var patx = monarchCommon.fixCase(lexer, pat);
-            tester = function (s) { return (op === '==' ? s === patx : s !== patx); };
+            var patx_1 = monarchCommon.fixCase(lexer, pat);
+            tester = function (s) { return (op === '==' ? s === patx_1 : s !== patx_1); };
         }
         else {
-            var patx_1 = monarchCommon.fixCase(lexer, pat);
+            var patx_2 = monarchCommon.fixCase(lexer, pat);
             tester = function (s, id, matches, state, eos) {
-                var patexp = monarchCommon.substituteMatches(lexer, patx_1, id, matches, state);
+                var patexp = monarchCommon.substituteMatches(lexer, patx_2, id, matches, state);
                 return (op === '==' ? s === patexp : s !== patexp);
             };
         }
@@ -273,8 +272,7 @@ function compileAction(lexer, ruleName, action) {
     }
     else if (Array.isArray(action)) {
         var results = [];
-        var idx;
-        for (idx in action) {
+        for (var idx in action) {
             if (action.hasOwnProperty(idx)) {
                 results[idx] = compileAction(lexer, ruleName, action[idx]);
             }
@@ -283,38 +281,36 @@ function compileAction(lexer, ruleName, action) {
     }
     else if (action.cases) {
         // build an array of test cases
-        var cases = [];
+        var cases_1 = [];
         // for each case, push a test function and result value
-        var tkey;
-        for (tkey in action.cases) {
+        for (var tkey in action.cases) {
             if (action.cases.hasOwnProperty(tkey)) {
                 var val = compileAction(lexer, ruleName, action.cases[tkey]);
                 // what kind of case
                 if (tkey === '@default' || tkey === '@' || tkey === '') {
-                    cases.push({ test: null, value: val, name: tkey });
+                    cases_1.push({ test: null, value: val, name: tkey });
                 }
                 else if (tkey === '@eos') {
-                    cases.push({ test: function (id, matches, state, eos) { return eos; }, value: val, name: tkey });
+                    cases_1.push({ test: function (id, matches, state, eos) { return eos; }, value: val, name: tkey });
                 }
                 else {
-                    cases.push(createGuard(lexer, ruleName, tkey, val)); // call separate function to avoid local variable capture
+                    cases_1.push(createGuard(lexer, ruleName, tkey, val)); // call separate function to avoid local variable capture
                 }
             }
         }
         // create a matching function
-        var def = lexer.defaultToken;
+        var def_1 = lexer.defaultToken;
         return {
             test: function (id, matches, state, eos) {
-                var idx;
-                for (idx in cases) {
-                    if (cases.hasOwnProperty(idx)) {
-                        var didmatch = (!cases[idx].test || cases[idx].test(id, matches, state, eos));
+                for (var idx in cases_1) {
+                    if (cases_1.hasOwnProperty(idx)) {
+                        var didmatch = (!cases_1[idx].test || cases_1[idx].test(id, matches, state, eos));
                         if (didmatch) {
-                            return cases[idx].value;
+                            return cases_1[idx].value;
                         }
                     }
                 }
-                return def;
+                return def_1;
             }
         };
     }
@@ -388,8 +384,7 @@ export function compile(languageId, json) {
     lexerMin.defaultToken = lexer.defaultToken;
     // Compile an array of rules into newrules where RegExp objects are created.
     function addRules(state, newrules, rules) {
-        var idx;
-        for (idx in rules) {
+        for (var idx in rules) {
             if (rules.hasOwnProperty(idx)) {
                 var rule = rules[idx];
                 var include = rule.include;
@@ -450,8 +445,7 @@ export function compile(languageId, json) {
         monarchCommon.throwError(lexer, 'a language definition must define the \'tokenizer\' attribute as an object');
     }
     lexer.tokenizer = [];
-    var key;
-    for (key in json.tokenizer) {
+    for (var key in json.tokenizer) {
         if (json.tokenizer.hasOwnProperty(key)) {
             if (!lexer.start) {
                 lexer.start = key;

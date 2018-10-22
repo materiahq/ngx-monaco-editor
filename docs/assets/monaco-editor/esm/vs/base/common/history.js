@@ -11,32 +11,16 @@ var HistoryNavigator = /** @class */ (function () {
         this._limit = limit;
         this._onChange();
     }
-    HistoryNavigator.prototype.getHistory = function () {
-        return this._elements;
-    };
     HistoryNavigator.prototype.add = function (t) {
         this._history.delete(t);
         this._history.add(t);
         this._onChange();
     };
-    HistoryNavigator.prototype.addIfNotPresent = function (t) {
-        if (!this._history.has(t)) {
-            this.add(t);
-        }
-    };
     HistoryNavigator.prototype.next = function () {
-        if (this._navigator.next()) {
-            return this._navigator.current();
-        }
-        this.last();
-        return null;
+        return this._navigator.next();
     };
     HistoryNavigator.prototype.previous = function () {
-        if (this._navigator.previous()) {
-            return this._navigator.current();
-        }
-        this.first();
-        return null;
+        return this._navigator.previous();
     };
     HistoryNavigator.prototype.current = function () {
         return this._navigator.current();
@@ -50,14 +34,12 @@ var HistoryNavigator = /** @class */ (function () {
     HistoryNavigator.prototype.last = function () {
         return this._navigator.last();
     };
-    HistoryNavigator.prototype.clear = function () {
-        this._initialize([]);
-        this._onChange();
+    HistoryNavigator.prototype.has = function (t) {
+        return this._history.has(t);
     };
     HistoryNavigator.prototype._onChange = function () {
         this._reduceToLimit();
-        this._navigator = new ArrayNavigator(this._elements);
-        this._navigator.last();
+        this._navigator = new ArrayNavigator(this._elements, 0, this._elements.length, this._elements.length);
     };
     HistoryNavigator.prototype._reduceToLimit = function () {
         var data = this._elements;

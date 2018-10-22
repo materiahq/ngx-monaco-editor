@@ -15,10 +15,3 @@ var SyncDescriptor = /** @class */ (function () {
     return SyncDescriptor;
 }());
 export { SyncDescriptor };
-export var createSyncDescriptor = function (ctor) {
-    var staticArguments = [];
-    for (var _i = 1; _i < arguments.length; _i++) {
-        staticArguments[_i - 1] = arguments[_i];
-    }
-    return new (SyncDescriptor.bind.apply(SyncDescriptor, [void 0, ctor].concat(staticArguments)))();
-};

@@ -34,13 +34,13 @@ import { EditorState } from '../../browser/core/editorState.js';
 import { registerThemingParticipant } from '../../../platform/theme/common/themeService.js';
 import { editorBracketMatchBorder } from '../../common/view/editorColorRegistry.js';
 import { ModelDecorationOptions } from '../../common/model/textModel.js';
+import { createCancelablePromise, timeout } from '../../../base/common/async.js';
+import { onUnexpectedError } from '../../../base/common/errors.js';
 var InPlaceReplaceController = /** @class */ (function () {
     function InPlaceReplaceController(editor, editorWorkerService) {
+        this.decorationIds = [];
         this.editor = editor;
         this.editorWorkerService = editorWorkerService;
-        this.currentRequest = TPromise.as(null);
-        this.decorationRemover = TPromise.as(null);
-        this.decorationIds = [];
     }
     InPlaceReplaceController.get = function (editor) {
         return editor.getContribution(InPlaceReplaceController.ID);
@@ -53,25 +53,21 @@ var InPlaceReplaceController = /** @class */ (function () {
     InPlaceReplaceController.prototype.run = function (source, up) {
         var _this = this;
         // cancel any pending request
-        this.currentRequest.cancel();
-        var selection = this.editor.getSelection(), model = this.editor.getModel(), modelURI = model.uri;
+        if (this.currentRequest) {
+            this.currentRequest.cancel();
+        }
+        var selection = this.editor.getSelection();
+        var model = this.editor.getModel();
+        var modelURI = model.uri;
         if (selection.startLineNumber !== selection.endLineNumber) {
             // Can't accept multiline selection
             return null;
         }
         var state = new EditorState(this.editor, 1 /* Value */ | 4 /* Position */);
         if (!this.editorWorkerService.canNavigateValueSet(modelURI)) {
-            this.currentRequest = TPromise.as(null);
+            return undefined;
         }
-        else {
-            this.currentRequest = this.editorWorkerService.navigateValueSet(modelURI, selection, up);
-            this.currentRequest = this.currentRequest.then(function (basicResult) {
-                if (basicResult && basicResult.range && basicResult.value) {
-                    return basicResult;
-                }
-                return null;
-            });
-        }
+        this.currentRequest = createCancelablePromise(function (token) { return _this.editorWorkerService.navigateValueSet(modelURI, selection, up); });
         return this.currentRequest.then(function (result) {
             if (!result || !result.range || !result.value) {
                 // No proper result
@@ -82,7 +78,9 @@ var InPlaceReplaceController = /** @class */ (function () {
                 return;
             }
             // Selection
-            var editRange = Range.lift(result.range), highlightRange = result.range, diff = result.value.length - (selection.endColumn - selection.startColumn);
+            var editRange = Range.lift(result.range);
+            var highlightRange = result.range;
+            var diff = result.value.length - (selection.endColumn - selection.startColumn);
             // highlight
             highlightRange = {
                 startLineNumber: highlightRange.startLineNumber,
@@ -104,12 +102,12 @@ var InPlaceReplaceController = /** @class */ (function () {
                     options: InPlaceReplaceController.DECORATION
                 }]);
             // remove decoration after delay
-            _this.decorationRemover.cancel();
-            _this.decorationRemover = TPromise.timeout(350);
-            _this.decorationRemover.then(function () {
-                _this.decorationIds = _this.editor.deltaDecorations(_this.decorationIds, []);
-            });
-        });
+            if (_this.decorationRemover) {
+                _this.decorationRemover.cancel();
+            }
+            _this.decorationRemover = timeout(350);
+            _this.decorationRemover.then(function () { return _this.decorationIds = _this.editor.deltaDecorations(_this.decorationIds, []); }).catch(onUnexpectedError);
+        }).catch(onUnexpectedError);
     };
     InPlaceReplaceController.ID = 'editor.contrib.inPlaceReplaceController';
     InPlaceReplaceController.DECORATION = ModelDecorationOptions.register({
@@ -130,7 +128,8 @@ var InPlaceReplaceUp = /** @class */ (function (_super) {
             precondition: EditorContextKeys.writable,
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 82 /* US_COMMA */
+                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 82 /* US_COMMA */,
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
@@ -139,7 +138,7 @@ var InPlaceReplaceUp = /** @class */ (function (_super) {
         if (!controller) {
             return undefined;
         }
-        return controller.run(this.id, true);
+        return TPromise.wrap(controller.run(this.id, true));
     };
     return InPlaceReplaceUp;
 }(EditorAction));
@@ -153,7 +152,8 @@ var InPlaceReplaceDown = /** @class */ (function (_super) {
             precondition: EditorContextKeys.writable,
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
-                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 84 /* US_DOT */
+                primary: 2048 /* CtrlCmd */ | 1024 /* Shift */ | 84 /* US_DOT */,
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
@@ -162,7 +162,7 @@ var InPlaceReplaceDown = /** @class */ (function (_super) {
         if (!controller) {
             return undefined;
         }
-        return controller.run(this.id, false);
+        return TPromise.wrap(controller.run(this.id, false));
     };
     return InPlaceReplaceDown;
 }(EditorAction));

@@ -125,7 +125,8 @@ var GotoLineAction = /** @class */ (function (_super) {
             kbOpts: {
                 kbExpr: EditorContextKeys.focus,
                 primary: 2048 /* CtrlCmd */ | 37 /* KEY_G */,
-                mac: { primary: 256 /* WinCtrl */ | 37 /* KEY_G */ }
+                mac: { primary: 256 /* WinCtrl */ | 37 /* KEY_G */ },
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }

@@ -18,16 +18,16 @@ import * as nls from '../../../nls.js';
 import { onUnexpectedError } from '../../../base/common/errors.js';
 import * as platform from '../../../base/common/platform.js';
 import * as strings from '../../../base/common/strings.js';
+import { Delayer } from '../../../base/common/async.js';
 import * as dom from '../../../base/browser/dom.js';
-import { FindInput } from '../../../base/browser/ui/findinput/findInput.js';
-import { InputBox } from '../../../base/browser/ui/inputbox/inputBox.js';
 import { Widget } from '../../../base/browser/ui/widget.js';
 import { Sash, Orientation } from '../../../base/browser/ui/sash/sash.js';
 import { OverlayWidgetPositionPreference } from '../../browser/editorBrowser.js';
 import { FIND_IDS, MATCHES_LIMIT, CONTEXT_FIND_INPUT_FOCUSED, CONTEXT_REPLACE_INPUT_FOCUSED } from './findModel.js';
 import { Range } from '../../common/core/range.js';
 import { registerThemingParticipant } from '../../../platform/theme/common/themeService.js';
-import { editorFindRangeHighlight, editorFindMatch, editorFindMatchHighlight, contrastBorder, inputBackground, editorWidgetBackground, inputActiveOptionBorder, widgetShadow, inputForeground, inputBorder, inputValidationInfoBackground, inputValidationInfoBorder, inputValidationWarningBackground, inputValidationWarningBorder, inputValidationErrorBackground, inputValidationErrorBorder, errorForeground, editorWidgetBorder, editorFindMatchBorder, editorFindMatchHighlightBorder, editorFindRangeHighlightBorder } from '../../../platform/theme/common/colorRegistry.js';
+import { editorFindRangeHighlight, editorFindMatch, editorFindMatchHighlight, contrastBorder, inputBackground, editorWidgetBackground, inputActiveOptionBorder, widgetShadow, inputForeground, inputBorder, inputValidationInfoBackground, inputValidationInfoBorder, inputValidationWarningBackground, inputValidationWarningBorder, inputValidationErrorBackground, inputValidationErrorBorder, errorForeground, editorWidgetBorder, editorFindMatchBorder, editorFindMatchHighlightBorder, editorFindRangeHighlightBorder, editorWidgetResizeBorder } from '../../../platform/theme/common/colorRegistry.js';
+import { ContextScopedFindInput, ContextScopedHistoryInputBox } from '../../../platform/widget/browser/contextScopedHistoryWidget.js';
 var NLS_FIND_INPUT_LABEL = nls.localize('label.find', "Find");
 var NLS_FIND_INPUT_PLACEHOLDER = nls.localize('placeholder.find', "Find");
 var NLS_PREVIOUS_MATCH_BTN_LABEL = nls.localize('label.previousMatchButton', "Previous match");
@@ -70,8 +70,10 @@ var FindWidget = /** @class */ (function (_super) {
         _this._state = state;
         _this._contextViewProvider = contextViewProvider;
         _this._keybindingService = keybindingService;
+        _this._contextKeyService = contextKeyService;
         _this._isVisible = false;
         _this._isReplaceVisible = false;
+        _this._updateHistoryDelayer = new Delayer(500);
         _this._register(_this._state.onFindReplaceStateChange(function (e) { return _this._onStateChanged(e); }));
         _this._buildDomNode();
         _this._updateButtons();
@@ -93,7 +95,7 @@ var FindWidget = /** @class */ (function (_super) {
                 _this._updateToggleSelectionFindButton();
             }
         }));
-        _this._register(_this._codeEditor.onDidFocusEditor(function () {
+        _this._register(_this._codeEditor.onDidFocusEditorWidget(function () {
             if (_this._isVisible) {
                 var globalBufferTerm = _this._controller.getGlobalBufferTerm();
                 if (globalBufferTerm && globalBufferTerm !== _this._state.searchString) {
@@ -220,6 +222,20 @@ var FindWidget = /** @class */ (function (_super) {
         }
         if (e.searchString || e.currentMatch) {
             this._layoutViewZone();
+        }
+        if (e.updateHistory) {
+            this._delayedUpdateHistory();
+        }
+    };
+    FindWidget.prototype._delayedUpdateHistory = function () {
+        this._updateHistoryDelayer.trigger(this._updateHistory.bind(this));
+    };
+    FindWidget.prototype._updateHistory = function () {
+        if (this._state.searchString) {
+            this._findInput.inputBox.addToHistory();
+        }
+        if (this._state.replaceString) {
+            this._replaceInputBox.addToHistory();
         }
     };
     FindWidget.prototype._updateMatchesCount = function () {
@@ -558,7 +574,7 @@ var FindWidget = /** @class */ (function (_super) {
     FindWidget.prototype._buildFindPart = function () {
         var _this = this;
         // Find input
-        this._findInput = this._register(new FindInput(null, this._contextViewProvider, {
+        this._findInput = this._register(new ContextScopedFindInput(null, this._contextViewProvider, {
             width: FIND_INPUT_AREA_WIDTH,
             label: NLS_FIND_INPUT_LABEL,
             placeholder: NLS_FIND_INPUT_PLACEHOLDER,
@@ -582,12 +598,12 @@ var FindWidget = /** @class */ (function (_super) {
                     return { content: e.message };
                 }
             }
-        }));
+        }, this._contextKeyService));
         this._findInput.setRegex(!!this._state.isRegex);
         this._findInput.setCaseSensitive(!!this._state.matchCase);
         this._findInput.setWholeWords(!!this._state.wholeWord);
         this._register(this._findInput.onKeyDown(function (e) { return _this._onFindInputKeyDown(e); }));
-        this._register(this._findInput.onInput(function () {
+        this._register(this._findInput.inputBox.onDidChange(function () {
             _this._state.change({ searchString: _this._findInput.getValue() }, true);
         }));
         this._register(this._findInput.onDidOptionChange(function () {
@@ -682,10 +698,11 @@ var FindWidget = /** @class */ (function (_super) {
         var replaceInput = document.createElement('div');
         replaceInput.className = 'replace-input';
         replaceInput.style.width = REPLACE_INPUT_AREA_WIDTH + 'px';
-        this._replaceInputBox = this._register(new InputBox(replaceInput, null, {
+        this._replaceInputBox = this._register(new ContextScopedHistoryInputBox(replaceInput, null, {
             ariaLabel: NLS_REPLACE_INPUT_LABEL,
-            placeholder: NLS_REPLACE_INPUT_PLACEHOLDER
-        }));
+            placeholder: NLS_REPLACE_INPUT_PLACEHOLDER,
+            history: []
+        }, this._contextKeyService));
         this._register(dom.addStandardDisposableListener(this._replaceInputBox.inputElement, 'keydown', function (e) { return _this._onReplaceInputKeyDown(e); }));
         this._register(dom.addStandardDisposableListener(this._replaceInputBox.inputElement, 'input', function (e) {
             _this._state.change({ replaceString: _this._replaceInputBox.value }, false);
@@ -825,9 +842,6 @@ var SimpleCheckbox = /** @class */ (function (_super) {
         enumerable: true,
         configurable: true
     });
-    SimpleCheckbox.prototype.focus = function () {
-        this._checkbox.focus();
-    };
     SimpleCheckbox.prototype.enable = function () {
         this._checkbox.removeAttribute('disabled');
     };
@@ -937,8 +951,14 @@ registerThemingParticipant(function (theme, collector) {
     if (error) {
         collector.addRule(".monaco-editor .find-widget.no-results .matchesCount { color: " + error + "; }");
     }
-    var border = theme.getColor(editorWidgetBorder);
-    if (border) {
-        collector.addRule(".monaco-editor .find-widget .monaco-sash { background-color: " + border + "; width: 3px !important; margin-left: -4px;}");
+    var resizeBorderBackground = theme.getColor(editorWidgetResizeBorder);
+    if (resizeBorderBackground) {
+        collector.addRule(".monaco-editor .find-widget .monaco-sash { background-color: " + resizeBorderBackground + "; width: 3px !important; margin-left: -4px;}");
+    }
+    else {
+        var border = theme.getColor(editorWidgetBorder);
+        if (border) {
+            collector.addRule(".monaco-editor .find-widget .monaco-sash { background-color: " + border + "; width: 3px !important; margin-left: -4px;}");
+        }
     }
 });

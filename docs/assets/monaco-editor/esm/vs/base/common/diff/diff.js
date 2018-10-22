@@ -7,7 +7,7 @@ import { DiffChange } from './diffChange.js';
 function createStringSequence(a) {
     return {
         getLength: function () { return a.length; },
-        getElementHash: function (pos) { return a[pos]; }
+        getElementAtIndex: function (pos) { return a.charCodeAt(pos); }
     };
 }
 export function stringDiff(original, modified, pretty) {
@@ -149,7 +149,6 @@ var DiffChangeHelper = /** @class */ (function () {
     };
     return DiffChangeHelper;
 }());
-var hasOwnProperty = Object.prototype.hasOwnProperty;
 /**
  * An implementation of the difference algorithm described in
  * "An O(ND) Difference Algorithm and its variations" by Eugene W. Myers
@@ -163,56 +162,17 @@ var LcsDiff = /** @class */ (function () {
         this.OriginalSequence = originalSequence;
         this.ModifiedSequence = newSequence;
         this.ContinueProcessingPredicate = continueProcessingPredicate;
-        this.m_originalIds = [];
-        this.m_modifiedIds = [];
         this.m_forwardHistory = [];
         this.m_reverseHistory = [];
-        this.ComputeUniqueIdentifiers();
     }
-    LcsDiff.prototype.ComputeUniqueIdentifiers = function () {
-        var originalSequenceLength = this.OriginalSequence.getLength();
-        var modifiedSequenceLength = this.ModifiedSequence.getLength();
-        this.m_originalIds = new Array(originalSequenceLength);
-        this.m_modifiedIds = new Array(modifiedSequenceLength);
-        // Create a new hash table for unique elements from the original
-        // sequence.
-        var hashTable = {};
-        var currentUniqueId = 1;
-        var i;
-        // Fill up the hash table for unique elements
-        for (i = 0; i < originalSequenceLength; i++) {
-            var originalElementHash = this.OriginalSequence.getElementHash(i);
-            if (!hasOwnProperty.call(hashTable, originalElementHash)) {
-                // No entry in the hashtable so this is a new unique element.
-                // Assign the element a new unique identifier and add it to the
-                // hash table
-                this.m_originalIds[i] = currentUniqueId++;
-                hashTable[originalElementHash] = this.m_originalIds[i];
-            }
-            else {
-                this.m_originalIds[i] = hashTable[originalElementHash];
-            }
-        }
-        // Now match up modified elements
-        for (i = 0; i < modifiedSequenceLength; i++) {
-            var modifiedElementHash = this.ModifiedSequence.getElementHash(i);
-            if (!hasOwnProperty.call(hashTable, modifiedElementHash)) {
-                this.m_modifiedIds[i] = currentUniqueId++;
-                hashTable[modifiedElementHash] = this.m_modifiedIds[i];
-            }
-            else {
-                this.m_modifiedIds[i] = hashTable[modifiedElementHash];
-            }
-        }
-    };
     LcsDiff.prototype.ElementsAreEqual = function (originalIndex, newIndex) {
-        return this.m_originalIds[originalIndex] === this.m_modifiedIds[newIndex];
+        return (this.OriginalSequence.getElementAtIndex(originalIndex) === this.ModifiedSequence.getElementAtIndex(newIndex));
     };
     LcsDiff.prototype.OriginalElementsAreEqual = function (index1, index2) {
-        return this.m_originalIds[index1] === this.m_originalIds[index2];
+        return (this.OriginalSequence.getElementAtIndex(index1) === this.OriginalSequence.getElementAtIndex(index2));
     };
     LcsDiff.prototype.ModifiedElementsAreEqual = function (index1, index2) {
-        return this.m_modifiedIds[index1] === this.m_modifiedIds[index2];
+        return (this.ModifiedSequence.getElementAtIndex(index1) === this.ModifiedSequence.getElementAtIndex(index2));
     };
     LcsDiff.prototype.ComputeDiff = function (pretty) {
         return this._ComputeDiff(0, this.OriginalSequence.getLength() - 1, 0, this.ModifiedSequence.getLength() - 1, pretty);
@@ -706,7 +666,8 @@ var LcsDiff = /** @class */ (function () {
         if (index <= 0 || index >= this.OriginalSequence.getLength() - 1) {
             return true;
         }
-        return /^\s*$/.test(this.OriginalSequence.getElementHash(index));
+        var element = this.OriginalSequence.getElementAtIndex(index);
+        return (typeof element === 'string' && /^\s*$/.test(element));
     };
     LcsDiff.prototype._OriginalRegionIsBoundary = function (originalStart, originalLength) {
         if (this._OriginalIsBoundary(originalStart) || this._OriginalIsBoundary(originalStart - 1)) {
@@ -724,7 +685,8 @@ var LcsDiff = /** @class */ (function () {
         if (index <= 0 || index >= this.ModifiedSequence.getLength() - 1) {
             return true;
         }
-        return /^\s*$/.test(this.ModifiedSequence.getElementHash(index));
+        var element = this.ModifiedSequence.getElementAtIndex(index);
+        return (typeof element === 'string' && /^\s*$/.test(element));
     };
     LcsDiff.prototype._ModifiedRegionIsBoundary = function (modifiedStart, modifiedLength) {
         if (this._ModifiedIsBoundary(modifiedStart) || this._ModifiedIsBoundary(modifiedStart - 1)) {

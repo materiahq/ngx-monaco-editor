@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 'use strict';
+var _a, _b, _c;
 import { editorBackground, editorForeground, editorSelectionHighlight, editorInactiveSelection } from '../../../platform/theme/common/colorRegistry.js';
 import { editorIndentGuides, editorActiveIndentGuides } from '../../common/view/editorColorRegistry.js';
 /* -------------------------------- Begin vs theme -------------------------------- */
@@ -27,8 +28,8 @@ export var vs = {
         { token: 'delimiter.html', foreground: '383838' },
         { token: 'delimiter.xml', foreground: '0000FF' },
         { token: 'tag', foreground: '800000' },
-        { token: 'tag.id.jade', foreground: '4F76AC' },
-        { token: 'tag.class.jade', foreground: '4F76AC' },
+        { token: 'tag.id.pug', foreground: '4F76AC' },
+        { token: 'tag.class.pug', foreground: '4F76AC' },
         { token: 'meta.scss', foreground: '800000' },
         { token: 'metatag', foreground: 'e00000' },
         { token: 'metatag.content.html', foreground: 'FF0000' },
@@ -90,8 +91,8 @@ export var vs_dark = {
         { token: 'delimiter.html', foreground: '808080' },
         { token: 'delimiter.xml', foreground: '808080' },
         { token: 'tag', foreground: '569CD6' },
-        { token: 'tag.id.jade', foreground: '4F76AC' },
-        { token: 'tag.class.jade', foreground: '4F76AC' },
+        { token: 'tag.id.pug', foreground: '4F76AC' },
+        { token: 'tag.class.pug', foreground: '4F76AC' },
         { token: 'meta.scss', foreground: 'A79873' },
         { token: 'meta.tag', foreground: 'CE9178' },
         { token: 'metatag', foreground: 'DD6A6F' },
@@ -148,8 +149,8 @@ export var hc_black = {
         { token: 'delimiter', foreground: 'FFFF00' },
         { token: 'delimiter.html', foreground: 'FFFF00' },
         { token: 'tag', foreground: '569CD6' },
-        { token: 'tag.id.jade', foreground: '4F76AC' },
-        { token: 'tag.class.jade', foreground: '4F76AC' },
+        { token: 'tag.id.pug', foreground: '4F76AC' },
+        { token: 'tag.class.pug', foreground: '4F76AC' },
         { token: 'meta', foreground: 'D4D4D4' },
         { token: 'meta.tag', foreground: 'CE9178' },
         { token: 'metatag', foreground: '569CD6' },
@@ -177,4 +178,3 @@ export var hc_black = {
         _c[editorActiveIndentGuides] = '#FFFFFF',
         _c)
 };
-var _a, _b, _c;

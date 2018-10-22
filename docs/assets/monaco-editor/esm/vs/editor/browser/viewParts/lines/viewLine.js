@@ -154,7 +154,7 @@ var ViewLine = /** @class */ (function () {
                 }
             }
         }
-        var renderLineInput = new RenderLineInput(options.useMonospaceOptimizations, lineData.content, lineData.isBasicASCII, lineData.containsRTL, lineData.minColumn - 1, lineData.tokens, actualInlineDecorations, lineData.tabSize, options.spaceWidth, options.stopRenderingLineAfter, options.renderWhitespace, options.renderControlCharacters, options.fontLigatures);
+        var renderLineInput = new RenderLineInput(options.useMonospaceOptimizations, lineData.content, lineData.continuesWithWrappedLine, lineData.isBasicASCII, lineData.containsRTL, lineData.minColumn - 1, lineData.tokens, actualInlineDecorations, lineData.tabSize, options.spaceWidth, options.stopRenderingLineAfter, options.renderWhitespace, options.renderControlCharacters, options.fontLigatures);
         if (this._renderedViewLine && this._renderedViewLine.input.equals(renderLineInput)) {
             // no need to do anything, we have the same render input
             return false;
@@ -177,7 +177,7 @@ var ViewLine = /** @class */ (function () {
                 // Another rounding error has been observed on Linux in VSCode, where <span> width
                 // rounding errors add up to an observable large number...
                 // ---
-                // Also see another example of rounding errors on Windows in 
+                // Also see another example of rounding errors on Windows in
                 // https://github.com/Microsoft/vscode/issues/33178
                 renderedViewLine = new FastRenderedViewLine(this._renderedViewLine ? this._renderedViewLine.domNode : null, renderLineInput, output.characterMapping);
             }

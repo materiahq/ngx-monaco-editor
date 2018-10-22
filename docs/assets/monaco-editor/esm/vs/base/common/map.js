@@ -13,23 +13,9 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-import URI from './uri.js';
 export function values(forEachable) {
     var result = [];
     forEachable.forEach(function (value) { return result.push(value); });
-    return result;
-}
-export function keys(map) {
-    var result = [];
-    map.forEach(function (value, key) { return result.push(key); });
-    return result;
-}
-export function getOrSet(map, key, value) {
-    var result = map.get(key);
-    if (result === void 0) {
-        result = value;
-        map.set(key, result);
-    }
     return result;
 }
 var StringIterator = /** @class */ (function () {
@@ -45,9 +31,6 @@ var StringIterator = /** @class */ (function () {
     StringIterator.prototype.next = function () {
         this._pos += 1;
         return this;
-    };
-    StringIterator.prototype.join = function (parts) {
-        return parts.join('');
     };
     StringIterator.prototype.hasNext = function () {
         return this._pos < this._value.length - 1;
@@ -75,16 +58,13 @@ var PathIterator = /** @class */ (function () {
     PathIterator.prototype.hasNext = function () {
         return this._to < this._value.length;
     };
-    PathIterator.prototype.join = function (parts) {
-        return parts.join('/');
-    };
     PathIterator.prototype.next = function () {
         // this._data = key.split(/[\\/]/).filter(s => !!s);
         this._from = this._to;
         var justSeps = true;
         for (; this._to < this._value.length; this._to++) {
             var ch = this._value.charCodeAt(this._to);
-            if (ch === PathIterator._fwd || ch === PathIterator._bwd) {
+            if (ch === 47 /* Slash */ || ch === 92 /* Backslash */) {
                 if (justSeps) {
                     this._from++;
                 }
@@ -123,17 +103,12 @@ var PathIterator = /** @class */ (function () {
     PathIterator.prototype.value = function () {
         return this._value.substring(this._from, this._to);
     };
-    PathIterator._fwd = '/'.charCodeAt(0);
-    PathIterator._bwd = '\\'.charCodeAt(0);
     return PathIterator;
 }());
 export { PathIterator };
 var TernarySearchTreeNode = /** @class */ (function () {
     function TernarySearchTreeNode() {
     }
-    TernarySearchTreeNode.prototype.isEmpty = function () {
-        return !this.left && !this.mid && !this.right && !this.element;
-    };
     return TernarySearchTreeNode;
 }());
 var TernarySearchTree = /** @class */ (function () {
@@ -154,16 +129,16 @@ var TernarySearchTree = /** @class */ (function () {
         var node;
         if (!this._root) {
             this._root = new TernarySearchTreeNode();
-            this._root.str = iter.value();
+            this._root.segment = iter.value();
         }
         node = this._root;
         while (true) {
-            var val = iter.cmp(node.str);
+            var val = iter.cmp(node.segment);
             if (val > 0) {
                 // left
                 if (!node.left) {
                     node.left = new TernarySearchTreeNode();
-                    node.left.str = iter.value();
+                    node.left.segment = iter.value();
                 }
                 node = node.left;
             }
@@ -171,7 +146,7 @@ var TernarySearchTree = /** @class */ (function () {
                 // right
                 if (!node.right) {
                     node.right = new TernarySearchTreeNode();
-                    node.right.str = iter.value();
+                    node.right.segment = iter.value();
                 }
                 node = node.right;
             }
@@ -180,7 +155,7 @@ var TernarySearchTree = /** @class */ (function () {
                 iter.next();
                 if (!node.mid) {
                     node.mid = new TernarySearchTreeNode();
-                    node.mid.str = iter.value();
+                    node.mid.segment = iter.value();
                 }
                 node = node.mid;
             }
@@ -188,15 +163,16 @@ var TernarySearchTree = /** @class */ (function () {
                 break;
             }
         }
-        var oldElement = node.element;
-        node.element = element;
+        var oldElement = node.value;
+        node.value = element;
+        node.key = key;
         return oldElement;
     };
     TernarySearchTree.prototype.get = function (key) {
         var iter = this._iter.reset(key);
         var node = this._root;
         while (node) {
-            var val = iter.cmp(node.str);
+            var val = iter.cmp(node.segment);
             if (val > 0) {
                 // left
                 node = node.left;
@@ -214,60 +190,14 @@ var TernarySearchTree = /** @class */ (function () {
                 break;
             }
         }
-        return node ? node.element : undefined;
-    };
-    TernarySearchTree.prototype.delete = function (key) {
-        var iter = this._iter.reset(key);
-        var stack = [];
-        var node = this._root;
-        // find and unset node
-        while (node) {
-            var val = iter.cmp(node.str);
-            if (val > 0) {
-                // left
-                stack.push([1, node]);
-                node = node.left;
-            }
-            else if (val < 0) {
-                // right
-                stack.push([-1, node]);
-                node = node.right;
-            }
-            else if (iter.hasNext()) {
-                // mid
-                iter.next();
-                stack.push([0, node]);
-                node = node.mid;
-            }
-            else {
-                // remove element
-                node.element = undefined;
-                // clean up empty nodes
-                while (stack.length > 0 && node.isEmpty()) {
-                    var _a = stack.pop(), dir = _a[0], parent_1 = _a[1];
-                    switch (dir) {
-                        case 1:
-                            parent_1.left = undefined;
-                            break;
-                        case 0:
-                            parent_1.mid = undefined;
-                            break;
-                        case -1:
-                            parent_1.right = undefined;
-                            break;
-                    }
-                    node = parent_1;
-                }
-                break;
-            }
-        }
+        return node ? node.value : undefined;
     };
     TernarySearchTree.prototype.findSubstr = function (key) {
         var iter = this._iter.reset(key);
         var node = this._root;
         var candidate;
         while (node) {
-            var val = iter.cmp(node.str);
+            var val = iter.cmp(node.segment);
             if (val > 0) {
                 // left
                 node = node.left;
@@ -279,62 +209,31 @@ var TernarySearchTree = /** @class */ (function () {
             else if (iter.hasNext()) {
                 // mid
                 iter.next();
-                candidate = node.element || candidate;
+                candidate = node.value || candidate;
                 node = node.mid;
             }
             else {
                 break;
             }
         }
-        return node && node.element || candidate;
-    };
-    TernarySearchTree.prototype.findSuperstr = function (key) {
-        var iter = this._iter.reset(key);
-        var node = this._root;
-        while (node) {
-            var val = iter.cmp(node.str);
-            if (val > 0) {
-                // left
-                node = node.left;
-            }
-            else if (val < 0) {
-                // right
-                node = node.right;
-            }
-            else if (iter.hasNext()) {
-                // mid
-                iter.next();
-                node = node.mid;
-            }
-            else {
-                // collect
-                if (!node.mid) {
-                    return undefined;
-                }
-                var ret = new TernarySearchTree(this._iter);
-                ret._root = node.mid;
-                return ret;
-            }
-        }
-        return undefined;
+        return node && node.value || candidate;
     };
     TernarySearchTree.prototype.forEach = function (callback) {
-        this._forEach(this._root, [], callback);
+        this._forEach(this._root, callback);
     };
-    TernarySearchTree.prototype._forEach = function (node, parts, callback) {
+    TernarySearchTree.prototype._forEach = function (node, callback) {
         if (node) {
             // left
-            this._forEach(node.left, parts, callback);
+            this._forEach(node.left, callback);
             // node
-            parts.push(node.str);
-            if (node.element) {
-                callback(node.element, this._iter.join(parts));
+            if (node.value) {
+                // callback(node.value, this._iter.join(parts));
+                callback(node.value, node.key);
             }
             // mid
-            this._forEach(node.mid, parts, callback);
-            parts.pop();
+            this._forEach(node.mid, callback);
             // right
-            this._forEach(node.right, parts, callback);
+            this._forEach(node.right, callback);
         }
     };
     return TernarySearchTree;
@@ -351,37 +250,12 @@ var ResourceMap = /** @class */ (function () {
     ResourceMap.prototype.get = function (resource) {
         return this.map.get(this.toKey(resource));
     };
-    ResourceMap.prototype.has = function (resource) {
-        return this.map.has(this.toKey(resource));
-    };
-    Object.defineProperty(ResourceMap.prototype, "size", {
-        get: function () {
-            return this.map.size;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    ResourceMap.prototype.clear = function () {
-        this.map.clear();
-    };
-    ResourceMap.prototype.delete = function (resource) {
-        return this.map.delete(this.toKey(resource));
-    };
-    ResourceMap.prototype.forEach = function (clb) {
-        this.map.forEach(clb);
-    };
-    ResourceMap.prototype.values = function () {
-        return values(this.map);
-    };
     ResourceMap.prototype.toKey = function (resource) {
         var key = resource.toString();
         if (this.ignoreCase) {
             key = key.toLowerCase();
         }
         return key;
-    };
-    ResourceMap.prototype.keys = function () {
-        return keys(this.map).map(URI.parse);
     };
     return ResourceMap;
 }());
@@ -405,9 +279,6 @@ var LinkedMap = /** @class */ (function () {
         this._tail = undefined;
         this._size = 0;
     };
-    LinkedMap.prototype.isEmpty = function () {
-        return !this._head && !this._tail;
-    };
     Object.defineProperty(LinkedMap.prototype, "size", {
         get: function () {
             return this._size;
@@ -415,9 +286,6 @@ var LinkedMap = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    LinkedMap.prototype.has = function (key) {
-        return this._map.has(key);
-    };
     LinkedMap.prototype.get = function (key, touch) {
         if (touch === void 0) { touch = Touch.None; }
         var item = this._map.get(key);
@@ -458,32 +326,6 @@ var LinkedMap = /** @class */ (function () {
             this._size++;
         }
     };
-    LinkedMap.prototype.delete = function (key) {
-        return !!this.remove(key);
-    };
-    LinkedMap.prototype.remove = function (key) {
-        var item = this._map.get(key);
-        if (!item) {
-            return undefined;
-        }
-        this._map.delete(key);
-        this.removeItem(item);
-        this._size--;
-        return item.value;
-    };
-    LinkedMap.prototype.shift = function () {
-        if (!this._head && !this._tail) {
-            return undefined;
-        }
-        if (!this._head || !this._tail) {
-            throw new Error('Invalid list');
-        }
-        var item = this._head;
-        this._map.delete(item.key);
-        this.removeItem(item);
-        this._size--;
-        return item.value;
-    };
     LinkedMap.prototype.forEach = function (callbackfn, thisArg) {
         var current = this._head;
         while (current) {
@@ -495,24 +337,6 @@ var LinkedMap = /** @class */ (function () {
             }
             current = current.next;
         }
-    };
-    LinkedMap.prototype.values = function () {
-        var result = [];
-        var current = this._head;
-        while (current) {
-            result.push(current.value);
-            current = current.next;
-        }
-        return result;
-    };
-    LinkedMap.prototype.keys = function () {
-        var result = [];
-        var current = this._head;
-        while (current) {
-            result.push(current.key);
-            current = current.next;
-        }
-        return result;
     };
     /* VS Code / Monaco editor runs on es5 which has no Symbol.iterator
     public keys(): IterableIterator<K> {
@@ -600,27 +424,6 @@ var LinkedMap = /** @class */ (function () {
         }
         this._tail = item;
     };
-    LinkedMap.prototype.removeItem = function (item) {
-        if (item === this._head && item === this._tail) {
-            this._head = void 0;
-            this._tail = void 0;
-        }
-        else if (item === this._head) {
-            this._head = item.next;
-        }
-        else if (item === this._tail) {
-            this._tail = item.previous;
-        }
-        else {
-            var next = item.next;
-            var previous = item.previous;
-            if (!next || !previous) {
-                throw new Error('Invalid list');
-            }
-            next.previous = previous;
-            previous.next = next;
-        }
-    };
     LinkedMap.prototype.touch = function (item, touch) {
         if (!this._head || !this._tail) {
             throw new Error('Invalid list');
@@ -683,13 +486,6 @@ var LinkedMap = /** @class */ (function () {
         });
         return data;
     };
-    LinkedMap.prototype.fromJSON = function (data) {
-        this.clear();
-        for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
-            var _a = data_1[_i], key = _a[0], value = _a[1];
-            this.set(key, value);
-        }
-    };
     return LinkedMap;
 }());
 export { LinkedMap };
@@ -702,33 +498,8 @@ var LRUCache = /** @class */ (function (_super) {
         _this._ratio = Math.min(Math.max(0, ratio), 1);
         return _this;
     }
-    Object.defineProperty(LRUCache.prototype, "limit", {
-        get: function () {
-            return this._limit;
-        },
-        set: function (limit) {
-            this._limit = limit;
-            this.checkTrim();
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(LRUCache.prototype, "ratio", {
-        get: function () {
-            return this._ratio;
-        },
-        set: function (ratio) {
-            this._ratio = Math.min(Math.max(0, ratio), 1);
-            this.checkTrim();
-        },
-        enumerable: true,
-        configurable: true
-    });
     LRUCache.prototype.get = function (key) {
         return _super.prototype.get.call(this, key, Touch.AsNew);
-    };
-    LRUCache.prototype.peek = function (key) {
-        return _super.prototype.get.call(this, key, Touch.None);
     };
     LRUCache.prototype.set = function (key, value) {
         _super.prototype.set.call(this, key, value, Touch.AsNew);

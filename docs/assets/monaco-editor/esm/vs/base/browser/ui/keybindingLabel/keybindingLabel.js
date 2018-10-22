@@ -15,13 +15,6 @@ var KeybindingLabel = /** @class */ (function () {
         this.didEverRender = false;
         container.appendChild(this.domNode);
     }
-    Object.defineProperty(KeybindingLabel.prototype, "element", {
-        get: function () {
-            return this.domNode;
-        },
-        enumerable: true,
-        configurable: true
-    });
     KeybindingLabel.prototype.set = function (keybinding, matches) {
         if (this.didEverRender && this.keybinding === keybinding && KeybindingLabel.areSame(this.matches, matches)) {
             return;

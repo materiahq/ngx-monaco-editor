@@ -40,36 +40,36 @@ var FindOptionsWidget = /** @class */ (function (_super) {
         _this.caseSensitive = _this._register(new CaseSensitiveCheckbox({
             appendTitle: _this._keybindingLabelFor(FIND_IDS.ToggleCaseSensitiveCommand),
             isChecked: _this._state.matchCase,
-            onChange: function (viaKeyboard) {
-                _this._state.change({
-                    matchCase: _this.caseSensitive.checked
-                }, false);
-            },
             inputActiveOptionBorder: inputActiveOptionBorderColor
         }));
         _this._domNode.appendChild(_this.caseSensitive.domNode);
+        _this._register(_this.caseSensitive.onChange(function () {
+            _this._state.change({
+                matchCase: _this.caseSensitive.checked
+            }, false);
+        }));
         _this.wholeWords = _this._register(new WholeWordsCheckbox({
             appendTitle: _this._keybindingLabelFor(FIND_IDS.ToggleWholeWordCommand),
             isChecked: _this._state.wholeWord,
-            onChange: function (viaKeyboard) {
-                _this._state.change({
-                    wholeWord: _this.wholeWords.checked
-                }, false);
-            },
             inputActiveOptionBorder: inputActiveOptionBorderColor
         }));
         _this._domNode.appendChild(_this.wholeWords.domNode);
+        _this._register(_this.wholeWords.onChange(function () {
+            _this._state.change({
+                wholeWord: _this.wholeWords.checked
+            }, false);
+        }));
         _this.regex = _this._register(new RegexCheckbox({
             appendTitle: _this._keybindingLabelFor(FIND_IDS.ToggleRegexCommand),
             isChecked: _this._state.isRegex,
-            onChange: function (viaKeyboard) {
-                _this._state.change({
-                    isRegex: _this.regex.checked
-                }, false);
-            },
             inputActiveOptionBorder: inputActiveOptionBorderColor
         }));
         _this._domNode.appendChild(_this.regex.domNode);
+        _this._register(_this.regex.onChange(function () {
+            _this._state.change({
+                isRegex: _this.regex.checked
+            }, false);
+        }));
         _this._editor.addOverlayWidget(_this);
         _this._register(_this._state.onFindReplaceStateChange(function (e) {
             var somethingChanged = false;

@@ -29,14 +29,12 @@ import { RawContextKey, IContextKeyService } from '../../../platform/contextkey/
 import { IMarkerService, MarkerSeverity } from '../../../platform/markers/common/markers.js';
 import { Range } from '../../common/core/range.js';
 import { registerEditorAction, registerEditorContribution, EditorAction, EditorCommand, registerEditorCommand } from '../../browser/editorExtensions.js';
-import { isCodeEditor } from '../../browser/editorBrowser.js';
 import { IThemeService } from '../../../platform/theme/common/themeService.js';
 import { EditorContextKeys } from '../../common/editorContextKeys.js';
-import { KeybindingsRegistry } from '../../../platform/keybinding/common/keybindingsRegistry.js';
 import { MarkerNavigationWidget } from './gotoErrorWidget.js';
 import { compare } from '../../../base/common/strings.js';
 import { binarySearch } from '../../../base/common/arrays.js';
-import { IEditorService } from '../../../platform/editor/common/editor.js';
+import { ICodeEditorService } from '../../browser/services/codeEditorService.js';
 import { onUnexpectedError } from '../../../base/common/errors.js';
 var MarkerModel = /** @class */ (function () {
     function MarkerModel(editor, markers) {
@@ -225,10 +223,10 @@ var MarkerController = /** @class */ (function () {
         this._disposeOnClose.push(this._model);
         this._disposeOnClose.push(this._widget);
         this._disposeOnClose.push(this._widget.onDidSelectRelatedInformation(function (related) {
-            _this._editorService.openEditor({
+            _this._editorService.openCodeEditor({
                 resource: related.resource,
                 options: { pinned: true, revealIfOpened: true, selection: Range.lift(related).collapseToStart() }
-            }).then(undefined, onUnexpectedError);
+            }, _this._editor).then(undefined, onUnexpectedError);
             _this.closeMarkersNavigation(false);
         }));
         this._disposeOnClose.push(this._editor.onDidChangeModel(function () { return _this._cleanUp(); }));
@@ -278,28 +276,29 @@ var MarkerController = /** @class */ (function () {
         __param(1, IMarkerService),
         __param(2, IContextKeyService),
         __param(3, IThemeService),
-        __param(4, IEditorService)
+        __param(4, ICodeEditorService)
     ], MarkerController);
     return MarkerController;
 }());
 var MarkerNavigationAction = /** @class */ (function (_super) {
     __extends(MarkerNavigationAction, _super);
-    function MarkerNavigationAction(next, opts) {
+    function MarkerNavigationAction(next, multiFile, opts) {
         var _this = _super.call(this, opts) || this;
         _this._isNext = next;
+        _this._multiFile = multiFile;
         return _this;
     }
     MarkerNavigationAction.prototype.run = function (accessor, editor) {
         var _this = this;
         var markerService = accessor.get(IMarkerService);
-        var editorService = accessor.get(IEditorService);
+        var editorService = accessor.get(ICodeEditorService);
         var controller = MarkerController.get(editor);
         if (!controller) {
             return undefined;
         }
         var model = controller.getOrCreateModel();
-        var atEdge = model.move(this._isNext, false);
-        if (!atEdge) {
+        var atEdge = model.move(this._isNext, !this._multiFile);
+        if (!atEdge || !this._multiFile) {
             return undefined;
         }
         // try with the next/prev file
@@ -330,14 +329,14 @@ var MarkerNavigationAction = /** @class */ (function (_super) {
         // close the widget for this editor-instance, open the resource
         // for the next marker and re-start marker navigation in there
         controller.closeMarkersNavigation();
-        return editorService.openEditor({
+        return editorService.openCodeEditor({
             resource: newMarker.resource,
             options: { pinned: false, revealIfOpened: true, revealInCenterIfOutsideViewport: true, selection: newMarker }
-        }).then(function (editor) {
-            if (!editor || !isCodeEditor(editor.getControl())) {
+        }, editor).then(function (editor) {
+            if (!editor) {
                 return undefined;
             }
-            return editor.getControl().getAction(_this.id).run();
+            return editor.getAction(_this.id).run();
         });
     };
     MarkerNavigationAction.compareMarker = function (a, b) {
@@ -355,15 +354,11 @@ var MarkerNavigationAction = /** @class */ (function (_super) {
 var NextMarkerAction = /** @class */ (function (_super) {
     __extends(NextMarkerAction, _super);
     function NextMarkerAction() {
-        return _super.call(this, true, {
+        return _super.call(this, true, false, {
             id: 'editor.action.marker.next',
             label: nls.localize('markerAction.next.label', "Go to Next Problem (Error, Warning, Info)"),
             alias: 'Go to Next Error or Warning',
-            precondition: EditorContextKeys.writable,
-            kbOpts: {
-                kbExpr: EditorContextKeys.focus,
-                primary: 66 /* F8 */
-            }
+            precondition: EditorContextKeys.writable
         }) || this;
     }
     return NextMarkerAction;
@@ -371,22 +366,54 @@ var NextMarkerAction = /** @class */ (function (_super) {
 var PrevMarkerAction = /** @class */ (function (_super) {
     __extends(PrevMarkerAction, _super);
     function PrevMarkerAction() {
-        return _super.call(this, false, {
+        return _super.call(this, false, false, {
             id: 'editor.action.marker.prev',
             label: nls.localize('markerAction.previous.label', "Go to Previous Problem (Error, Warning, Info)"),
             alias: 'Go to Previous Error or Warning',
-            precondition: EditorContextKeys.writable,
-            kbOpts: {
-                kbExpr: EditorContextKeys.focus,
-                primary: 1024 /* Shift */ | 66 /* F8 */
-            }
+            precondition: EditorContextKeys.writable
         }) || this;
     }
     return PrevMarkerAction;
 }(MarkerNavigationAction));
+var NextMarkerInFilesAction = /** @class */ (function (_super) {
+    __extends(NextMarkerInFilesAction, _super);
+    function NextMarkerInFilesAction() {
+        return _super.call(this, true, true, {
+            id: 'editor.action.marker.nextInFiles',
+            label: nls.localize('markerAction.nextInFiles.label', "Go to Next Problem in Files (Error, Warning, Info)"),
+            alias: 'Go to Next Error or Warning in Files',
+            precondition: EditorContextKeys.writable,
+            kbOpts: {
+                kbExpr: EditorContextKeys.focus,
+                primary: 66 /* F8 */,
+                weight: 100 /* EditorContrib */
+            }
+        }) || this;
+    }
+    return NextMarkerInFilesAction;
+}(MarkerNavigationAction));
+var PrevMarkerInFilesAction = /** @class */ (function (_super) {
+    __extends(PrevMarkerInFilesAction, _super);
+    function PrevMarkerInFilesAction() {
+        return _super.call(this, false, true, {
+            id: 'editor.action.marker.prevInFiles',
+            label: nls.localize('markerAction.previousInFiles.label', "Go to Previous Problem in Files (Error, Warning, Info)"),
+            alias: 'Go to Previous Error or Warning in Files',
+            precondition: EditorContextKeys.writable,
+            kbOpts: {
+                kbExpr: EditorContextKeys.focus,
+                primary: 1024 /* Shift */ | 66 /* F8 */,
+                weight: 100 /* EditorContrib */
+            }
+        }) || this;
+    }
+    return PrevMarkerInFilesAction;
+}(MarkerNavigationAction));
 registerEditorContribution(MarkerController);
 registerEditorAction(NextMarkerAction);
 registerEditorAction(PrevMarkerAction);
+registerEditorAction(NextMarkerInFilesAction);
+registerEditorAction(PrevMarkerInFilesAction);
 var CONTEXT_MARKERS_NAVIGATION_VISIBLE = new RawContextKey('markersNavigationVisible', false);
 var MarkerCommand = EditorCommand.bindToContribution(MarkerController.get);
 registerEditorCommand(new MarkerCommand({
@@ -394,7 +421,7 @@ registerEditorCommand(new MarkerCommand({
     precondition: CONTEXT_MARKERS_NAVIGATION_VISIBLE,
     handler: function (x) { return x.closeMarkersNavigation(); },
     kbOpts: {
-        weight: KeybindingsRegistry.WEIGHT.editorContrib(50),
+        weight: 100 /* EditorContrib */ + 50,
         kbExpr: EditorContextKeys.focus,
         primary: 9 /* Escape */,
         secondary: [1024 /* Shift */ | 9 /* Escape */]

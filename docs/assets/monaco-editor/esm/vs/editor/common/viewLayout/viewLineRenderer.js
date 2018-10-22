@@ -14,9 +14,10 @@ var LinePart = /** @class */ (function () {
     return LinePart;
 }());
 var RenderLineInput = /** @class */ (function () {
-    function RenderLineInput(useMonospaceOptimizations, lineContent, isBasicASCII, containsRTL, fauxIndentLength, lineTokens, lineDecorations, tabSize, spaceWidth, stopRenderingLineAfter, renderWhitespace, renderControlCharacters, fontLigatures) {
+    function RenderLineInput(useMonospaceOptimizations, lineContent, continuesWithWrappedLine, isBasicASCII, containsRTL, fauxIndentLength, lineTokens, lineDecorations, tabSize, spaceWidth, stopRenderingLineAfter, renderWhitespace, renderControlCharacters, fontLigatures) {
         this.useMonospaceOptimizations = useMonospaceOptimizations;
         this.lineContent = lineContent;
+        this.continuesWithWrappedLine = continuesWithWrappedLine;
         this.isBasicASCII = isBasicASCII;
         this.containsRTL = containsRTL;
         this.fauxIndentLength = fauxIndentLength;
@@ -36,6 +37,7 @@ var RenderLineInput = /** @class */ (function () {
     RenderLineInput.prototype.equals = function (other) {
         return (this.useMonospaceOptimizations === other.useMonospaceOptimizations
             && this.lineContent === other.lineContent
+            && this.continuesWithWrappedLine === other.continuesWithWrappedLine
             && this.isBasicASCII === other.isBasicASCII
             && this.containsRTL === other.containsRTL
             && this.fauxIndentLength === other.fauxIndentLength
@@ -224,7 +226,7 @@ function resolveRenderLineInput(input) {
     }
     var tokens = transformAndRemoveOverflowing(input.lineTokens, input.fauxIndentLength, len);
     if (input.renderWhitespace === 2 /* All */ || input.renderWhitespace === 1 /* Boundary */) {
-        tokens = _applyRenderWhitespace(lineContent, len, tokens, input.fauxIndentLength, input.tabSize, useMonospaceOptimizations, input.renderWhitespace === 1 /* Boundary */);
+        tokens = _applyRenderWhitespace(lineContent, len, input.continuesWithWrappedLine, tokens, input.fauxIndentLength, input.tabSize, useMonospaceOptimizations, input.renderWhitespace === 1 /* Boundary */);
     }
     var containsForeignElements = 0 /* None */;
     if (input.lineDecorations.length > 0) {
@@ -306,7 +308,7 @@ function splitLargeTokens(lineContent, tokens) {
  * Moreover, a token is created for every visual indent because on some fonts the glyphs used for rendering whitespace (&rarr; or &middot;) do not have the same width as &nbsp;.
  * The rendering phase will generate `style="width:..."` for these tokens.
  */
-function _applyRenderWhitespace(lineContent, len, tokens, fauxIndentLength, tabSize, useMonospaceOptimizations, onlyBoundary) {
+function _applyRenderWhitespace(lineContent, len, continuesWithWrappedLine, tokens, fauxIndentLength, tabSize, useMonospaceOptimizations, onlyBoundary) {
     var result = [], resultLen = 0;
     var tokenIndex = 0;
     var tokenType = tokens[tokenIndex].type;
@@ -397,14 +399,22 @@ function _applyRenderWhitespace(lineContent, len, tokens, fauxIndentLength, tabS
             tokenEndIndex = tokens[tokenIndex].endIndex;
         }
     }
+    var generateWhitespace = false;
     if (wasInWhitespace) {
         // was in whitespace token
-        result[resultLen++] = new LinePart(len, 'vs-whitespace');
+        if (continuesWithWrappedLine && onlyBoundary) {
+            var lastCharCode = (len > 0 ? lineContent.charCodeAt(len - 1) : 0 /* Null */);
+            var prevCharCode = (len > 1 ? lineContent.charCodeAt(len - 2) : 0 /* Null */);
+            var isSingleTrailingSpace = (lastCharCode === 32 /* Space */ && (prevCharCode !== 32 /* Space */ && prevCharCode !== 9 /* Tab */));
+            if (!isSingleTrailingSpace) {
+                generateWhitespace = true;
+            }
+        }
+        else {
+            generateWhitespace = true;
+        }
     }
-    else {
-        // was in regular token
-        result[resultLen++] = new LinePart(len, tokenType);
-    }
+    result[resultLen++] = new LinePart(len, generateWhitespace ? 'vs-whitespace' : tokenType);
     return result;
 }
 /**
@@ -524,7 +534,12 @@ function _renderLine(input, sb) {
                     tabsCharDelta += insertSpacesCount - 1;
                     charOffsetInPart += insertSpacesCount - 1;
                     if (insertSpacesCount > 0) {
-                        sb.write1(0x2192); // &rarr;
+                        if (insertSpacesCount > 1) {
+                            sb.write1(0x2192); // RIGHTWARDS ARROW
+                        }
+                        else {
+                            sb.write1(0xffeb); // HALFWIDTH RIGHTWARDS ARROW
+                        }
                         insertSpacesCount--;
                     }
                     while (insertSpacesCount > 0) {

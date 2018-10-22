@@ -633,6 +633,10 @@ var Minimap = /** @class */ (function (_super) {
                             minimapCharRenderer.x1BlockRenderChar(target, dx, dy, tokenColor, backgroundColor, useLighterFont);
                         }
                         dx += charWidth;
+                        if (dx > maxDx) {
+                            // hit edge of minimap
+                            return;
+                        }
                     }
                 }
             }

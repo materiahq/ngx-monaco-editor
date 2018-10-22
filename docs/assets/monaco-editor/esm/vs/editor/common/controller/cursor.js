@@ -369,7 +369,6 @@ var Cursor = /** @class */ (function (_super) {
         }
         if (handlerId === H.CompositionEnd) {
             this._isDoingComposition = false;
-            return;
         }
         if (this._configuration.editor.readOnly) {
             // All the remaining handlers will try to edit the model,
@@ -416,6 +415,9 @@ var Cursor = /** @class */ (function (_super) {
                 case H.ExecuteCommands:
                     this._externalExecuteCommands(payload);
                     break;
+                case H.CompositionEnd:
+                    this._interpretCompositionEnd(source);
+                    break;
             }
         }
         catch (err) {
@@ -427,6 +429,12 @@ var Cursor = /** @class */ (function (_super) {
         }
         if (this._emitStateChangedIfNecessary(source, cursorChangeReason, oldState)) {
             this._revealRange(0 /* Primary */, 0 /* Simple */, true, 0 /* Smooth */);
+        }
+    };
+    Cursor.prototype._interpretCompositionEnd = function (source) {
+        if (!this._isDoingComposition && source === 'keyboard') {
+            // composition finishes, let's check if we need to auto complete if necessary.
+            this._executeEditOperation(TypeOperations.compositionEndWithInterceptors(this._prevEditOperationType, this.context.config, this.context.model, this.getSelections()));
         }
     };
     Cursor.prototype._type = function (source, text) {

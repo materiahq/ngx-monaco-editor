@@ -2,16 +2,15 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
-import { sequence, asWinJsPromise } from '../../../base/common/async.js';
+import { first2 } from '../../../base/common/async.js';
 import { isFalsyOrEmpty } from '../../../base/common/arrays.js';
 import { compareIgnoreCase } from '../../../base/common/strings.js';
 import { assign } from '../../../base/common/objects.js';
 import { onUnexpectedExternalError } from '../../../base/common/errors.js';
-import { TPromise } from '../../../base/common/winjs.base.js';
 import { registerDefaultLanguageCommand } from '../../browser/editorExtensions.js';
 import { SuggestRegistry, SuggestTriggerKind } from '../../common/modes.js';
 import { RawContextKey } from '../../../platform/contextkey/common/contextkey.js';
+import { CancellationToken } from '../../../base/common/cancellation.js';
 export var Context = {
     Visible: new RawContextKey('suggestWidgetVisible', false),
     MultipleSuggestions: new RawContextKey('suggestWidgetMultipleSuggestions', false),
@@ -20,13 +19,12 @@ export var Context = {
     AcceptSuggestionsOnEnter: new RawContextKey('acceptSuggestionOnEnter', true)
 };
 var _snippetSuggestSupport;
-export function setSnippetSuggestSupport(support) {
-    var old = _snippetSuggestSupport;
-    _snippetSuggestSupport = support;
-    return old;
+export function getSnippetSuggestSupport() {
+    return _snippetSuggestSupport;
 }
-export function provideSuggestionItems(model, position, snippetConfig, onlyFrom, context) {
+export function provideSuggestionItems(model, position, snippetConfig, onlyFrom, context, token) {
     if (snippetConfig === void 0) { snippetConfig = 'bottom'; }
+    if (token === void 0) { token = CancellationToken.None; }
     var allSuggestions = [];
     var acceptSuggestion = createSuggesionFilter(snippetConfig);
     position = position.clone();
@@ -40,42 +38,36 @@ export function provideSuggestionItems(model, position, snippetConfig, onlyFrom,
     // add suggestions from contributed providers - providers are ordered in groups of
     // equal score and once a group produces a result the process stops
     var hasResult = false;
-    var factory = supports.map(function (supports) {
-        return function () {
-            // stop when we have a result
-            if (hasResult) {
+    var factory = supports.map(function (supports) { return function () {
+        // for each support in the group ask for suggestions
+        return Promise.all(supports.map(function (support) {
+            if (!isFalsyOrEmpty(onlyFrom) && onlyFrom.indexOf(support) < 0) {
                 return undefined;
             }
-            // for each support in the group ask for suggestions
-            return TPromise.join(supports.map(function (support) {
-                if (!isFalsyOrEmpty(onlyFrom) && onlyFrom.indexOf(support) < 0) {
-                    return undefined;
-                }
-                return asWinJsPromise(function (token) { return support.provideCompletionItems(model, position, suggestConext, token); }).then(function (container) {
-                    var len = allSuggestions.length;
-                    if (container && !isFalsyOrEmpty(container.suggestions)) {
-                        for (var _i = 0, _a = container.suggestions; _i < _a.length; _i++) {
-                            var suggestion = _a[_i];
-                            if (acceptSuggestion(suggestion)) {
-                                fixOverwriteBeforeAfter(suggestion, container);
-                                allSuggestions.push({
-                                    position: position,
-                                    container: container,
-                                    suggestion: suggestion,
-                                    support: support,
-                                    resolve: createSuggestionResolver(support, suggestion, model, position)
-                                });
-                            }
+            return Promise.resolve(support.provideCompletionItems(model, position, suggestConext, token)).then(function (container) {
+                var len = allSuggestions.length;
+                if (container && !isFalsyOrEmpty(container.suggestions)) {
+                    for (var _i = 0, _a = container.suggestions; _i < _a.length; _i++) {
+                        var suggestion = _a[_i];
+                        if (acceptSuggestion(suggestion)) {
+                            fixOverwriteBeforeAfter(suggestion, container);
+                            allSuggestions.push({
+                                position: position,
+                                container: container,
+                                suggestion: suggestion,
+                                support: support,
+                                resolve: createSuggestionResolver(support, suggestion, model, position)
+                            });
                         }
                     }
-                    if (len !== allSuggestions.length && support !== _snippetSuggestSupport) {
-                        hasResult = true;
-                    }
-                }, onUnexpectedExternalError);
-            }));
-        };
-    });
-    var result = sequence(factory).then(function () { return allSuggestions.sort(getSuggestionComparator(snippetConfig)); });
+                }
+                if (len !== allSuggestions.length && support !== _snippetSuggestSupport) {
+                    hasResult = true;
+                }
+            }, onUnexpectedExternalError);
+        }));
+    }; });
+    var result = first2(factory, function () { return hasResult; }).then(function () { return allSuggestions.sort(getSuggestionComparator(snippetConfig)); });
     // result.then(items => {
     // 	console.log(model.getWordUntilPosition(position), items.map(item => `${item.suggestion.label}, type=${item.suggestion.type}, incomplete?${item.container.incomplete}, overwriteBefore=${item.suggestion.overwriteBefore}`));
     // 	return items;
@@ -93,12 +85,13 @@ function fixOverwriteBeforeAfter(suggestion, container) {
     }
 }
 function createSuggestionResolver(provider, suggestion, model, position) {
-    return function () {
+    return function (token) {
         if (typeof provider.resolveCompletionItem === 'function') {
-            return asWinJsPromise(function (token) { return provider.resolveCompletionItem(model, position, suggestion, token); })
-                .then(function (value) { assign(suggestion, value); });
+            return Promise.resolve(provider.resolveCompletionItem(model, position, suggestion, token)).then(function (value) { assign(suggestion, value); });
         }
-        return TPromise.as(void 0);
+        else {
+            return Promise.resolve(void 0);
+        }
     };
 }
 function createSuggesionFilter(snippetConfig) {
@@ -174,31 +167,34 @@ registerDefaultLanguageCommand('_executeCompletionItemProvider', function (model
         for (var _i = 0, items_1 = items; _i < items_1.length; _i++) {
             var item = items_1[_i];
             if (resolving.length < maxItemsToResolve) {
-                resolving.push(item.resolve());
+                resolving.push(item.resolve(CancellationToken.None));
             }
             result.incomplete = result.incomplete || item.container.incomplete;
             result.suggestions.push(item.suggestion);
         }
     }).then(function () {
-        return TPromise.join(resolving);
+        return Promise.all(resolving);
     }).then(function () {
         return result;
     });
 });
-var _suggestions;
 var _provider = new /** @class */ (function () {
     function class_1() {
+        this.onlyOnceSuggestions = [];
     }
     class_1.prototype.provideCompletionItems = function () {
-        return _suggestions && { suggestions: _suggestions };
+        var suggestions = this.onlyOnceSuggestions.slice(0);
+        var result = { suggestions: suggestions };
+        this.onlyOnceSuggestions.length = 0;
+        return result;
     };
     return class_1;
 }());
 SuggestRegistry.register('*', _provider);
 export function showSimpleSuggestions(editor, suggestions) {
     setTimeout(function () {
-        _suggestions = suggestions;
+        var _a;
+        (_a = _provider.onlyOnceSuggestions).push.apply(_a, suggestions);
         editor.getContribution('editor.contrib.suggestController').triggerSuggest([_provider]);
-        _suggestions = undefined;
     }, 0);
 }

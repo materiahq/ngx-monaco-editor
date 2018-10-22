@@ -13,7 +13,8 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-import { registerEditorCommand, EditorCommand, registerEditorContribution } from '../../browser/editorExtensions.js';
+import * as nls from '../../../nls.js';
+import { registerEditorContribution, EditorAction, registerEditorAction } from '../../browser/editorExtensions.js';
 import { Disposable } from '../../../base/common/lifecycle.js';
 import { EditorContextKeys } from '../../common/editorContextKeys.js';
 var CursorState = /** @class */ (function () {
@@ -98,18 +99,21 @@ var CursorUndo = /** @class */ (function (_super) {
     function CursorUndo() {
         return _super.call(this, {
             id: 'cursorUndo',
+            label: nls.localize('cursor.undo', "Soft Undo"),
+            alias: 'Soft Undo',
             precondition: null,
             kbOpts: {
                 kbExpr: EditorContextKeys.textInputFocus,
-                primary: 2048 /* CtrlCmd */ | 51 /* KEY_U */
+                primary: 2048 /* CtrlCmd */ | 51 /* KEY_U */,
+                weight: 100 /* EditorContrib */
             }
         }) || this;
     }
-    CursorUndo.prototype.runEditorCommand = function (accessor, editor, args) {
+    CursorUndo.prototype.run = function (accessor, editor, args) {
         CursorUndoController.get(editor).cursorUndo();
     };
     return CursorUndo;
-}(EditorCommand));
+}(EditorAction));
 export { CursorUndo };
 registerEditorContribution(CursorUndoController);
-registerEditorCommand(new CursorUndo());
+registerEditorAction(CursorUndo);

@@ -19,6 +19,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 import './list.css';
+import { localize } from '../../../../nls.js';
 import { dispose } from '../../../common/lifecycle.js';
 import { isNumber } from '../../../common/types.js';
 import { range, firstIndex } from '../../../common/arrays.js';
@@ -32,19 +33,8 @@ import { domEvent } from '../../event.js';
 import { ListView } from './listView.js';
 import { Color } from '../../../common/color.js';
 import { mixin } from '../../../common/objects.js';
+import { CombinedSpliceable } from './splice.js';
 import { clamp } from '../../../common/numbers.js';
-var CombinedSpliceable = /** @class */ (function () {
-    function CombinedSpliceable(spliceables) {
-        this.spliceables = spliceables;
-    }
-    CombinedSpliceable.prototype.splice = function (start, deleteCount, elements) {
-        for (var _i = 0, _a = this.spliceables; _i < _a.length; _i++) {
-            var spliceable = _a[_i];
-            spliceable.splice(start, deleteCount, elements);
-        }
-    };
-    return CombinedSpliceable;
-}());
 var TraitRenderer = /** @class */ (function () {
     function TraitRenderer(trait) {
         this.trait = trait;
@@ -72,6 +62,9 @@ var TraitRenderer = /** @class */ (function () {
             this.renderedElements.push(rendered);
         }
         this.trait.renderIndex(index, templateData);
+    };
+    TraitRenderer.prototype.disposeElement = function () {
+        // noop
     };
     TraitRenderer.prototype.splice = function (start, deleteCount, insertCount) {
         var rendered = [];
@@ -306,6 +299,10 @@ var DOMFocusController = /** @class */ (function () {
         var focusedDomElement = this.view.domElement(focus[0]);
         var tabIndexElement = focusedDomElement.querySelector('[tabIndex]');
         if (!tabIndexElement || !(tabIndexElement instanceof HTMLElement)) {
+            return;
+        }
+        var style = window.getComputedStyle(tabIndexElement);
+        if (style.visibility === 'hidden' || style.display === 'none') {
             return;
         }
         e.preventDefault();
@@ -670,6 +667,13 @@ var PipelineRenderer = /** @class */ (function () {
             renderer.renderElement(element, index, templateData[i++]);
         }
     };
+    PipelineRenderer.prototype.disposeElement = function (element, index, templateData) {
+        var i = 0;
+        for (var _i = 0, _a = this.renderers; _i < _a.length; _i++) {
+            var renderer = _a[_i];
+            renderer.disposeElement(element, index, templateData[i++]);
+        }
+    };
     PipelineRenderer.prototype.disposeTemplate = function (templateData) {
         var i = 0;
         for (var _i = 0, _a = this.renderers; _i < _a.length; _i++) {
@@ -680,21 +684,20 @@ var PipelineRenderer = /** @class */ (function () {
     return PipelineRenderer;
 }());
 var List = /** @class */ (function () {
-    function List(container, delegate, renderers, options) {
+    function List(container, virtualDelegate, renderers, options) {
         if (options === void 0) { options = DefaultOptions; }
         var _this = this;
         this.idPrefix = "list_id_" + ++List.InstanceCount;
         this.eventBufferer = new EventBufferer();
         this.onContextMenu = Event.None;
         this._onOpen = new Emitter();
-        this.onOpen = this._onOpen.event;
         this._onPin = new Emitter();
         this._onDidDispose = new Emitter();
         this.focus = new FocusTrait(function (i) { return _this.getElementDomId(i); });
         this.selection = new Trait('selected');
         mixin(options, defaultStyles, false);
         renderers = renderers.map(function (r) { return new PipelineRenderer(r.templateId, [_this.focus.renderer, _this.selection.renderer, r]); });
-        this.view = new ListView(container, delegate, renderers, options);
+        this.view = new ListView(container, virtualDelegate, renderers, options);
         this.view.domNode.setAttribute('role', 'tree');
         DOM.addClass(this.view.domNode, this.idPrefix);
         this.view.domNode.tabIndex = 0;
@@ -724,7 +727,7 @@ var List = /** @class */ (function () {
         this.onFocusChange(this._onFocusChange, this, this.disposables);
         this.onSelectionChange(this._onSelectionChange, this, this.disposables);
         if (options.ariaLabel) {
-            this.view.domNode.setAttribute('aria-label', options.ariaLabel);
+            this.view.domNode.setAttribute('aria-label', localize('aria list', "{0}. Use the navigation keys to navigate.", options.ariaLabel));
         }
         this.style(options);
     }
@@ -744,74 +747,6 @@ var List = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(List.prototype, "onPin", {
-        get: function () {
-            var _this = this;
-            return mapEvent(this._onPin.event, function (indexes) { return _this.toListEvent({ indexes: indexes }); });
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(List.prototype, "onMouseClick", {
-        get: function () { return this.view.onMouseClick; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(List.prototype, "onMouseDblClick", {
-        get: function () { return this.view.onMouseDblClick; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(List.prototype, "onMouseUp", {
-        get: function () { return this.view.onMouseUp; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(List.prototype, "onMouseDown", {
-        get: function () { return this.view.onMouseDown; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(List.prototype, "onMouseOver", {
-        get: function () { return this.view.onMouseOver; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(List.prototype, "onMouseMove", {
-        get: function () { return this.view.onMouseMove; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(List.prototype, "onMouseOut", {
-        get: function () { return this.view.onMouseOut; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(List.prototype, "onTouchStart", {
-        get: function () { return this.view.onTouchStart; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(List.prototype, "onTap", {
-        get: function () { return this.view.onTap; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(List.prototype, "onKeyDown", {
-        get: function () { return domEvent(this.view.domNode, 'keydown'); },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(List.prototype, "onKeyUp", {
-        get: function () { return domEvent(this.view.domNode, 'keyup'); },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(List.prototype, "onKeyPress", {
-        get: function () { return domEvent(this.view.domNode, 'keypress'); },
-        enumerable: true,
-        configurable: true
-    });
     Object.defineProperty(List.prototype, "onDidDispose", {
         get: function () { return this._onDidDispose.event; },
         enumerable: true,
@@ -820,6 +755,12 @@ var List = /** @class */ (function () {
     List.prototype.splice = function (start, deleteCount, elements) {
         var _this = this;
         if (elements === void 0) { elements = []; }
+        if (start < 0 || start > this.view.length) {
+            throw new Error("Invalid start index: " + start);
+        }
+        if (deleteCount < 0) {
+            throw new Error("Invalid delete count: " + deleteCount);
+        }
         if (deleteCount === 0 && elements.length === 0) {
             return;
         }
@@ -839,19 +780,6 @@ var List = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(List.prototype, "scrollTop", {
-        get: function () {
-            return this.view.getScrollTop();
-        },
-        set: function (scrollTop) {
-            this.view.setScrollTop(scrollTop);
-        },
-        enumerable: true,
-        configurable: true
-    });
-    List.prototype.domFocus = function () {
-        this.view.domNode.focus();
-    };
     List.prototype.layout = function (height) {
         this.view.layout(height);
     };
@@ -865,35 +793,8 @@ var List = /** @class */ (function () {
         indexes = indexes.sort(numericSort);
         this.selection.set(indexes);
     };
-    List.prototype.selectNext = function (n, loop) {
-        if (n === void 0) { n = 1; }
-        if (loop === void 0) { loop = false; }
-        if (this.length === 0) {
-            return;
-        }
-        var selection = this.selection.get();
-        var index = selection.length > 0 ? selection[0] + n : 0;
-        this.setSelection(loop ? [index % this.length] : [Math.min(index, this.length - 1)]);
-    };
-    List.prototype.selectPrevious = function (n, loop) {
-        if (n === void 0) { n = 1; }
-        if (loop === void 0) { loop = false; }
-        if (this.length === 0) {
-            return;
-        }
-        var selection = this.selection.get();
-        var index = selection.length > 0 ? selection[0] - n : 0;
-        if (loop && index < 0) {
-            index = this.length + (index % this.length);
-        }
-        this.setSelection([Math.max(index, 0)]);
-    };
     List.prototype.getSelection = function () {
         return this.selection.get();
-    };
-    List.prototype.getSelectedElements = function () {
-        var _this = this;
-        return this.getSelection().map(function (i) { return _this.view.element(i); });
     };
     List.prototype.setFocus = function (indexes) {
         for (var _i = 0, indexes_2 = indexes; _i < indexes_2.length; _i++) {
@@ -1012,24 +913,6 @@ var List = /** @class */ (function () {
             }
         }
     };
-    /**
-     * Returns the relative position of an element rendered in the list.
-     * Returns `null` if the element isn't *entirely* in the visible viewport.
-     */
-    List.prototype.getRelativeTop = function (index) {
-        if (index < 0 || index >= this.length) {
-            throw new Error("Invalid index " + index);
-        }
-        var scrollTop = this.view.getScrollTop();
-        var elementTop = this.view.elementTop(index);
-        var elementHeight = this.view.elementHeight(index);
-        if (elementTop < scrollTop || elementTop + elementHeight > scrollTop + this.view.renderHeight) {
-            return null;
-        }
-        // y = mx + b
-        var m = elementHeight - this.view.renderHeight;
-        return Math.abs((scrollTop - elementTop) / m);
-    };
     List.prototype.getElementDomId = function (index) {
         return this.idPrefix + "_" + index;
     };
@@ -1094,9 +977,6 @@ var List = /** @class */ (function () {
     __decorate([
         memoize
     ], List.prototype, "onSelectionChange", null);
-    __decorate([
-        memoize
-    ], List.prototype, "onPin", null);
     return List;
 }());
 export { List };

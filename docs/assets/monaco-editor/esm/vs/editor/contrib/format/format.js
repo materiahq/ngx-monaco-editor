@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -21,7 +20,7 @@ import { Range } from '../../common/core/range.js';
 import { registerDefaultLanguageCommand, registerLanguageCommand } from '../../browser/editorExtensions.js';
 import { DocumentFormattingEditProviderRegistry, DocumentRangeFormattingEditProviderRegistry, OnTypeFormattingEditProviderRegistry } from '../../common/modes.js';
 import { IModelService } from '../../common/services/modelService.js';
-import { asWinJsPromise, sequence } from '../../../base/common/async.js';
+import { asWinJsPromise, first } from '../../../base/common/async.js';
 var NoProviderError = /** @class */ (function (_super) {
     __extends(NoProviderError, _super);
     function NoProviderError(message) {
@@ -39,17 +38,10 @@ export function getDocumentRangeFormattingEdits(model, range, options) {
     if (providers.length === 0) {
         return TPromise.wrapError(new NoProviderError());
     }
-    var result;
-    return sequence(providers.map(function (provider) {
-        return function () {
-            if (!isFalsyOrEmpty(result)) {
-                return undefined;
-            }
-            return asWinJsPromise(function (token) { return provider.provideDocumentRangeFormattingEdits(model, range, options, token); }).then(function (value) {
-                result = value;
-            }, onUnexpectedExternalError);
-        };
-    })).then(function () { return result; });
+    return first(providers.map(function (provider) { return function () {
+        return asWinJsPromise(function (token) { return provider.provideDocumentRangeFormattingEdits(model, range, options, token); })
+            .then(undefined, onUnexpectedExternalError);
+    }; }), function (result) { return !isFalsyOrEmpty(result); });
 }
 export function getDocumentFormattingEdits(model, options) {
     var providers = DocumentFormattingEditProviderRegistry.ordered(model);
@@ -57,17 +49,10 @@ export function getDocumentFormattingEdits(model, options) {
     if (providers.length === 0) {
         return getDocumentRangeFormattingEdits(model, model.getFullModelRange(), options);
     }
-    var result;
-    return sequence(providers.map(function (provider) {
-        return function () {
-            if (!isFalsyOrEmpty(result)) {
-                return undefined;
-            }
-            return asWinJsPromise(function (token) { return provider.provideDocumentFormattingEdits(model, options, token); }).then(function (value) {
-                result = value;
-            }, onUnexpectedExternalError);
-        };
-    })).then(function () { return result; });
+    return first(providers.map(function (provider) { return function () {
+        return asWinJsPromise(function (token) { return provider.provideDocumentFormattingEdits(model, options, token); })
+            .then(undefined, onUnexpectedExternalError);
+    }; }), function (result) { return !isFalsyOrEmpty(result); });
 }
 export function getOnTypeFormattingEdits(model, position, ch, options) {
     var support = OnTypeFormattingEditProviderRegistry.ordered(model)[0];

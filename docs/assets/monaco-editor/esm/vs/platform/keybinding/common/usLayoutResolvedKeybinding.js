@@ -14,7 +14,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import { ResolvedKeybinding, ResolvedKeybindingPart, KeyCodeUtils } from '../../../base/common/keyCodes.js';
-import { UILabelProvider, AriaLabelProvider, ElectronAcceleratorLabelProvider, UserSettingsLabelProvider } from '../../../base/common/keybindingLabels.js';
+import { UILabelProvider, AriaLabelProvider } from '../../../base/common/keybindingLabels.js';
 /**
  * Do not instantiate. Use KeybindingService to get a ResolvedKeybinding seeded with information about the current kb layout.
  */
@@ -78,58 +78,6 @@ var USLayoutResolvedKeybinding = /** @class */ (function (_super) {
         var firstPart = this._getAriaLabelForKeybinding(this._firstPart);
         var chordPart = this._getAriaLabelForKeybinding(this._chordPart);
         return AriaLabelProvider.toLabel(this._firstPart, firstPart, this._chordPart, chordPart, this._os);
-    };
-    USLayoutResolvedKeybinding.prototype._keyCodeToElectronAccelerator = function (keyCode) {
-        if (keyCode >= 93 /* NUMPAD_0 */ && keyCode <= 108 /* NUMPAD_DIVIDE */) {
-            // Electron cannot handle numpad keys
-            return null;
-        }
-        switch (keyCode) {
-            case 16 /* UpArrow */:
-                return 'Up';
-            case 18 /* DownArrow */:
-                return 'Down';
-            case 15 /* LeftArrow */:
-                return 'Left';
-            case 17 /* RightArrow */:
-                return 'Right';
-        }
-        return KeyCodeUtils.toString(keyCode);
-    };
-    USLayoutResolvedKeybinding.prototype._getElectronAcceleratorLabelForKeybinding = function (keybinding) {
-        if (!keybinding) {
-            return null;
-        }
-        if (keybinding.isDuplicateModifierCase()) {
-            return null;
-        }
-        return this._keyCodeToElectronAccelerator(keybinding.keyCode);
-    };
-    USLayoutResolvedKeybinding.prototype.getElectronAccelerator = function () {
-        if (this._chordPart !== null) {
-            // Electron cannot handle chords
-            return null;
-        }
-        var firstPart = this._getElectronAcceleratorLabelForKeybinding(this._firstPart);
-        return ElectronAcceleratorLabelProvider.toLabel(this._firstPart, firstPart, null, null, this._os);
-    };
-    USLayoutResolvedKeybinding.prototype._getUserSettingsLabelForKeybinding = function (keybinding) {
-        if (!keybinding) {
-            return null;
-        }
-        if (keybinding.isDuplicateModifierCase()) {
-            return '';
-        }
-        return KeyCodeUtils.toUserSettingsUS(keybinding.keyCode);
-    };
-    USLayoutResolvedKeybinding.prototype.getUserSettingsLabel = function () {
-        var firstPart = this._getUserSettingsLabelForKeybinding(this._firstPart);
-        var chordPart = this._getUserSettingsLabelForKeybinding(this._chordPart);
-        var result = UserSettingsLabelProvider.toLabel(this._firstPart, firstPart, this._chordPart, chordPart, this._os);
-        return (result ? result.toLowerCase() : result);
-    };
-    USLayoutResolvedKeybinding.prototype.isWYSIWYG = function () {
-        return true;
     };
     USLayoutResolvedKeybinding.prototype.isChord = function () {
         return (this._chordPart ? true : false);

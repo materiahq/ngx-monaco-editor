@@ -54,7 +54,7 @@ var ColorPickerHeader = /** @class */ (function (_super) {
         this.onDidChangePresentation();
     };
     ColorPickerHeader.prototype.onDidChangePresentation = function () {
-        this.pickedColorNode.textContent = this.model.presentation.label;
+        this.pickedColorNode.textContent = this.model.presentation ? this.model.presentation.label : '';
     };
     return ColorPickerHeader;
 }(Disposable));
@@ -287,13 +287,9 @@ var ColorPickerWidget = /** @class */ (function (_super) {
         _this._register(_this.body);
         return _this;
     }
-    ColorPickerWidget.prototype.getId = function () {
-        return ColorPickerWidget.ID;
-    };
     ColorPickerWidget.prototype.layout = function () {
         this.body.layout();
     };
-    ColorPickerWidget.ID = 'editor.contrib.colorPickerWidget';
     return ColorPickerWidget;
 }(Widget));
 export { ColorPickerWidget };

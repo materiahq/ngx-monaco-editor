@@ -30,6 +30,7 @@ import { Range } from '../../common/core/range.js';
 import { EditorContextKeys } from '../../common/editorContextKeys.js';
 import { registerEditorAction, EditorAction, registerEditorContribution } from '../../browser/editorExtensions.js';
 import { TokenSelectionSupport } from './tokenSelectionSupport.js';
+import { MenuId } from '../../../platform/actions/common/actions.js';
 // --- selection state machine
 var State = /** @class */ (function () {
     function State(editor) {
@@ -40,14 +41,13 @@ var State = /** @class */ (function () {
     }
     return State;
 }());
-// --- shared state between grow and shrink actions
-var state = null;
-var ignoreSelection = false;
 // -- action implementation
 var SmartSelectController = /** @class */ (function () {
     function SmartSelectController(editor, instantiationService) {
         this.editor = editor;
         this._tokenSelectionSupport = instantiationService.createInstance(TokenSelectionSupport);
+        this._state = null;
+        this._ignoreSelection = false;
     }
     SmartSelectController.get = function (editor) {
         return editor.getContribution(SmartSelectController.ID);
@@ -62,13 +62,13 @@ var SmartSelectController = /** @class */ (function () {
         var selection = this.editor.getSelection();
         var model = this.editor.getModel();
         // forget about current state
-        if (state) {
-            if (state.editor !== this.editor) {
-                state = null;
+        if (this._state) {
+            if (this._state.editor !== this.editor) {
+                this._state = null;
             }
         }
         var promise = TPromise.as(null);
-        if (!state) {
+        if (!this._state) {
             promise = this._tokenSelectionSupport.getRangesToPosition(model.uri, selection.getStartPosition()).then(function (elements) {
                 if (arrays.isFalsyOrEmpty(elements)) {
                     return;
@@ -96,31 +96,31 @@ var SmartSelectController = /** @class */ (function () {
                 if (lastState) {
                     lastState.previous = editorState;
                 }
-                state = editorState;
+                _this._state = editorState;
                 // listen to caret move and forget about state
                 var unhook = _this.editor.onDidChangeCursorPosition(function (e) {
-                    if (ignoreSelection) {
+                    if (_this._ignoreSelection) {
                         return;
                     }
-                    state = null;
+                    _this._state = null;
                     unhook.dispose();
                 });
             });
         }
         return promise.then(function () {
-            if (!state) {
+            if (!_this._state) {
                 return;
             }
-            state = forward ? state.next : state.previous;
-            if (!state) {
+            _this._state = forward ? _this._state.next : _this._state.previous;
+            if (!_this._state) {
                 return;
             }
-            ignoreSelection = true;
+            _this._ignoreSelection = true;
             try {
-                _this.editor.setSelection(state.selection);
+                _this.editor.setSelection(_this._state.selection);
             }
             finally {
-                ignoreSelection = false;
+                _this._ignoreSelection = false;
             }
             return;
         });
@@ -158,7 +158,14 @@ var GrowSelectionAction = /** @class */ (function (_super) {
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
                 primary: 1024 /* Shift */ | 512 /* Alt */ | 17 /* RightArrow */,
-                mac: { primary: 2048 /* CtrlCmd */ | 256 /* WinCtrl */ | 1024 /* Shift */ | 17 /* RightArrow */ }
+                mac: { primary: 2048 /* CtrlCmd */ | 256 /* WinCtrl */ | 1024 /* Shift */ | 17 /* RightArrow */ },
+                weight: 100 /* EditorContrib */
+            },
+            menubarOpts: {
+                menuId: MenuId.MenubarSelectionMenu,
+                group: '1_basic',
+                title: nls.localize({ key: 'miSmartSelectGrow', comment: ['&& denotes a mnemonic'] }, "&&Expand Selection"),
+                order: 2
             }
         }) || this;
     }
@@ -175,7 +182,14 @@ var ShrinkSelectionAction = /** @class */ (function (_super) {
             kbOpts: {
                 kbExpr: EditorContextKeys.editorTextFocus,
                 primary: 1024 /* Shift */ | 512 /* Alt */ | 15 /* LeftArrow */,
-                mac: { primary: 2048 /* CtrlCmd */ | 256 /* WinCtrl */ | 1024 /* Shift */ | 15 /* LeftArrow */ }
+                mac: { primary: 2048 /* CtrlCmd */ | 256 /* WinCtrl */ | 1024 /* Shift */ | 15 /* LeftArrow */ },
+                weight: 100 /* EditorContrib */
+            },
+            menubarOpts: {
+                menuId: MenuId.MenubarSelectionMenu,
+                group: '1_basic',
+                title: nls.localize({ key: 'miSmartSelectShrink', comment: ['&& denotes a mnemonic'] }, "&&Shrink Selection"),
+                order: 3
             }
         }) || this;
     }

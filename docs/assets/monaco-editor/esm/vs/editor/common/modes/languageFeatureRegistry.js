@@ -4,8 +4,20 @@
  *--------------------------------------------------------------------------------------------*/
 'use strict';
 import { Emitter } from '../../../base/common/event.js';
+import { toDisposable } from '../../../base/common/lifecycle.js';
 import { score } from './languageSelector.js';
 import { shouldSynchronizeModel } from '../services/modelService.js';
+function isExclusive(selector) {
+    if (typeof selector === 'string') {
+        return false;
+    }
+    else if (Array.isArray(selector)) {
+        return selector.every(isExclusive);
+    }
+    else {
+        return selector.exclusive;
+    }
+}
 var LanguageFeatureRegistry = /** @class */ (function () {
     function LanguageFeatureRegistry() {
         this._clock = 0;
@@ -30,19 +42,17 @@ var LanguageFeatureRegistry = /** @class */ (function () {
         this._entries.push(entry);
         this._lastCandidate = undefined;
         this._onDidChange.fire(this._entries.length);
-        return {
-            dispose: function () {
-                if (entry) {
-                    var idx = _this._entries.indexOf(entry);
-                    if (idx >= 0) {
-                        _this._entries.splice(idx, 1);
-                        _this._lastCandidate = undefined;
-                        _this._onDidChange.fire(_this._entries.length);
-                        entry = undefined;
-                    }
+        return toDisposable(function () {
+            if (entry) {
+                var idx = _this._entries.indexOf(entry);
+                if (idx >= 0) {
+                    _this._entries.splice(idx, 1);
+                    _this._lastCandidate = undefined;
+                    _this._onDidChange.fire(_this._entries.length);
+                    entry = undefined;
                 }
             }
-        };
+        });
     };
     LanguageFeatureRegistry.prototype.has = function (model) {
         return this.all(model).length > 0;
@@ -110,6 +120,16 @@ var LanguageFeatureRegistry = /** @class */ (function () {
         for (var _i = 0, _a = this._entries; _i < _a.length; _i++) {
             var entry = _a[_i];
             entry._score = score(entry.selector, model.uri, model.getLanguageIdentifier().language, shouldSynchronizeModel(model));
+            if (isExclusive(entry.selector) && entry._score > 0) {
+                // support for one exclusive selector that overwrites
+                // any other selector
+                for (var _b = 0, _c = this._entries; _b < _c.length; _b++) {
+                    var entry_1 = _c[_b];
+                    entry_1._score = 0;
+                }
+                entry._score = 1000;
+                break;
+            }
         }
         // needs sorting
         this._entries.sort(LanguageFeatureRegistry._compareByScoreAndTime);

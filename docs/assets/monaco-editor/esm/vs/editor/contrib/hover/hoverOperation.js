@@ -3,35 +3,43 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 'use strict';
-import { RunOnceScheduler } from '../../../base/common/async.js';
+import { RunOnceScheduler, createCancelablePromise } from '../../../base/common/async.js';
 import { onUnexpectedError } from '../../../base/common/errors.js';
 var HoverOperation = /** @class */ (function () {
     function HoverOperation(computer, success, error, progress) {
         var _this = this;
         this._computer = computer;
         this._state = 0 /* IDLE */;
-        this._firstWaitScheduler = new RunOnceScheduler(function () { return _this._triggerAsyncComputation(); }, this._getHoverTimeMillis() / 2);
-        this._secondWaitScheduler = new RunOnceScheduler(function () { return _this._triggerSyncComputation(); }, this._getHoverTimeMillis() / 2);
-        this._loadingMessageScheduler = new RunOnceScheduler(function () { return _this._showLoadingMessage(); }, 3 * this._getHoverTimeMillis());
+        this._hoverTime = HoverOperation.HOVER_TIME;
+        this._firstWaitScheduler = new RunOnceScheduler(function () { return _this._triggerAsyncComputation(); }, 0);
+        this._secondWaitScheduler = new RunOnceScheduler(function () { return _this._triggerSyncComputation(); }, 0);
+        this._loadingMessageScheduler = new RunOnceScheduler(function () { return _this._showLoadingMessage(); }, 0);
         this._asyncComputationPromise = null;
         this._asyncComputationPromiseDone = false;
         this._completeCallback = success;
         this._errorCallback = error;
         this._progressCallback = progress;
     }
-    HoverOperation.prototype._getHoverTimeMillis = function () {
-        if (this._computer.getHoverTimeMillis) {
-            return this._computer.getHoverTimeMillis();
-        }
-        return HoverOperation.HOVER_TIME;
+    HoverOperation.prototype.setHoverTime = function (hoverTime) {
+        this._hoverTime = hoverTime;
+    };
+    HoverOperation.prototype._firstWaitTime = function () {
+        return this._hoverTime / 2;
+    };
+    HoverOperation.prototype._secondWaitTime = function () {
+        return this._hoverTime / 2;
+    };
+    HoverOperation.prototype._loadingMessageTime = function () {
+        return 3 * this._hoverTime;
     };
     HoverOperation.prototype._triggerAsyncComputation = function () {
         var _this = this;
         this._state = 2 /* SECOND_WAIT */;
-        this._secondWaitScheduler.schedule();
+        this._secondWaitScheduler.schedule(this._secondWaitTime());
         if (this._computer.computeAsync) {
             this._asyncComputationPromiseDone = false;
-            this._asyncComputationPromise = this._computer.computeAsync().then(function (asyncResult) {
+            this._asyncComputationPromise = createCancelablePromise(function (token) { return _this._computer.computeAsync(token); });
+            this._asyncComputationPromise.then(function (asyncResult) {
                 _this._asyncComputationPromiseDone = true;
                 _this._withAsyncResult(asyncResult);
             }, function (e) { return _this._onError(e); });
@@ -85,11 +93,26 @@ var HoverOperation = /** @class */ (function () {
             this._progressCallback(value);
         }
     };
-    HoverOperation.prototype.start = function () {
-        if (this._state === 0 /* IDLE */) {
-            this._state = 1 /* FIRST_WAIT */;
-            this._firstWaitScheduler.schedule();
-            this._loadingMessageScheduler.schedule();
+    HoverOperation.prototype.start = function (mode) {
+        if (mode === 0 /* Delayed */) {
+            if (this._state === 0 /* IDLE */) {
+                this._state = 1 /* FIRST_WAIT */;
+                this._firstWaitScheduler.schedule(this._firstWaitTime());
+                this._loadingMessageScheduler.schedule(this._loadingMessageTime());
+            }
+        }
+        else {
+            switch (this._state) {
+                case 0 /* IDLE */:
+                    this._triggerAsyncComputation();
+                    this._secondWaitScheduler.cancel();
+                    this._triggerSyncComputation();
+                    break;
+                case 2 /* SECOND_WAIT */:
+                    this._secondWaitScheduler.cancel();
+                    this._triggerSyncComputation();
+                    break;
+            }
         }
     };
     HoverOperation.prototype.cancel = function () {

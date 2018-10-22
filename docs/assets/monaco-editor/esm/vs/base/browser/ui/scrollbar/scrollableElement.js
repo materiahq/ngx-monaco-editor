@@ -164,6 +164,7 @@ var AbstractScrollableElement = /** @class */ (function (_super) {
         _this._isDragging = false;
         _this._mouseIsOver = false;
         _this._shouldRender = true;
+        _this._revealOnScroll = true;
         return _this;
     }
     AbstractScrollableElement.prototype.dispose = function () {
@@ -241,6 +242,7 @@ var AbstractScrollableElement = /** @class */ (function (_super) {
         }
     };
     AbstractScrollableElement.prototype._onMouseWheel = function (e) {
+        var _a;
         var classifier = MouseWheelClassifier.INSTANCE;
         if (SCROLL_WHEEL_SMOOTH_SCROLL_ENABLED) {
             classifier.accept(Date.now(), e.deltaX, e.deltaY);
@@ -288,7 +290,6 @@ var AbstractScrollableElement = /** @class */ (function (_super) {
             e.preventDefault();
             e.stopPropagation();
         }
-        var _a;
     };
     AbstractScrollableElement.prototype._onDidScroll = function (e) {
         this._shouldRender = this._horizontalScrollbar.onDidScroll(e) || this._shouldRender;
@@ -296,7 +297,9 @@ var AbstractScrollableElement = /** @class */ (function (_super) {
         if (this._options.useShadows) {
             this._shouldRender = true;
         }
-        this._reveal();
+        if (this._revealOnScroll) {
+            this._reveal();
+        }
         if (!this._options.lazyRender) {
             this._render();
         }

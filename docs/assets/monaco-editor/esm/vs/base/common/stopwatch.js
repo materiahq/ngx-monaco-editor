@@ -15,9 +15,6 @@ var StopWatch = /** @class */ (function () {
         if (highResolution === void 0) { highResolution = true; }
         return new StopWatch(highResolution);
     };
-    StopWatch.prototype.stop = function () {
-        this._stopTime = this._now();
-    };
     StopWatch.prototype.elapsed = function () {
         if (this._stopTime !== -1) {
             return this._stopTime - this._startTime;

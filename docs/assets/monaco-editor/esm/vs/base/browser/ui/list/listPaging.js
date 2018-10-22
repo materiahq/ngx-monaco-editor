@@ -5,7 +5,6 @@
 import './list.css';
 import { range } from '../../../common/arrays.js';
 import { List } from './listWidget.js';
-import { mapEvent } from '../../../common/event.js';
 var PagedRenderer = /** @class */ (function () {
     function PagedRenderer(renderer, modelProvider) {
         this.renderer = renderer;
@@ -32,6 +31,9 @@ var PagedRenderer = /** @class */ (function () {
         this.renderer.renderPlaceholder(index, data.data);
         promise.done(function (entry) { return _this.renderer.renderElement(entry, index, data.data); });
     };
+    PagedRenderer.prototype.disposeElement = function () {
+        // noop
+    };
     PagedRenderer.prototype.disposeTemplate = function (data) {
         data.disposable.dispose();
         data.disposable = null;
@@ -41,20 +43,17 @@ var PagedRenderer = /** @class */ (function () {
     return PagedRenderer;
 }());
 var PagedList = /** @class */ (function () {
-    function PagedList(container, delegate, renderers, options) {
+    function PagedList(container, virtualDelegate, renderers, options) {
         if (options === void 0) { options = {}; }
         var _this = this;
         var pagedRenderers = renderers.map(function (r) { return new PagedRenderer(r, function () { return _this.model; }); });
-        this.list = new List(container, delegate, pagedRenderers, options);
+        this.list = new List(container, virtualDelegate, pagedRenderers, options);
     }
     PagedList.prototype.getHTMLElement = function () {
         return this.list.getHTMLElement();
     };
     PagedList.prototype.isDOMFocused = function () {
         return this.list.getHTMLElement() === document.activeElement;
-    };
-    PagedList.prototype.domFocus = function () {
-        this.list.domFocus();
     };
     Object.defineProperty(PagedList.prototype, "onDidFocus", {
         get: function () {
@@ -63,67 +62,9 @@ var PagedList = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(PagedList.prototype, "onDidBlur", {
-        get: function () {
-            return this.list.onDidBlur;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PagedList.prototype, "widget", {
-        get: function () {
-            return this.list;
-        },
-        enumerable: true,
-        configurable: true
-    });
     Object.defineProperty(PagedList.prototype, "onDidDispose", {
         get: function () {
             return this.list.onDidDispose;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PagedList.prototype, "onFocusChange", {
-        get: function () {
-            var _this = this;
-            return mapEvent(this.list.onFocusChange, function (_a) {
-                var elements = _a.elements, indexes = _a.indexes;
-                return ({ elements: elements.map(function (e) { return _this._model.get(e); }), indexes: indexes });
-            });
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PagedList.prototype, "onOpen", {
-        get: function () {
-            var _this = this;
-            return mapEvent(this.list.onOpen, function (_a) {
-                var elements = _a.elements, indexes = _a.indexes, browserEvent = _a.browserEvent;
-                return ({ elements: elements.map(function (e) { return _this._model.get(e); }), indexes: indexes, browserEvent: browserEvent });
-            });
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PagedList.prototype, "onSelectionChange", {
-        get: function () {
-            var _this = this;
-            return mapEvent(this.list.onSelectionChange, function (_a) {
-                var elements = _a.elements, indexes = _a.indexes;
-                return ({ elements: elements.map(function (e) { return _this._model.get(e); }), indexes: indexes });
-            });
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PagedList.prototype, "onPin", {
-        get: function () {
-            var _this = this;
-            return mapEvent(this.list.onPin, function (_a) {
-                var elements = _a.elements, indexes = _a.indexes;
-                return ({ elements: elements.map(function (e) { return _this._model.get(e); }), indexes: indexes });
-            });
         },
         enumerable: true,
         configurable: true
@@ -139,64 +80,8 @@ var PagedList = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(PagedList.prototype, "length", {
-        get: function () {
-            return this.list.length;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(PagedList.prototype, "scrollTop", {
-        get: function () {
-            return this.list.scrollTop;
-        },
-        set: function (scrollTop) {
-            this.list.scrollTop = scrollTop;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    PagedList.prototype.open = function (indexes, browserEvent) {
-        this.list.open(indexes, browserEvent);
-    };
-    PagedList.prototype.setFocus = function (indexes) {
-        this.list.setFocus(indexes);
-    };
-    PagedList.prototype.focusNext = function (n, loop) {
-        this.list.focusNext(n, loop);
-    };
-    PagedList.prototype.focusPrevious = function (n, loop) {
-        this.list.focusPrevious(n, loop);
-    };
-    PagedList.prototype.selectNext = function (n, loop) {
-        this.list.selectNext(n, loop);
-    };
-    PagedList.prototype.selectPrevious = function (n, loop) {
-        this.list.selectPrevious(n, loop);
-    };
-    PagedList.prototype.focusNextPage = function () {
-        this.list.focusNextPage();
-    };
-    PagedList.prototype.focusPreviousPage = function () {
-        this.list.focusPreviousPage();
-    };
     PagedList.prototype.getFocus = function () {
         return this.list.getFocus();
-    };
-    PagedList.prototype.setSelection = function (indexes) {
-        this.list.setSelection(indexes);
-    };
-    PagedList.prototype.getSelection = function () {
-        return this.list.getSelection();
-    };
-    PagedList.prototype.layout = function (height) {
-        this.list.layout(height);
-    };
-    PagedList.prototype.reveal = function (index, relativeTop) {
-        this.list.reveal(index, relativeTop);
-    };
-    PagedList.prototype.style = function (styles) {
-        this.list.style(styles);
     };
     PagedList.prototype.dispose = function () {
         this.list.dispose();

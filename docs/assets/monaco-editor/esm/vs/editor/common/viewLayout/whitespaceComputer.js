@@ -10,6 +10,7 @@
 var WhitespaceComputer = /** @class */ (function () {
     function WhitespaceComputer() {
         this._heights = [];
+        this._minWidths = [];
         this._ids = [];
         this._afterLineNumbers = [];
         this._ordinals = [];
@@ -17,6 +18,7 @@ var WhitespaceComputer = /** @class */ (function () {
         this._prefixSumValidIndex = -1;
         this._whitespaceId2Index = {};
         this._lastWhitespaceId = 0;
+        this._minWidth = -1; /* marker for not being computed */
     }
     /**
      * Find the insertion index for a new value inside a sorted array of values.
@@ -53,22 +55,26 @@ var WhitespaceComputer = /** @class */ (function () {
      * @param heightInPx The height of the whitespace, in pixels.
      * @return An id that can be used later to mutate or delete the whitespace
      */
-    WhitespaceComputer.prototype.insertWhitespace = function (afterLineNumber, ordinal, heightInPx) {
+    WhitespaceComputer.prototype.insertWhitespace = function (afterLineNumber, ordinal, heightInPx, minWidth) {
         afterLineNumber = afterLineNumber | 0;
         ordinal = ordinal | 0;
         heightInPx = heightInPx | 0;
+        minWidth = minWidth | 0;
         var id = (++this._lastWhitespaceId);
         var insertionIndex = WhitespaceComputer.findInsertionIndex(this._afterLineNumbers, afterLineNumber, this._ordinals, ordinal);
-        this._insertWhitespaceAtIndex(id, insertionIndex, afterLineNumber, ordinal, heightInPx);
+        this._insertWhitespaceAtIndex(id, insertionIndex, afterLineNumber, ordinal, heightInPx, minWidth);
+        this._minWidth = -1; /* marker for not being computed */
         return id;
     };
-    WhitespaceComputer.prototype._insertWhitespaceAtIndex = function (id, insertIndex, afterLineNumber, ordinal, heightInPx) {
+    WhitespaceComputer.prototype._insertWhitespaceAtIndex = function (id, insertIndex, afterLineNumber, ordinal, heightInPx, minWidth) {
         id = id | 0;
         insertIndex = insertIndex | 0;
         afterLineNumber = afterLineNumber | 0;
         ordinal = ordinal | 0;
         heightInPx = heightInPx | 0;
+        minWidth = minWidth | 0;
         this._heights.splice(insertIndex, 0, heightInPx);
+        this._minWidths.splice(insertIndex, 0, minWidth);
         this._ids.splice(insertIndex, 0, id);
         this._afterLineNumbers.splice(insertIndex, 0, afterLineNumber);
         this._ordinals.splice(insertIndex, 0, ordinal);
@@ -136,11 +142,13 @@ var WhitespaceComputer = /** @class */ (function () {
                 var ordinal = this._ordinals[index];
                 // Record old height
                 var heightInPx = this._heights[index];
+                // Record old min width
+                var minWidth = this._minWidths[index];
                 // Since changing `afterLineNumber` can trigger a reordering, we're gonna remove this whitespace
                 this.removeWhitespace(id);
                 // And add it again
                 var insertionIndex = WhitespaceComputer.findInsertionIndex(this._afterLineNumbers, newAfterLineNumber, this._ordinals, ordinal);
-                this._insertWhitespaceAtIndex(id, insertionIndex, newAfterLineNumber, ordinal, heightInPx);
+                this._insertWhitespaceAtIndex(id, insertionIndex, newAfterLineNumber, ordinal, heightInPx, minWidth);
                 return true;
             }
         }
@@ -159,6 +167,7 @@ var WhitespaceComputer = /** @class */ (function () {
             var index = this._whitespaceId2Index[sid];
             delete this._whitespaceId2Index[sid];
             this._removeWhitespaceAtIndex(index);
+            this._minWidth = -1; /* marker for not being computed */
             return true;
         }
         return false;
@@ -166,6 +175,7 @@ var WhitespaceComputer = /** @class */ (function () {
     WhitespaceComputer.prototype._removeWhitespaceAtIndex = function (removeIndex) {
         removeIndex = removeIndex | 0;
         this._heights.splice(removeIndex, 1);
+        this._minWidths.splice(removeIndex, 1);
         this._ids.splice(removeIndex, 1);
         this._afterLineNumbers.splice(removeIndex, 1);
         this._ordinals.splice(removeIndex, 1);
@@ -310,6 +320,19 @@ var WhitespaceComputer = /** @class */ (function () {
      */
     WhitespaceComputer.prototype.getCount = function () {
         return this._heights.length;
+    };
+    /**
+     * The maximum min width for all whitespaces.
+     */
+    WhitespaceComputer.prototype.getMinWidth = function () {
+        if (this._minWidth === -1) {
+            var minWidth = 0;
+            for (var i = 0, len = this._minWidths.length; i < len; i++) {
+                minWidth = Math.max(minWidth, this._minWidths[i]);
+            }
+            this._minWidth = minWidth;
+        }
+        return this._minWidth;
     };
     /**
      * Get the `afterLineNumber` for whitespace at index `index`.

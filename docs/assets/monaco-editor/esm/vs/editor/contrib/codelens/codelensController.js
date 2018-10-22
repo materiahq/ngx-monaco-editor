@@ -12,17 +12,16 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { RunOnceScheduler, asWinJsPromise } from '../../../base/common/async.js';
+import { createCancelablePromise, RunOnceScheduler } from '../../../base/common/async.js';
 import { onUnexpectedError } from '../../../base/common/errors.js';
-import { dispose } from '../../../base/common/lifecycle.js';
-import { TPromise } from '../../../base/common/winjs.base.js';
-import { ICommandService } from '../../../platform/commands/common/commands.js';
-import { CodeLensProviderRegistry } from '../../common/modes.js';
-import { registerEditorContribution } from '../../browser/editorExtensions.js';
-import { getCodeLensData } from './codelens.js';
-import { CodeLens, CodeLensHelper } from './codelensWidget.js';
-import { INotificationService } from '../../../platform/notification/common/notification.js';
+import { dispose, toDisposable } from '../../../base/common/lifecycle.js';
 import { StableEditorScrollState } from '../../browser/core/editorState.js';
+import { registerEditorContribution } from '../../browser/editorExtensions.js';
+import { CodeLensProviderRegistry } from '../../common/modes.js';
+import { CodeLens, CodeLensHelper } from './codelensWidget.js';
+import { ICommandService } from '../../../platform/commands/common/commands.js';
+import { INotificationService } from '../../../platform/notification/common/notification.js';
+import { getCodeLensData } from './codelens.js';
 var CodeLensContribution = /** @class */ (function () {
     function CodeLensContribution(_editor, _commandService, _notificationService) {
         var _this = this;
@@ -57,9 +56,9 @@ var CodeLensContribution = /** @class */ (function () {
             this._currentFindCodeLensSymbolsPromise = null;
             this._modelChangeCounter++;
         }
-        if (this._currentFindOccPromise) {
-            this._currentFindOccPromise.cancel();
-            this._currentFindOccPromise = null;
+        if (this._currentResolveCodeLensSymbolsPromise) {
+            this._currentResolveCodeLensSymbolsPromise.cancel();
+            this._currentResolveCodeLensSymbolsPromise = null;
         }
         this._localToDispose = dispose(this._localToDispose);
     };
@@ -94,7 +93,7 @@ var CodeLensContribution = /** @class */ (function () {
             if (_this._currentFindCodeLensSymbolsPromise) {
                 _this._currentFindCodeLensSymbolsPromise.cancel();
             }
-            _this._currentFindCodeLensSymbolsPromise = getCodeLensData(model);
+            _this._currentFindCodeLensSymbolsPromise = createCancelablePromise(function (token) { return getCodeLensData(model, token); });
             _this._currentFindCodeLensSymbolsPromise.then(function (result) {
                 if (counterValue === _this._modelChangeCounter) { // only the last one wins
                     _this._renderCodeLensSymbols(result);
@@ -141,23 +140,21 @@ var CodeLensContribution = /** @class */ (function () {
         this._localToDispose.push(this._editor.onDidLayoutChange(function (e) {
             _this._detectVisibleLenses.schedule();
         }));
-        this._localToDispose.push({
-            dispose: function () {
-                if (_this._editor.getModel()) {
-                    var scrollState = StableEditorScrollState.capture(_this._editor);
-                    _this._editor.changeDecorations(function (changeAccessor) {
-                        _this._editor.changeViewZones(function (accessor) {
-                            _this._disposeAllLenses(changeAccessor, accessor);
-                        });
+        this._localToDispose.push(toDisposable(function () {
+            if (_this._editor.getModel()) {
+                var scrollState = StableEditorScrollState.capture(_this._editor);
+                _this._editor.changeDecorations(function (changeAccessor) {
+                    _this._editor.changeViewZones(function (accessor) {
+                        _this._disposeAllLenses(changeAccessor, accessor);
                     });
-                    scrollState.restore(_this._editor);
-                }
-                else {
-                    // No accessors available
-                    _this._disposeAllLenses(null, null);
-                }
+                });
+                scrollState.restore(_this._editor);
             }
-        });
+            else {
+                // No accessors available
+                _this._disposeAllLenses(null, null);
+            }
+        }));
         scheduler.schedule();
     };
     CodeLensContribution.prototype._disposeAllLenses = function (decChangeAccessor, viewZoneChangeAccessor) {
@@ -232,9 +229,9 @@ var CodeLensContribution = /** @class */ (function () {
     };
     CodeLensContribution.prototype._onViewportChanged = function () {
         var _this = this;
-        if (this._currentFindOccPromise) {
-            this._currentFindOccPromise.cancel();
-            this._currentFindOccPromise = null;
+        if (this._currentResolveCodeLensSymbolsPromise) {
+            this._currentResolveCodeLensSymbolsPromise.cancel();
+            this._currentResolveCodeLensSymbolsPromise = null;
         }
         var model = this._editor.getModel();
         if (!model) {
@@ -252,25 +249,29 @@ var CodeLensContribution = /** @class */ (function () {
         if (toResolve.length === 0) {
             return;
         }
-        var promises = toResolve.map(function (request, i) {
-            var resolvedSymbols = new Array(request.length);
-            var promises = request.map(function (request, i) {
-                if (typeof request.provider.resolveCodeLens === 'function') {
-                    return asWinJsPromise(function (token) {
-                        return request.provider.resolveCodeLens(model, request.symbol, token);
-                    }).then(function (symbol) {
-                        resolvedSymbols[i] = symbol;
-                    });
-                }
-                resolvedSymbols[i] = request.symbol;
-                return TPromise.as(void 0);
+        this._currentResolveCodeLensSymbolsPromise = createCancelablePromise(function (token) {
+            var promises = toResolve.map(function (request, i) {
+                var resolvedSymbols = new Array(request.length);
+                var promises = request.map(function (request, i) {
+                    if (typeof request.provider.resolveCodeLens === 'function') {
+                        return Promise.resolve(request.provider.resolveCodeLens(model, request.symbol, token)).then(function (symbol) {
+                            resolvedSymbols[i] = symbol;
+                        });
+                    }
+                    resolvedSymbols[i] = request.symbol;
+                    return Promise.resolve(void 0);
+                });
+                return Promise.all(promises).then(function () {
+                    lenses[i].updateCommands(resolvedSymbols);
+                });
             });
-            return TPromise.join(promises).then(function () {
-                lenses[i].updateCommands(resolvedSymbols);
-            });
+            return Promise.all(promises);
         });
-        this._currentFindOccPromise = TPromise.join(promises).then(function () {
-            _this._currentFindOccPromise = null;
+        this._currentResolveCodeLensSymbolsPromise.then(function () {
+            _this._currentResolveCodeLensSymbolsPromise = null;
+        }).catch(function (err) {
+            _this._currentResolveCodeLensSymbolsPromise = null;
+            onUnexpectedError(err);
         });
     };
     CodeLensContribution.ID = 'css.editor.codeLens';

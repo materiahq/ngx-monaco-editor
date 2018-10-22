@@ -76,11 +76,20 @@ var CharacterHardWrappingLineMapperFactory = /** @class */ (function () {
         if (hardWrappingIndent !== WrappingIndent.None) {
             firstNonWhitespaceIndex = strings.firstNonWhitespaceIndex(lineText);
             if (firstNonWhitespaceIndex !== -1) {
+                // Track existing indent
                 wrappedTextIndent = lineText.substring(0, firstNonWhitespaceIndex);
                 for (var i = 0; i < firstNonWhitespaceIndex; i++) {
                     wrappedTextIndentVisibleColumn = CharacterHardWrappingLineMapperFactory.nextVisibleColumn(wrappedTextIndentVisibleColumn, tabSize, lineText.charCodeAt(i) === 9 /* Tab */, 1);
                 }
+                // Increase indent of continuation lines, if desired
+                var numberOfAdditionalTabs = 0;
                 if (hardWrappingIndent === WrappingIndent.Indent) {
+                    numberOfAdditionalTabs = 1;
+                }
+                else if (hardWrappingIndent === WrappingIndent.DeepIndent) {
+                    numberOfAdditionalTabs = 2;
+                }
+                for (var i = 0; i < numberOfAdditionalTabs; i++) {
                     wrappedTextIndent += '\t';
                     wrappedTextIndentVisibleColumn = CharacterHardWrappingLineMapperFactory.nextVisibleColumn(wrappedTextIndentVisibleColumn, tabSize, true, 1);
                 }

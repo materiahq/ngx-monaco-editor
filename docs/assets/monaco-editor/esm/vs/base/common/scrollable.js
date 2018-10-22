@@ -131,7 +131,7 @@ var Scrollable = /** @class */ (function (_super) {
     };
     /**
      * Returns the final scroll position that the instance will have once the smooth scroll animation concludes.
-     * If no scroll animation is occuring, it will return the current scroll position instead.
+     * If no scroll animation is occurring, it will return the current scroll position instead.
      */
     Scrollable.prototype.getFutureScrollPosition = function () {
         if (this._smoothScrolling) {

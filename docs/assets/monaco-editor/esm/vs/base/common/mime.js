@@ -7,7 +7,6 @@ import * as paths from './paths.js';
 import * as strings from './strings.js';
 import { match } from './glob.js';
 export var MIME_TEXT = 'text/plain';
-export var MIME_BINARY = 'application/octet-stream';
 export var MIME_UNKNOWN = 'application/unknown';
 var registeredAssociations = [];
 var nonUserRegisteredAssociations = [];
@@ -61,20 +60,6 @@ function toTextMimeAssociationItem(association) {
         filepatternLowercase: association.filepattern ? association.filepattern.toLowerCase() : void 0,
         filepatternOnPath: association.filepattern ? association.filepattern.indexOf(paths.sep) >= 0 : false
     };
-}
-/**
- * Clear text mimes from the registry.
- */
-export function clearTextMimes(onlyUserConfigured) {
-    if (!onlyUserConfigured) {
-        registeredAssociations = [];
-        nonUserRegisteredAssociations = [];
-        userRegisteredAssociations = [];
-    }
-    else {
-        registeredAssociations = registeredAssociations.filter(function (a) { return !a.userConfigured; });
-        userRegisteredAssociations = [];
-    }
 }
 /**
  * Given a file, return the best matching mime type for it
@@ -166,25 +151,4 @@ function guessMimeTypeByFirstline(firstLine) {
         }
     }
     return null;
-}
-export function isUnspecific(mime) {
-    if (!mime) {
-        return true;
-    }
-    if (typeof mime === 'string') {
-        return mime === MIME_BINARY || mime === MIME_TEXT || mime === MIME_UNKNOWN;
-    }
-    return mime.length === 1 && isUnspecific(mime[0]);
-}
-export function suggestFilename(langId, prefix) {
-    for (var i = 0; i < registeredAssociations.length; i++) {
-        var association = registeredAssociations[i];
-        if (association.userConfigured) {
-            continue; // only support registered ones
-        }
-        if (association.id === langId && association.extension) {
-            return prefix + association.extension;
-        }
-    }
-    return prefix; // without any known extension, just return the prefix
 }

@@ -3,10 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 'use strict';
-import { toDisposable, combinedDisposable, empty as EmptyDisposable } from './lifecycle.js';
-import { TPromise } from './winjs.base.js';
-import { once as onceFn } from './functional.js';
 import { onUnexpectedError } from './errors.js';
+import { once as onceFn } from './functional.js';
+import { combinedDisposable, Disposable, toDisposable } from './lifecycle.js';
 import { LinkedList } from './linkedList.js';
 export var Event;
 (function (Event) {
@@ -185,38 +184,6 @@ var EventMultiplexer = /** @class */ (function () {
     return EventMultiplexer;
 }());
 export { EventMultiplexer };
-export function fromCallback(fn) {
-    var listener;
-    var emitter = new Emitter({
-        onFirstListenerAdd: function () { return listener = fn(function (e) { return emitter.fire(e); }); },
-        onLastListenerRemove: function () { return listener.dispose(); }
-    });
-    return emitter.event;
-}
-export function fromPromise(promise) {
-    var emitter = new Emitter();
-    var shouldEmit = false;
-    promise
-        .then(null, function () { return null; })
-        .then(function () {
-        if (!shouldEmit) {
-            setTimeout(function () { return emitter.fire(); }, 0);
-        }
-        else {
-            emitter.fire();
-        }
-    });
-    shouldEmit = true;
-    return emitter.event;
-}
-export function toPromise(event) {
-    return new TPromise(function (complete) {
-        var sub = event(function (e) {
-            sub.dispose();
-            complete(e);
-        });
-    });
-}
 export function once(event) {
     return function (listener, thisArgs, disposables) {
         if (thisArgs === void 0) { thisArgs = null; }
@@ -324,12 +291,6 @@ export function mapEvent(event, map) {
         return event(function (i) { return listener.call(thisArgs, map(i)); }, null, disposables);
     };
 }
-export function forEach(event, each) {
-    return function (listener, thisArgs, disposables) {
-        if (thisArgs === void 0) { thisArgs = null; }
-        return event(function (i) { each(i); listener.call(thisArgs, i); }, null, disposables);
-    };
-}
 export function filterEvent(event, filter) {
     return function (listener, thisArgs, disposables) {
         if (thisArgs === void 0) { thisArgs = null; }
@@ -348,14 +309,8 @@ var ChainableEvent = /** @class */ (function () {
     ChainableEvent.prototype.map = function (fn) {
         return new ChainableEvent(mapEvent(this._event, fn));
     };
-    ChainableEvent.prototype.forEach = function (fn) {
-        return new ChainableEvent(forEach(this._event, fn));
-    };
     ChainableEvent.prototype.filter = function (fn) {
         return new ChainableEvent(filterEvent(this._event, fn));
-    };
-    ChainableEvent.prototype.latch = function () {
-        return new ChainableEvent(latch(this._event));
     };
     ChainableEvent.prototype.on = function (listener, thisArgs, disposables) {
         return this._event(listener, thisArgs, disposables);
@@ -365,101 +320,11 @@ var ChainableEvent = /** @class */ (function () {
 export function chain(event) {
     return new ChainableEvent(event);
 }
-export function stopwatch(event) {
-    var start = new Date().getTime();
-    return mapEvent(once(event), function (_) { return new Date().getTime() - start; });
-}
-/**
- * Buffers the provided event until a first listener comes
- * along, at which point fire all the events at once and
- * pipe the event from then on.
- *
- * ```typescript
- * const emitter = new Emitter<number>();
- * const event = emitter.event;
- * const bufferedEvent = buffer(event);
- *
- * emitter.fire(1);
- * emitter.fire(2);
- * emitter.fire(3);
- * // nothing...
- *
- * const listener = bufferedEvent(num => console.log(num));
- * // 1, 2, 3
- *
- * emitter.fire(4);
- * // 4
- * ```
- */
-export function buffer(event, nextTick, buffer) {
-    if (nextTick === void 0) { nextTick = false; }
-    if (buffer === void 0) { buffer = []; }
-    buffer = buffer.slice();
-    var listener = event(function (e) {
-        if (buffer) {
-            buffer.push(e);
-        }
-        else {
-            emitter.fire(e);
-        }
-    });
-    var flush = function () {
-        buffer.forEach(function (e) { return emitter.fire(e); });
-        buffer = null;
-    };
-    var emitter = new Emitter({
-        onFirstListenerAdd: function () {
-            if (!listener) {
-                listener = event(function (e) { return emitter.fire(e); });
-            }
-        },
-        onFirstListenerDidAdd: function () {
-            if (buffer) {
-                if (nextTick) {
-                    setTimeout(flush);
-                }
-                else {
-                    flush();
-                }
-            }
-        },
-        onLastListenerRemove: function () {
-            listener.dispose();
-            listener = null;
-        }
-    });
-    return emitter.event;
-}
-/**
- * Similar to `buffer` but it buffers indefinitely and repeats
- * the buffered events to every new listener.
- */
-export function echo(event, nextTick, buffer) {
-    if (nextTick === void 0) { nextTick = false; }
-    if (buffer === void 0) { buffer = []; }
-    buffer = buffer.slice();
-    event(function (e) {
-        buffer.push(e);
-        emitter.fire(e);
-    });
-    var flush = function (listener, thisArgs) { return buffer.forEach(function (e) { return listener.call(thisArgs, e); }); };
-    var emitter = new Emitter({
-        onListenerDidAdd: function (emitter, listener, thisArgs) {
-            if (nextTick) {
-                setTimeout(function () { return flush(listener, thisArgs); });
-            }
-            else {
-                flush(listener, thisArgs);
-            }
-        }
-    });
-    return emitter.event;
-}
 var Relay = /** @class */ (function () {
     function Relay() {
         this.emitter = new Emitter();
         this.event = this.emitter.event;
-        this.disposable = EmptyDisposable;
+        this.disposable = Disposable.None;
     }
     Object.defineProperty(Relay.prototype, "input", {
         set: function (event) {
@@ -476,27 +341,3 @@ var Relay = /** @class */ (function () {
     return Relay;
 }());
 export { Relay };
-export function fromNodeEventEmitter(emitter, eventName, map) {
-    if (map === void 0) { map = function (id) { return id; }; }
-    var fn = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-        return result.fire(map.apply(void 0, args));
-    };
-    var onFirstListenerAdd = function () { return emitter.on(eventName, fn); };
-    var onLastListenerRemove = function () { return emitter.removeListener(eventName, fn); };
-    var result = new Emitter({ onFirstListenerAdd: onFirstListenerAdd, onLastListenerRemove: onLastListenerRemove });
-    return result.event;
-}
-export function latch(event) {
-    var firstCall = true;
-    var cache;
-    return filterEvent(event, function (value) {
-        var shouldEmit = firstCall || value !== cache;
-        firstCall = false;
-        cache = value;
-        return shouldEmit;
-    });
-}

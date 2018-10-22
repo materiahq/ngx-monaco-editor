@@ -39,9 +39,13 @@ export var WrappingIndent;
      */
     WrappingIndent[WrappingIndent["Same"] = 1] = "Same";
     /**
-     * Indent => wrapped lines get +1 indentation as the parent.
+     * Indent => wrapped lines get +1 indentation toward the parent.
      */
     WrappingIndent[WrappingIndent["Indent"] = 2] = "Indent";
+    /**
+     * DeepIndent => wrapped lines get +2 indentation toward the parent.
+     */
+    WrappingIndent[WrappingIndent["DeepIndent"] = 3] = "DeepIndent";
 })(WrappingIndent || (WrappingIndent = {}));
 /**
  * The kind of animation in which the editor's cursor should be rendered.
@@ -204,6 +208,7 @@ var InternalEditorOptions = /** @class */ (function () {
         this.viewInfo = source.viewInfo;
         this.wrappingInfo = source.wrappingInfo;
         this.contribInfo = source.contribInfo;
+        this.showUnused = source.showUnused;
     }
     /**
      * @internal
@@ -223,6 +228,7 @@ var InternalEditorOptions = /** @class */ (function () {
             && this.useTabStops === other.useTabStops
             && this.tabFocusMode === other.tabFocusMode
             && this.dragAndDrop === other.dragAndDrop
+            && this.showUnused === other.showUnused
             && this.emptySelectionClipboard === other.emptySelectionClipboard
             && InternalEditorOptions._equalsLayoutInfo(this.layoutInfo, other.layoutInfo)
             && this.fontInfo.equals(other.fontInfo)
@@ -314,12 +320,14 @@ var InternalEditorOptions = /** @class */ (function () {
             && a.cursorWidth === b.cursorWidth
             && a.hideCursorInOverviewRuler === b.hideCursorInOverviewRuler
             && a.scrollBeyondLastLine === b.scrollBeyondLastLine
+            && a.scrollBeyondLastColumn === b.scrollBeyondLastColumn
             && a.smoothScrolling === b.smoothScrolling
             && a.stopRenderingLineAfter === b.stopRenderingLineAfter
             && a.renderWhitespace === b.renderWhitespace
             && a.renderControlCharacters === b.renderControlCharacters
             && a.fontLigatures === b.fontLigatures
             && a.renderIndentGuides === b.renderIndentGuides
+            && a.highlightActiveIndentGuide === b.highlightActiveIndentGuide
             && a.renderLineHighlight === b.renderLineHighlight
             && this._equalsScrollbarOptions(a.scrollbar, b.scrollbar)
             && this._equalsMinimapOptions(a.minimap, b.minimap)
@@ -363,6 +371,30 @@ var InternalEditorOptions = /** @class */ (function () {
     /**
      * @internal
      */
+    InternalEditorOptions._equalsHoverOptions = function (a, b) {
+        return (a.enabled === b.enabled
+            && a.delay === b.delay
+            && a.sticky === b.sticky);
+    };
+    /**
+     * @internal
+     */
+    InternalEditorOptions._equalsSuggestOptions = function (a, b) {
+        if (a === b) {
+            return true;
+        }
+        else if (!a || !b) {
+            return false;
+        }
+        else {
+            return a.filterGraceful === b.filterGraceful
+                && a.snippets === b.snippets
+                && a.snippetsPreventQuickSuggestions === b.snippetsPreventQuickSuggestions;
+        }
+    };
+    /**
+     * @internal
+     */
     InternalEditorOptions._equalsWrappingInfo = function (a, b) {
         return (a.inDiffEditor === b.inDiffEditor
             && a.isDominatedByLongLines === b.isDominatedByLongLines
@@ -379,7 +411,7 @@ var InternalEditorOptions = /** @class */ (function () {
      */
     InternalEditorOptions._equalsContribOptions = function (a, b) {
         return (a.selectionClipboard === b.selectionClipboard
-            && a.hover === b.hover
+            && this._equalsHoverOptions(a.hover, b.hover)
             && a.links === b.links
             && a.contextmenu === b.contextmenu
             && InternalEditorOptions._equalsQuickSuggestions(a.quickSuggestions, b.quickSuggestions)
@@ -391,11 +423,11 @@ var InternalEditorOptions = /** @class */ (function () {
             && a.suggestOnTriggerCharacters === b.suggestOnTriggerCharacters
             && a.acceptSuggestionOnEnter === b.acceptSuggestionOnEnter
             && a.acceptSuggestionOnCommitCharacter === b.acceptSuggestionOnCommitCharacter
-            && a.snippetSuggestions === b.snippetSuggestions
             && a.wordBasedSuggestions === b.wordBasedSuggestions
             && a.suggestSelection === b.suggestSelection
             && a.suggestFontSize === b.suggestFontSize
             && a.suggestLineHeight === b.suggestLineHeight
+            && this._equalsSuggestOptions(a.suggest, b.suggest)
             && a.selectionHighlight === b.selectionHighlight
             && a.occurrencesHighlight === b.occurrencesHighlight
             && a.codeLens === b.codeLens
@@ -491,11 +523,14 @@ function _wrappingIndentFromString(wrappingIndent, defaultValue) {
     if (typeof wrappingIndent !== 'string') {
         return defaultValue;
     }
-    if (wrappingIndent === 'indent') {
+    if (wrappingIndent === 'same') {
+        return WrappingIndent.Same;
+    }
+    else if (wrappingIndent === 'indent') {
         return WrappingIndent.Indent;
     }
-    else if (wrappingIndent === 'same') {
-        return WrappingIndent.Same;
+    else if (wrappingIndent === 'deepIndent') {
+        return WrappingIndent.DeepIndent;
     }
     else {
         return WrappingIndent.None;
@@ -591,6 +626,7 @@ var EditorOptionsValidator = /** @class */ (function () {
             multiCursorModifier: multiCursorModifier,
             multiCursorMergeOverlapping: _boolean(opts.multiCursorMergeOverlapping, defaults.multiCursorMergeOverlapping),
             accessibilitySupport: _stringSet(opts.accessibilitySupport, defaults.accessibilitySupport, ['auto', 'on', 'off']),
+            showUnused: _boolean(opts.showUnused, defaults.showUnused),
             viewInfo: viewInfo,
             contribInfo: contribInfo,
         };
@@ -636,6 +672,33 @@ var EditorOptionsValidator = /** @class */ (function () {
             seedSearchStringFromSelection: _boolean(opts.seedSearchStringFromSelection, defaults.seedSearchStringFromSelection),
             autoFindInSelection: _boolean(opts.autoFindInSelection, defaults.autoFindInSelection),
             globalFindClipboard: _boolean(opts.globalFindClipboard, defaults.globalFindClipboard)
+        };
+    };
+    EditorOptionsValidator._santizeHoverOpts = function (_opts, defaults) {
+        var opts;
+        if (typeof _opts === 'boolean') {
+            opts = {
+                enabled: _opts
+            };
+        }
+        else if (typeof _opts === 'object') {
+            opts = _opts;
+        }
+        else {
+            return defaults;
+        }
+        return {
+            enabled: _boolean(opts.enabled, defaults.enabled),
+            delay: _clampedInt(opts.delay, defaults.delay, 0, 10000),
+            sticky: _boolean(opts.sticky, defaults.sticky)
+        };
+    };
+    EditorOptionsValidator._sanitizeSuggestOpts = function (opts, defaults) {
+        var suggestOpts = opts.suggest || {};
+        return {
+            filterGraceful: _boolean(suggestOpts.filterGraceful, defaults.filterGraceful),
+            snippets: _stringSet(opts.snippetSuggestions, defaults.snippets, ['top', 'bottom', 'inline', 'none']),
+            snippetsPreventQuickSuggestions: _boolean(suggestOpts.snippetsPreventQuickSuggestions, defaults.filterGraceful),
         };
     };
     EditorOptionsValidator._sanitizeViewInfo = function (opts, defaults) {
@@ -724,12 +787,14 @@ var EditorOptionsValidator = /** @class */ (function () {
             cursorWidth: _clampedInt(opts.cursorWidth, defaults.cursorWidth, 0, Number.MAX_VALUE),
             hideCursorInOverviewRuler: _boolean(opts.hideCursorInOverviewRuler, defaults.hideCursorInOverviewRuler),
             scrollBeyondLastLine: _boolean(opts.scrollBeyondLastLine, defaults.scrollBeyondLastLine),
+            scrollBeyondLastColumn: _clampedInt(opts.scrollBeyondLastColumn, defaults.scrollBeyondLastColumn, 0, 1073741824 /* MAX_SAFE_SMALL_INTEGER */),
             smoothScrolling: _boolean(opts.smoothScrolling, defaults.smoothScrolling),
             stopRenderingLineAfter: _clampedInt(opts.stopRenderingLineAfter, defaults.stopRenderingLineAfter, -1, 1073741824 /* MAX_SAFE_SMALL_INTEGER */),
             renderWhitespace: renderWhitespace,
             renderControlCharacters: _boolean(opts.renderControlCharacters, defaults.renderControlCharacters),
             fontLigatures: fontLigatures,
             renderIndentGuides: _boolean(opts.renderIndentGuides, defaults.renderIndentGuides),
+            highlightActiveIndentGuide: _boolean(opts.highlightActiveIndentGuide, defaults.highlightActiveIndentGuide),
             renderLineHighlight: renderLineHighlight,
             scrollbar: scrollbar,
             minimap: minimap,
@@ -751,7 +816,7 @@ var EditorOptionsValidator = /** @class */ (function () {
         var find = this._santizeFindOpts(opts.find, defaults.find);
         return {
             selectionClipboard: _boolean(opts.selectionClipboard, defaults.selectionClipboard),
-            hover: _boolean(opts.hover, defaults.hover),
+            hover: this._santizeHoverOpts(opts.hover, defaults.hover),
             links: _boolean(opts.links, defaults.links),
             contextmenu: _boolean(opts.contextmenu, defaults.contextmenu),
             quickSuggestions: quickSuggestions,
@@ -763,11 +828,11 @@ var EditorOptionsValidator = /** @class */ (function () {
             suggestOnTriggerCharacters: _boolean(opts.suggestOnTriggerCharacters, defaults.suggestOnTriggerCharacters),
             acceptSuggestionOnEnter: _stringSet(opts.acceptSuggestionOnEnter, defaults.acceptSuggestionOnEnter, ['on', 'smart', 'off']),
             acceptSuggestionOnCommitCharacter: _boolean(opts.acceptSuggestionOnCommitCharacter, defaults.acceptSuggestionOnCommitCharacter),
-            snippetSuggestions: _stringSet(opts.snippetSuggestions, defaults.snippetSuggestions, ['top', 'bottom', 'inline', 'none']),
             wordBasedSuggestions: _boolean(opts.wordBasedSuggestions, defaults.wordBasedSuggestions),
             suggestSelection: _stringSet(opts.suggestSelection, defaults.suggestSelection, ['first', 'recentlyUsed', 'recentlyUsedByPrefix']),
             suggestFontSize: _clampedInt(opts.suggestFontSize, defaults.suggestFontSize, 0, 1000),
             suggestLineHeight: _clampedInt(opts.suggestLineHeight, defaults.suggestLineHeight, 0, 1000),
+            suggest: this._sanitizeSuggestOpts(opts, defaults.suggest),
             selectionHighlight: _boolean(opts.selectionHighlight, defaults.selectionHighlight),
             occurrencesHighlight: _boolean(opts.occurrencesHighlight, defaults.occurrencesHighlight),
             codeLens: _boolean(opts.codeLens, defaults.codeLens),
@@ -818,6 +883,7 @@ var InternalEditorOptionsFactory = /** @class */ (function () {
             multiCursorModifier: opts.multiCursorModifier,
             multiCursorMergeOverlapping: opts.multiCursorMergeOverlapping,
             accessibilitySupport: opts.accessibilitySupport,
+            showUnused: opts.showUnused,
             viewInfo: {
                 extraEditorClassName: opts.viewInfo.extraEditorClassName,
                 disableMonospaceOptimizations: opts.viewInfo.disableMonospaceOptimizations,
@@ -837,12 +903,14 @@ var InternalEditorOptionsFactory = /** @class */ (function () {
                 cursorWidth: opts.viewInfo.cursorWidth,
                 hideCursorInOverviewRuler: opts.viewInfo.hideCursorInOverviewRuler,
                 scrollBeyondLastLine: opts.viewInfo.scrollBeyondLastLine,
+                scrollBeyondLastColumn: opts.viewInfo.scrollBeyondLastColumn,
                 smoothScrolling: opts.viewInfo.smoothScrolling,
                 stopRenderingLineAfter: opts.viewInfo.stopRenderingLineAfter,
                 renderWhitespace: (accessibilityIsOn ? 'none' : opts.viewInfo.renderWhitespace),
                 renderControlCharacters: (accessibilityIsOn ? false : opts.viewInfo.renderControlCharacters),
                 fontLigatures: (accessibilityIsOn ? false : opts.viewInfo.fontLigatures),
                 renderIndentGuides: (accessibilityIsOn ? false : opts.viewInfo.renderIndentGuides),
+                highlightActiveIndentGuide: opts.viewInfo.highlightActiveIndentGuide,
                 renderLineHighlight: opts.viewInfo.renderLineHighlight,
                 scrollbar: opts.viewInfo.scrollbar,
                 minimap: {
@@ -868,11 +936,11 @@ var InternalEditorOptionsFactory = /** @class */ (function () {
                 suggestOnTriggerCharacters: opts.contribInfo.suggestOnTriggerCharacters,
                 acceptSuggestionOnEnter: opts.contribInfo.acceptSuggestionOnEnter,
                 acceptSuggestionOnCommitCharacter: opts.contribInfo.acceptSuggestionOnCommitCharacter,
-                snippetSuggestions: opts.contribInfo.snippetSuggestions,
                 wordBasedSuggestions: opts.contribInfo.wordBasedSuggestions,
                 suggestSelection: opts.contribInfo.suggestSelection,
                 suggestFontSize: opts.contribInfo.suggestFontSize,
                 suggestLineHeight: opts.contribInfo.suggestLineHeight,
+                suggest: opts.contribInfo.suggest,
                 selectionHighlight: (accessibilityIsOn ? false : opts.contribInfo.selectionHighlight),
                 occurrencesHighlight: (accessibilityIsOn ? false : opts.contribInfo.occurrencesHighlight),
                 codeLens: (accessibilityIsOn ? false : opts.contribInfo.codeLens),
@@ -1035,7 +1103,8 @@ var InternalEditorOptionsFactory = /** @class */ (function () {
             fontInfo: env.fontInfo,
             viewInfo: opts.viewInfo,
             wrappingInfo: wrappingInfo,
-            contribInfo: opts.contribInfo
+            contribInfo: opts.contribInfo,
+            showUnused: opts.showUnused,
         });
     };
     return InternalEditorOptionsFactory;
@@ -1214,6 +1283,7 @@ export var EDITOR_DEFAULTS = {
     multiCursorModifier: 'altKey',
     multiCursorMergeOverlapping: true,
     accessibilitySupport: 'auto',
+    showUnused: true,
     viewInfo: {
         extraEditorClassName: '',
         disableMonospaceOptimizations: false,
@@ -1233,12 +1303,14 @@ export var EDITOR_DEFAULTS = {
         cursorWidth: 0,
         hideCursorInOverviewRuler: false,
         scrollBeyondLastLine: true,
+        scrollBeyondLastColumn: 5,
         smoothScrolling: false,
         stopRenderingLineAfter: 10000,
         renderWhitespace: 'none',
         renderControlCharacters: false,
         fontLigatures: false,
         renderIndentGuides: true,
+        highlightActiveIndentGuide: true,
         renderLineHighlight: 'line',
         scrollbar: {
             vertical: ScrollbarVisibility.Auto,
@@ -1265,7 +1337,11 @@ export var EDITOR_DEFAULTS = {
     },
     contribInfo: {
         selectionClipboard: true,
-        hover: true,
+        hover: {
+            enabled: true,
+            delay: 300,
+            sticky: true
+        },
         links: true,
         contextmenu: true,
         quickSuggestions: { other: true, comments: false, strings: false },
@@ -1277,11 +1353,15 @@ export var EDITOR_DEFAULTS = {
         suggestOnTriggerCharacters: true,
         acceptSuggestionOnEnter: 'on',
         acceptSuggestionOnCommitCharacter: true,
-        snippetSuggestions: 'inline',
         wordBasedSuggestions: true,
         suggestSelection: 'recentlyUsed',
         suggestFontSize: 0,
         suggestLineHeight: 0,
+        suggest: {
+            filterGraceful: true,
+            snippets: 'inline',
+            snippetsPreventQuickSuggestions: true
+        },
         selectionHighlight: true,
         occurrencesHighlight: true,
         codeLens: true,

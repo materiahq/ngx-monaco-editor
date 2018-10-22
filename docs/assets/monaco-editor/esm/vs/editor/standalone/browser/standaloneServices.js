@@ -38,8 +38,8 @@ import { IModeService } from '../../common/services/modeService.js';
 import { ModeServiceImpl } from '../../common/services/modeServiceImpl.js';
 import { IModelService } from '../../common/services/modelService.js';
 import { ModelServiceImpl } from '../../common/services/modelServiceImpl.js';
-import { CodeEditorServiceImpl } from '../../browser/services/codeEditorServiceImpl.js';
-import { SimpleConfigurationService, SimpleResourceConfigurationService, SimpleMenuService, SimpleProgressService, StandaloneCommandService, StandaloneKeybindingService, SimpleNotificationService, StandaloneTelemetryService, SimpleWorkspaceContextService, SimpleDialogService } from './simpleServices.js';
+import { StandaloneCodeEditorServiceImpl } from './standaloneCodeServiceImpl.js';
+import { SimpleConfigurationService, SimpleResourceConfigurationService, SimpleMenuService, SimpleProgressService, StandaloneCommandService, StandaloneKeybindingService, SimpleNotificationService, StandaloneTelemetryService, SimpleWorkspaceContextService, SimpleDialogService, SimpleBulkEditService, SimpleUriDisplayService } from './simpleServices.js';
 import { ContextKeyService } from '../../../platform/contextkey/browser/contextKeyService.js';
 import { IMenuService } from '../../../platform/actions/common/actions.js';
 import { IStandaloneThemeService } from '../common/standaloneThemeService.js';
@@ -48,6 +48,8 @@ import { ILogService, NullLogService } from '../../../platform/log/common/log.js
 import { INotificationService } from '../../../platform/notification/common/notification.js';
 import { IDialogService } from '../../../platform/dialogs/common/dialogs.js';
 import { IListService, ListService } from '../../../platform/list/browser/listService.js';
+import { IBulkEditService } from '../../browser/services/bulkEditService.js';
+import { IUriDisplayService } from '../../../platform/uriDisplay/common/uriDisplay.js';
 export var StaticServices;
 (function (StaticServices) {
     var _serviceCollection = new ServiceCollection();
@@ -108,6 +110,7 @@ export var StaticServices;
     StaticServices.configurationService = define(IConfigurationService, function () { return configurationServiceImpl; });
     StaticServices.resourceConfigurationService = define(ITextResourceConfigurationService, function () { return new SimpleResourceConfigurationService(configurationServiceImpl); });
     StaticServices.contextService = define(IWorkspaceContextService, function () { return new SimpleWorkspaceContextService(); });
+    StaticServices.uriDisplayService = define(IUriDisplayService, function () { return new SimpleUriDisplayService(); });
     StaticServices.telemetryService = define(ITelemetryService, function () { return new StandaloneTelemetryService(); });
     StaticServices.dialogService = define(IDialogService, function () { return new SimpleDialogService(); });
     StaticServices.notificationService = define(INotificationService, function () { return new SimpleNotificationService(); });
@@ -116,7 +119,7 @@ export var StaticServices;
     StaticServices.modelService = define(IModelService, function (o) { return new ModelServiceImpl(StaticServices.markerService.get(o), StaticServices.configurationService.get(o)); });
     StaticServices.editorWorkerService = define(IEditorWorkerService, function (o) { return new EditorWorkerServiceImpl(StaticServices.modelService.get(o), StaticServices.resourceConfigurationService.get(o)); });
     StaticServices.standaloneThemeService = define(IStandaloneThemeService, function () { return new StandaloneThemeServiceImpl(); });
-    StaticServices.codeEditorService = define(ICodeEditorService, function (o) { return new CodeEditorServiceImpl(StaticServices.standaloneThemeService.get(o)); });
+    StaticServices.codeEditorService = define(ICodeEditorService, function (o) { return new StandaloneCodeEditorServiceImpl(StaticServices.standaloneThemeService.get(o)); });
     StaticServices.progressService = define(IProgressService, function () { return new SimpleProgressService(); });
     StaticServices.storageService = define(IStorageService, function () { return NullStorageService; });
     StaticServices.logService = define(ILogService, function () { return new NullLogService(); });
@@ -149,6 +152,7 @@ var DynamicStandaloneServices = /** @class */ (function (_super) {
         var contextViewService = ensure(IContextViewService, function () { return _this._register(new ContextViewService(domElement, telemetryService, new NullLogService())); });
         ensure(IContextMenuService, function () { return _this._register(new ContextMenuService(domElement, telemetryService, notificationService, contextViewService)); });
         ensure(IMenuService, function () { return new SimpleMenuService(commandService); });
+        ensure(IBulkEditService, function () { return new SimpleBulkEditService(StaticServices.modelService.get(IModelService)); });
         return _this;
     }
     DynamicStandaloneServices.prototype.get = function (serviceId) {

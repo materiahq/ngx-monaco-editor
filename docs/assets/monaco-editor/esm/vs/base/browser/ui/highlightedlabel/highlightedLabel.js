@@ -20,18 +20,24 @@ var HighlightedLabel = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    HighlightedLabel.prototype.set = function (text, highlights) {
+    HighlightedLabel.prototype.set = function (text, highlights, title, escapeNewLines) {
         if (highlights === void 0) { highlights = []; }
+        if (title === void 0) { title = ''; }
         if (!text) {
             text = '';
         }
-        if (this.didEverRender && this.text === text && objects.equals(this.highlights, highlights)) {
+        if (escapeNewLines) {
+            // adjusts highlights inplace
+            text = HighlightedLabel.escapeNewLines(text, highlights);
+        }
+        if (this.didEverRender && this.text === text && this.title === title && objects.equals(this.highlights, highlights)) {
             return;
         }
         if (!Array.isArray(highlights)) {
             highlights = [];
         }
         this.text = text;
+        this.title = title;
         this.highlights = highlights;
         this.render();
     };
@@ -60,11 +66,34 @@ var HighlightedLabel = /** @class */ (function () {
             htmlContent.push('</span>');
         }
         this.domNode.innerHTML = htmlContent.join('');
+        this.domNode.title = this.title;
         this.didEverRender = true;
     };
     HighlightedLabel.prototype.dispose = function () {
         this.text = null;
         this.highlights = null;
+    };
+    HighlightedLabel.escapeNewLines = function (text, highlights) {
+        var total = 0;
+        var extra = 0;
+        return text.replace(/\r\n|\r|\n/, function (match, offset) {
+            extra = match === '\r\n' ? -1 : 0;
+            offset += total;
+            for (var _i = 0, highlights_1 = highlights; _i < highlights_1.length; _i++) {
+                var highlight = highlights_1[_i];
+                if (highlight.end <= offset) {
+                    continue;
+                }
+                if (highlight.start >= offset) {
+                    highlight.start += extra;
+                }
+                if (highlight.end >= offset) {
+                    highlight.end += extra;
+                }
+            }
+            total += extra;
+            return '\u23CE';
+        });
     };
     return HighlightedLabel;
 }());

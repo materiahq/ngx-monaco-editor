@@ -368,24 +368,23 @@ var SplitLinesCollection = /** @class */ (function () {
         var modelEnd = this.convertViewPositionToModelPosition(viewEndLineNumber, this.getViewLineMaxColumn(viewEndLineNumber));
         var result = [];
         var resultRepeatCount = [];
+        var resultRepeatOption = [];
         var modelStartLineIndex = modelStart.lineNumber - 1;
         var modelEndLineIndex = modelEnd.lineNumber - 1;
         var reqStart = null;
         for (var modelLineIndex = modelStartLineIndex; modelLineIndex <= modelEndLineIndex; modelLineIndex++) {
             var line = this.lines[modelLineIndex];
             if (line.isVisible()) {
-                var count = 0;
-                if (modelLineIndex === modelStartLineIndex) {
-                    var viewLineStartIndex = line.getViewLineNumberOfModelPosition(0, modelStart.column);
-                    var viewLineEndIndex = line.getViewLineNumberOfModelPosition(0, this.model.getLineMaxColumn(modelLineIndex + 1));
-                    count = viewLineEndIndex - viewLineStartIndex + 1;
-                }
-                else {
-                    var viewLineStartIndex = line.getViewLineNumberOfModelPosition(0, 1);
-                    var viewLineEndIndex = line.getViewLineNumberOfModelPosition(0, this.model.getLineMaxColumn(modelLineIndex + 1));
-                    count = viewLineEndIndex - viewLineStartIndex + 1;
+                var viewLineStartIndex = line.getViewLineNumberOfModelPosition(0, modelLineIndex === modelStartLineIndex ? modelStart.column : 1);
+                var viewLineEndIndex = line.getViewLineNumberOfModelPosition(0, this.model.getLineMaxColumn(modelLineIndex + 1));
+                var count = viewLineEndIndex - viewLineStartIndex + 1;
+                var option = 0 /* BlockNone */;
+                if (count > 1 && line.getViewLineMinColumn(this.model, modelLineIndex + 1, viewLineEndIndex) === 1) {
+                    // wrapped lines should block indent guides
+                    option = (viewLineStartIndex === 0 ? 1 /* BlockSubsequent */ : 2 /* BlockAll */);
                 }
                 resultRepeatCount.push(count);
+                resultRepeatOption.push(option);
                 // merge into previous request
                 if (reqStart === null) {
                     reqStart = new Position(modelLineIndex + 1, 0);
@@ -409,7 +408,21 @@ var SplitLinesCollection = /** @class */ (function () {
         for (var i = 0, len = result.length; i < len; i++) {
             var value = result[i];
             var count = Math.min(viewLineCount - currIndex, resultRepeatCount[i]);
+            var option = resultRepeatOption[i];
+            var blockAtIndex = void 0;
+            if (option === 2 /* BlockAll */) {
+                blockAtIndex = 0;
+            }
+            else if (option === 1 /* BlockSubsequent */) {
+                blockAtIndex = 1;
+            }
+            else {
+                blockAtIndex = count;
+            }
             for (var j = 0; j < count; j++) {
+                if (j === blockAtIndex) {
+                    value = 0;
+                }
                 viewIndents[currIndex++] = value;
             }
         }
@@ -645,7 +658,7 @@ var VisibleIdentitySplitLine = /** @class */ (function () {
     VisibleIdentitySplitLine.prototype.getViewLineData = function (model, modelLineNumber, outputLineIndex) {
         var lineTokens = model.getLineTokens(modelLineNumber);
         var lineContent = lineTokens.getLineContent();
-        return new ViewLineData(lineContent, 1, lineContent.length + 1, lineTokens.inflate());
+        return new ViewLineData(lineContent, false, 1, lineContent.length + 1, lineTokens.inflate());
     };
     VisibleIdentitySplitLine.prototype.getViewLinesData = function (model, modelLineNumber, fromOuputLineIndex, toOutputLineIndex, globalStartIndex, needed, result) {
         if (!needed[globalStartIndex]) {
@@ -802,12 +815,13 @@ var SplitLine = /** @class */ (function () {
         }
         var minColumn = (outputLineIndex > 0 ? this.wrappedIndentLength + 1 : 1);
         var maxColumn = lineContent.length + 1;
+        var continuesWithWrappedLine = (outputLineIndex + 1 < this.getViewLineCount());
         var deltaStartIndex = 0;
         if (outputLineIndex > 0) {
             deltaStartIndex = this.wrappedIndentLength;
         }
         var lineTokens = model.getLineTokens(modelLineNumber);
-        return new ViewLineData(lineContent, minColumn, maxColumn, lineTokens.sliceAndInflate(startOffset, endOffset, deltaStartIndex));
+        return new ViewLineData(lineContent, continuesWithWrappedLine, minColumn, maxColumn, lineTokens.sliceAndInflate(startOffset, endOffset, deltaStartIndex));
     };
     SplitLine.prototype.getViewLinesData = function (model, modelLineNumber, fromOuputLineIndex, toOutputLineIndex, globalStartIndex, needed, result) {
         if (!this._isVisible) {
@@ -983,7 +997,7 @@ var IdentityLinesCollection = /** @class */ (function () {
     IdentityLinesCollection.prototype.getViewLineData = function (viewLineNumber) {
         var lineTokens = this.model.getLineTokens(viewLineNumber);
         var lineContent = lineTokens.getLineContent();
-        return new ViewLineData(lineContent, 1, lineContent.length + 1, lineTokens.inflate());
+        return new ViewLineData(lineContent, false, 1, lineContent.length + 1, lineTokens.inflate());
     };
     IdentityLinesCollection.prototype.getViewLinesData = function (viewStartLineNumber, viewEndLineNumber, needed) {
         var lineCount = this.model.getLineCount();

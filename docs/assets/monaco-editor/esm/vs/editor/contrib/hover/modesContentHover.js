@@ -15,7 +15,6 @@ var __extends = (this && this.__extends) || (function () {
 })();
 import * as nls from '../../../nls.js';
 import * as dom from '../../../base/browser/dom.js';
-import { TPromise } from '../../../base/common/winjs.base.js';
 import { Range } from '../../common/core/range.js';
 import { Position } from '../../common/core/position.js';
 import { HoverProviderRegistry } from '../../common/modes.js';
@@ -28,8 +27,9 @@ import { ColorPickerModel } from '../colorPicker/colorPickerModel.js';
 import { ColorPickerWidget } from '../colorPicker/colorPickerWidget.js';
 import { ColorDetector } from '../colorPicker/colorDetector.js';
 import { Color, RGBA } from '../../../base/common/color.js';
-import { empty as EmptyDisposable, dispose, combinedDisposable } from '../../../base/common/lifecycle.js';
+import { Disposable, combinedDisposable } from '../../../base/common/lifecycle.js';
 import { getColorPresentations } from '../colorPicker/color.js';
+import { CancellationToken } from '../../../base/common/cancellation.js';
 var $ = dom.$;
 var ColorHover = /** @class */ (function () {
     function ColorHover(range, color, provider) {
@@ -51,12 +51,12 @@ var ModesContentComputer = /** @class */ (function () {
     ModesContentComputer.prototype.clearResult = function () {
         this._result = [];
     };
-    ModesContentComputer.prototype.computeAsync = function () {
+    ModesContentComputer.prototype.computeAsync = function (token) {
         var model = this._editor.getModel();
         if (!HoverProviderRegistry.has(model)) {
-            return TPromise.as(null);
+            return Promise.resolve(null);
         }
-        return getHover(model, new Position(this._range.startLineNumber, this._range.startColumn));
+        return getHover(model, new Position(this._range.startLineNumber, this._range.startColumn), token);
     };
     ModesContentComputer.prototype.computeSync = function () {
         var _this = this;
@@ -133,32 +133,33 @@ var ModesContentComputer = /** @class */ (function () {
 }());
 var ModesContentHoverWidget = /** @class */ (function (_super) {
     __extends(ModesContentHoverWidget, _super);
-    function ModesContentHoverWidget(editor, markdownRenderner, _themeService) {
+    function ModesContentHoverWidget(editor, markdownRenderer, _themeService) {
         var _this = _super.call(this, ModesContentHoverWidget.ID, editor) || this;
         _this._themeService = _themeService;
-        _this.renderDisposable = EmptyDisposable;
-        _this.toDispose = [];
+        _this.renderDisposable = Disposable.None;
         _this._computer = new ModesContentComputer(_this._editor);
         _this._highlightDecorations = [];
         _this._isChangingDecorations = false;
-        _this._markdownRenderer = markdownRenderner;
-        markdownRenderner.onDidRenderCodeBlock(_this.onContentsChange, _this, _this.toDispose);
+        _this._markdownRenderer = markdownRenderer;
+        _this._register(markdownRenderer.onDidRenderCodeBlock(_this.onContentsChange, _this));
         _this._hoverOperation = new HoverOperation(_this._computer, function (result) { return _this._withResult(result, true); }, null, function (result) { return _this._withResult(result, false); });
-        _this.toDispose.push(dom.addStandardDisposableListener(_this.getDomNode(), dom.EventType.FOCUS, function () {
+        _this._register(dom.addStandardDisposableListener(_this.getDomNode(), dom.EventType.FOCUS, function () {
             if (_this._colorPicker) {
                 dom.addClass(_this.getDomNode(), 'colorpicker-hover');
             }
         }));
-        _this.toDispose.push(dom.addStandardDisposableListener(_this.getDomNode(), dom.EventType.BLUR, function () {
+        _this._register(dom.addStandardDisposableListener(_this.getDomNode(), dom.EventType.BLUR, function () {
             dom.removeClass(_this.getDomNode(), 'colorpicker-hover');
+        }));
+        _this._register(editor.onDidChangeConfiguration(function (e) {
+            _this._hoverOperation.setHoverTime(_this._editor.getConfiguration().contribInfo.hover.delay);
         }));
         return _this;
     }
     ModesContentHoverWidget.prototype.dispose = function () {
         this.renderDisposable.dispose();
-        this.renderDisposable = EmptyDisposable;
+        this.renderDisposable = Disposable.None;
         this._hoverOperation.cancel();
-        this.toDispose = dispose(this.toDispose);
         _super.prototype.dispose.call(this);
     };
     ModesContentHoverWidget.prototype.onModelDecorationsChanged = function () {
@@ -171,11 +172,11 @@ var ModesContentHoverWidget = /** @class */ (function (_super) {
             this._hoverOperation.cancel();
             this._computer.clearResult();
             if (!this._colorPicker) { // TODO@Michel ensure that displayed text for other decorations is computed even if color picker is in place
-                this._hoverOperation.start();
+                this._hoverOperation.start(0 /* Delayed */);
             }
         }
     };
-    ModesContentHoverWidget.prototype.startShowingAt = function (range, focus) {
+    ModesContentHoverWidget.prototype.startShowingAt = function (range, mode, focus) {
         if (this._lastRange && this._lastRange.equalsRange(range)) {
             // We have to show the widget at the exact same range as before, so no work is needed
             return;
@@ -211,7 +212,7 @@ var ModesContentHoverWidget = /** @class */ (function (_super) {
         this._lastRange = range;
         this._computer.setRange(range);
         this._shouldFocus = focus;
-        this._hoverOperation.start();
+        this._hoverOperation.start(mode);
     };
     ModesContentHoverWidget.prototype.hide = function () {
         this._lastRange = null;
@@ -221,7 +222,7 @@ var ModesContentHoverWidget = /** @class */ (function (_super) {
         this._highlightDecorations = this._editor.deltaDecorations(this._highlightDecorations, []);
         this._isChangingDecorations = false;
         this.renderDisposable.dispose();
-        this.renderDisposable = EmptyDisposable;
+        this.renderDisposable = Disposable.None;
         this._colorPicker = null;
     };
     ModesContentHoverWidget.prototype.isColorPickerVisible = function () {
@@ -244,7 +245,10 @@ var ModesContentHoverWidget = /** @class */ (function (_super) {
         this.renderDisposable.dispose();
         this._colorPicker = null;
         // update column from which to show
-        var renderColumn = Number.MAX_VALUE, highlightRange = messages[0].range, fragment = document.createDocumentFragment(), isEmptyHoverContent = true;
+        var renderColumn = Number.MAX_VALUE;
+        var highlightRange = messages[0].range;
+        var fragment = document.createDocumentFragment();
+        var isEmptyHoverContent = true;
         var containColorPicker = false;
         var markdownDisposeable;
         messages.forEach(function (msg) {
@@ -274,7 +278,7 @@ var ModesContentHoverWidget = /** @class */ (function (_super) {
                 // create blank olor picker model and widget first to ensure it's positioned correctly.
                 var model_1 = new ColorPickerModel(color_1, [], 0);
                 var widget_1 = new ColorPickerWidget(fragment, model_1, _this._editor.getConfiguration().pixelRatio, _this._themeService);
-                getColorPresentations(editorModel_1, colorInfo, msg.provider).then(function (colorPresentations) {
+                getColorPresentations(editorModel_1, colorInfo, msg.provider, CancellationToken.None).then(function (colorPresentations) {
                     model_1.colorPresentations = colorPresentations;
                     var originalText = _this._editor.getModel().getValueInRange(msg.range);
                     model_1.guessColorPresentation(color_1, originalText);
@@ -290,10 +294,10 @@ var ModesContentHoverWidget = /** @class */ (function (_super) {
                             textEdits = [{ identifier: null, range: range_2, text: model_1.presentation.label, forceMoveMarkers: false }];
                             newRange = range_2.setEndPosition(range_2.endLineNumber, range_2.startColumn + model_1.presentation.label.length);
                         }
-                        editorModel_1.pushEditOperations([], textEdits, function () { return []; });
+                        _this._editor.executeEdits('colorpicker', textEdits);
                         if (model_1.presentation.additionalTextEdits) {
                             textEdits = model_1.presentation.additionalTextEdits.slice();
-                            editorModel_1.pushEditOperations([], textEdits, function () { return []; });
+                            _this._editor.executeEdits('colorpicker', textEdits);
                             _this.hide();
                         }
                         _this._editor.pushUndoStop();
@@ -308,7 +312,7 @@ var ModesContentHoverWidget = /** @class */ (function (_super) {
                                 blue: color.rgba.b / 255,
                                 alpha: color.rgba.a
                             }
-                        }, msg.provider).then(function (colorPresentations) {
+                        }, msg.provider, CancellationToken.None).then(function (colorPresentations) {
                             model_1.colorPresentations = colorPresentations;
                         });
                     };
