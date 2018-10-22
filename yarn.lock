@@ -370,10 +370,10 @@
     is-absolute "^1.0.0"
     is-negated-glob "^1.0.0"
 
-"@materia-ui/ngx-monaco-editor@^1.1.2":
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/@materia-ui/ngx-monaco-editor/-/ngx-monaco-editor-1.1.2.tgz#7171ab7a889db2b398ae518fa204a7ee4dcf5a92"
-  integrity sha512-b01TdeWwac+ksABUFfW93Z6aJirIyVW8X+H2rt7RJHAgUlGq4FATrrhK3Znc4aRtH/GB3YOZNfvsLaPVHUJsSw==
+"@materia-ui/ngx-monaco-editor@^1.2.3":
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/@materia-ui/ngx-monaco-editor/-/ngx-monaco-editor-1.2.3.tgz#054465e1eb807a8c1bc4111cd76a35d99648fa2a"
+  integrity sha512-DjCbH+MwxU2uF6zQjwWYc7zZbXZP3JUB3DkY/MjbbqAMLgugXWfe/xMrsZA/m0qIKnn6tEezL0BcCrKZYo5zNQ==
   dependencies:
     css-element-queries "^1.0.2"
     monaco-editor "^0.14.3"

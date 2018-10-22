@@ -7,6 +7,7 @@
 
 # dependencies
 /node_modules
+/src/ngx-monaco-editor/node_modules
 
 # IDEs and editors
 /.idea
@@ -39,3 +40,6 @@ testem.log
 Thumbs.db
 
 /documentation
+src/ngx-monaco-editor/node_modules/.yarn-integrity
+src/ngx-monaco-editor/node_modules/.yarn-integrity
+src/ngx-monaco-editor/node_modules/css-element-queries/.idea/encodings.xml

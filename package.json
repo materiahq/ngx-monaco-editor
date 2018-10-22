@@ -25,7 +25,7 @@
     "@angular/platform-browser": "~6.0.9",
     "@angular/platform-browser-dynamic": "~6.0.9",
     "@angular/router": "~6.0.9",
-    "@materia-ui/ngx-monaco-editor": "^1.1.2",
+    "@materia-ui/ngx-monaco-editor": "^1.2.3",
     "core-js": "^2.5.4",
     "rxjs": "6.1.0",
     "zone.js": "^0.8.26"
