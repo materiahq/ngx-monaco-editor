@@ -74,22 +74,9 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnChanges(changes) {
-        if (this.editor && (changes.code || changes.original)) {
-            let modified = monaco.editor.createModel(this.modified);
-            if (changes.code && changes.code.currentValue !== this.modified) {
-                modified = monaco.editor.createModel(
-                    changes.code.currentValue
-                );
-            }
-            let original = monaco.editor.createModel(this.original);
-            if (
-                changes.original &&
-                changes.original.currentValue !== this.original
-            ) {
-                original = monaco.editor.createModel(
-                    changes.original.currentValue
-                );
-            }
+        if (this.editor && (changes.code || changes.modified)) {
+            const modified = monaco.editor.createModel(this.modified);
+            const original = monaco.editor.createModel(this.original);
             this.editor.setModel({
                 original,
                 modified
@@ -116,7 +103,6 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
             modified
         });
         this.editor.layout();
-
         monaco.editor.setTheme('vs-light');
     }
 
