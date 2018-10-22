@@ -1,8 +1,8 @@
 ### Documentation
 
-Try it out on : [live demo](https://geoastronaute.github.io/ngx-monaco-editor).
+Try it out on : [live demo](https://materiahq.github.io/ngx-monaco-editor).
 
-Api reference available on : [documentation](https://geoastronaute.github.io/ngx-monaco-editor/api-reference).
+Api reference available on : [documentation](https://materiahq.github.io/ngx-monaco-editor/api-reference).
 
 ### Installation
 
