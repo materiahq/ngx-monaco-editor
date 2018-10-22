@@ -55,6 +55,7 @@ declare const monaco: any;
 export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy {
     container: HTMLDivElement;
     editor: any;
+    internalChange: boolean;
 
     @Input() code: string;
     @Input() options: MonacoOptions;
@@ -75,10 +76,14 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnChanges(changes) {
-        if (this.editor && (changes.code || changes.original)) {
-            this.editor.setValue(changes.code.currentValue);
+        if (this.editor && changes.code) {
+            if (! this.internalChange) {
+                this.editor.setValue(changes.code.currentValue);
+            } else {
+                this.internalChange = false;
+            }
 
-            if (!this.options.language) {
+            if ( ! this.options.language ) {
                 this.options.language = 'text';
             }
             monaco.editor.setModelLanguage(
@@ -107,14 +112,15 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy {
         this.editor = monaco.editor.create(this.container, opts);
         this.editor.layout();
 
-        this.editor.onDidChangeModelContent(editor => {
+        this.editor.onDidChangeModelContent((changes) => {
+            this.internalChange = true;
             this.codeChange.next(this.editor.getValue());
         });
         if (this.options.theme) {
             monaco.editor.setTheme(this.options.theme);
         }
 
-        if (!this.options.language) {
+        if ( ! this.options.language ) {
             this.options.language = 'text';
         }
         monaco.editor.setModelLanguage(
