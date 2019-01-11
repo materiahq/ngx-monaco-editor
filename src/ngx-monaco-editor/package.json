@@ -22,8 +22,8 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@angular/common": "6.x",
-    "@angular/core": "6.x",
+    "@angular/common": "6.x || 7.x",
+    "@angular/core": "6.x || 7.x",
     "rxjs": "6.x"
   },
   "dependencies": {
