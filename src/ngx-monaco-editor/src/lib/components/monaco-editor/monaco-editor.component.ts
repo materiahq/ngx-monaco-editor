@@ -77,7 +77,7 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy {
     ngOnChanges(changes) {
         if (this.editor && changes.code) {
             if (changes.code.currentValue !== this.editor.getValue()) {
-                this.editor.setValue(changes.code.currentValue);
+                changes.code.currentValue ? this.editor.setValue(changes.code.currentValue) : this.editor.setValue('');
             }
 
             if ( ! this.options.language ) {
