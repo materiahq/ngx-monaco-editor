@@ -2,12 +2,11 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
-import { ReplaceCommand } from '../commands/replaceCommand.js';
-import { CursorColumns, EditOperationResult } from './cursorCommon.js';
-import { Range } from '../core/range.js';
-import { MoveOperations } from './cursorMoveOperations.js';
 import * as strings from '../../../base/common/strings.js';
+import { ReplaceCommand } from '../commands/replaceCommand.js';
+import { CursorColumns, EditOperationResult, isQuote } from './cursorCommon.js';
+import { MoveOperations } from './cursorMoveOperations.js';
+import { Range } from '../core/range.js';
 var DeleteOperations = /** @class */ (function () {
     function DeleteOperations() {
     }
@@ -35,7 +34,7 @@ var DeleteOperations = /** @class */ (function () {
         return [shouldPushStackElementBefore, commands];
     };
     DeleteOperations._isAutoClosingPairDelete = function (config, model, selections) {
-        if (!config.autoClosingBrackets) {
+        if (config.autoClosingBrackets === 'never' && config.autoClosingQuotes === 'never') {
             return false;
         }
         for (var i = 0, len = selections.length; i < len; i++) {
@@ -48,6 +47,16 @@ var DeleteOperations = /** @class */ (function () {
             var character = lineText[position.column - 2];
             if (!config.autoClosingPairsOpen.hasOwnProperty(character)) {
                 return false;
+            }
+            if (isQuote(character)) {
+                if (config.autoClosingQuotes === 'never') {
+                    return false;
+                }
+            }
+            else {
+                if (config.autoClosingBrackets === 'never') {
+                    return false;
+                }
             }
             var afterCharacter = lineText[position.column - 1];
             var closeCharacter = config.autoClosingPairsOpen[character];

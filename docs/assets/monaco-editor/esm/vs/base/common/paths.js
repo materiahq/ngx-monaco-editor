@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { isWindows } from './platform.js';
 import { startsWithIgnoreCase } from './strings.js';
 /**
@@ -14,9 +13,13 @@ export var sep = '/';
  */
 export var nativeSep = isWindows ? '\\' : '/';
 /**
+ * @param path the path to get the dirname from
+ * @param separator the separator to use
  * @returns the directory name of a path.
+ *
  */
-export function dirname(path) {
+export function dirname(path, separator) {
+    if (separator === void 0) { separator = nativeSep; }
     var idx = ~path.lastIndexOf('/') || ~path.lastIndexOf('\\');
     if (idx === 0) {
         return '.';
@@ -30,7 +33,7 @@ export function dirname(path) {
     else {
         var res = path.substring(0, ~idx);
         if (isWindows && res[res.length - 1] === ':') {
-            res += nativeSep; // make sure drive letters end with backslash
+            res += separator; // make sure drive letters end with backslash
         }
         return res;
     }
@@ -73,7 +76,7 @@ export function normalize(path, toOSPath) {
     if (len === 0) {
         return '.';
     }
-    var wantsBackslash = isWindows && toOSPath;
+    var wantsBackslash = !!(isWindows && toOSPath);
     if (_isNormal(path, wantsBackslash)) {
         return path;
     }
@@ -241,33 +244,4 @@ export function isEqualOrParent(path, candidate, ignoreCase, separator) {
         candidate += separator;
     }
     return path.indexOf(candidate) === 0;
-}
-/**
- * Adapted from Node's path.isAbsolute functions
- */
-export function isAbsolute(path) {
-    return isWindows ?
-        isAbsolute_win32(path) :
-        isAbsolute_posix(path);
-}
-export function isAbsolute_win32(path) {
-    if (!path) {
-        return false;
-    }
-    var char0 = path.charCodeAt(0);
-    if (char0 === 47 /* Slash */ || char0 === 92 /* Backslash */) {
-        return true;
-    }
-    else if ((char0 >= 65 /* A */ && char0 <= 90 /* Z */) || (char0 >= 97 /* a */ && char0 <= 122 /* z */)) {
-        if (path.length > 2 && path.charCodeAt(1) === 58 /* Colon */) {
-            var char2 = path.charCodeAt(2);
-            if (char2 === 47 /* Slash */ || char2 === 92 /* Backslash */) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-export function isAbsolute_posix(path) {
-    return path && path.charCodeAt(0) === 47 /* Slash */;
 }

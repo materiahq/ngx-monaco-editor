@@ -98,11 +98,11 @@ define(["require", "exports"], function (require, exports) {
                 [/"(?=.)/, 'string', '@multiLineString'],
             ],
             multiLineString: [
+                [/[^\\"]+$/, 'string', '@popall'],
+                [/[^\\"]+/, 'string'],
                 [/\\./, 'string.escape'],
                 [/"/, 'string', '@popall'],
-                [/.(?=.*")/, 'string'],
-                [/.*\\$/, 'string'],
-                [/.*$/, 'string', '@popall'],
+                [/\\$/, 'string']
             ],
         },
     };

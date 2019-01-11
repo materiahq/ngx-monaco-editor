@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -16,6 +18,11 @@ var __extends = (this && this.__extends) || (function () {
 export function values(forEachable) {
     var result = [];
     forEachable.forEach(function (value) { return result.push(value); });
+    return result;
+}
+export function keys(map) {
+    var result = [];
+    map.forEach(function (value, key) { return result.push(key); });
     return result;
 }
 var StringIterator = /** @class */ (function () {
@@ -195,7 +202,7 @@ var TernarySearchTree = /** @class */ (function () {
     TernarySearchTree.prototype.findSubstr = function (key) {
         var iter = this._iter.reset(key);
         var node = this._root;
-        var candidate;
+        var candidate = undefined;
         while (node) {
             var val = iter.cmp(node.segment);
             if (val > 0) {
@@ -260,12 +267,6 @@ var ResourceMap = /** @class */ (function () {
     return ResourceMap;
 }());
 export { ResourceMap };
-export var Touch;
-(function (Touch) {
-    Touch[Touch["None"] = 0] = "None";
-    Touch[Touch["AsOld"] = 1] = "AsOld";
-    Touch[Touch["AsNew"] = 2] = "AsNew";
-})(Touch || (Touch = {}));
 var LinkedMap = /** @class */ (function () {
     function LinkedMap() {
         this._map = new Map();
@@ -287,35 +288,35 @@ var LinkedMap = /** @class */ (function () {
         configurable: true
     });
     LinkedMap.prototype.get = function (key, touch) {
-        if (touch === void 0) { touch = Touch.None; }
+        if (touch === void 0) { touch = 0 /* None */; }
         var item = this._map.get(key);
         if (!item) {
             return undefined;
         }
-        if (touch !== Touch.None) {
+        if (touch !== 0 /* None */) {
             this.touch(item, touch);
         }
         return item.value;
     };
     LinkedMap.prototype.set = function (key, value, touch) {
-        if (touch === void 0) { touch = Touch.None; }
+        if (touch === void 0) { touch = 0 /* None */; }
         var item = this._map.get(key);
         if (item) {
             item.value = value;
-            if (touch !== Touch.None) {
+            if (touch !== 0 /* None */) {
                 this.touch(item, touch);
             }
         }
         else {
             item = { key: key, value: value, next: undefined, previous: undefined };
             switch (touch) {
-                case Touch.None:
+                case 0 /* None */:
                     this.addItemLast(item);
                     break;
-                case Touch.AsOld:
+                case 1 /* AsOld */:
                     this.addItemFirst(item);
                     break;
-                case Touch.AsNew:
+                case 2 /* AsNew */:
                     this.addItemLast(item);
                     break;
                 default:
@@ -394,7 +395,9 @@ var LinkedMap = /** @class */ (function () {
         }
         this._head = current;
         this._size = currentSize;
-        current.previous = void 0;
+        if (current) {
+            current.previous = void 0;
+        }
     };
     LinkedMap.prototype.addItemFirst = function (item) {
         // First time Insert
@@ -428,10 +431,10 @@ var LinkedMap = /** @class */ (function () {
         if (!this._head || !this._tail) {
             throw new Error('Invalid list');
         }
-        if ((touch !== Touch.AsOld && touch !== Touch.AsNew)) {
+        if ((touch !== 1 /* AsOld */ && touch !== 2 /* AsNew */)) {
             return;
         }
-        if (touch === Touch.AsOld) {
+        if (touch === 1 /* AsOld */) {
             if (item === this._head) {
                 return;
             }
@@ -455,7 +458,7 @@ var LinkedMap = /** @class */ (function () {
             this._head.previous = item;
             this._head = item;
         }
-        else if (touch === Touch.AsNew) {
+        else if (touch === 2 /* AsNew */) {
             if (item === this._tail) {
                 return;
             }
@@ -499,10 +502,10 @@ var LRUCache = /** @class */ (function (_super) {
         return _this;
     }
     LRUCache.prototype.get = function (key) {
-        return _super.prototype.get.call(this, key, Touch.AsNew);
+        return _super.prototype.get.call(this, key, 2 /* AsNew */);
     };
     LRUCache.prototype.set = function (key, value) {
-        _super.prototype.set.call(this, key, value, Touch.AsNew);
+        _super.prototype.set.call(this, key, value, 2 /* AsNew */);
         this.checkTrim();
     };
     LRUCache.prototype.checkTrim = function () {

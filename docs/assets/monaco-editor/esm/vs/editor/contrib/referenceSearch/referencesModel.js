@@ -2,40 +2,24 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { localize } from '../../../nls.js';
 import { Emitter } from '../../../base/common/event.js';
 import { basename } from '../../../base/common/paths.js';
 import { dispose } from '../../../base/common/lifecycle.js';
 import * as strings from '../../../base/common/strings.js';
 import { defaultGenerator } from '../../../base/common/idGenerator.js';
-import { TPromise } from '../../../base/common/winjs.base.js';
 import { Range } from '../../common/core/range.js';
 var OneReference = /** @class */ (function () {
-    function OneReference(_parent, _range) {
-        this._parent = _parent;
+    function OneReference(parent, _range) {
+        this.parent = parent;
         this._range = _range;
         this._onRefChanged = new Emitter();
         this.onRefChanged = this._onRefChanged.event;
-        this._id = defaultGenerator.nextId();
+        this.id = defaultGenerator.nextId();
     }
-    Object.defineProperty(OneReference.prototype, "id", {
-        get: function () {
-            return this._id;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(OneReference.prototype, "parent", {
-        get: function () {
-            return this._parent;
-        },
-        enumerable: true,
-        configurable: true
-    });
     Object.defineProperty(OneReference.prototype, "uri", {
         get: function () {
-            return this._parent.uri;
+            return this.parent.uri;
         },
         enumerable: true,
         configurable: true
@@ -61,14 +45,12 @@ var FilePreview = /** @class */ (function () {
     function FilePreview(_modelReference) {
         this._modelReference = _modelReference;
     }
-    Object.defineProperty(FilePreview.prototype, "_model", {
-        get: function () { return this._modelReference.object.textEditorModel; },
-        enumerable: true,
-        configurable: true
-    });
+    FilePreview.prototype.dispose = function () {
+        dispose(this._modelReference);
+    };
     FilePreview.prototype.preview = function (range, n) {
         if (n === void 0) { n = 8; }
-        var model = this._model;
+        var model = this._modelReference.object.textEditorModel;
         if (!model) {
             return undefined;
         }
@@ -82,12 +64,6 @@ var FilePreview = /** @class */ (function () {
             after: model.getValueInRange(afterRange).replace(/\s+$/, strings.empty)
         };
         return ret;
-    };
-    FilePreview.prototype.dispose = function () {
-        if (this._modelReference) {
-            this._modelReference.dispose();
-            this._modelReference = null;
-        }
     };
     return FilePreview;
 }());
@@ -152,9 +128,9 @@ var FileReferences = /** @class */ (function () {
     FileReferences.prototype.resolve = function (textModelResolverService) {
         var _this = this;
         if (this._resolved) {
-            return TPromise.as(this);
+            return Promise.resolve(this);
         }
-        return textModelResolverService.createModelReference(this._uri).then(function (modelReference) {
+        return Promise.resolve(textModelResolverService.createModelReference(this._uri).then(function (modelReference) {
             var model = modelReference.object;
             if (!model) {
                 modelReference.dispose();
@@ -169,12 +145,12 @@ var FileReferences = /** @class */ (function () {
             _this._resolved = true;
             _this._loadFailure = err;
             return _this;
-        });
+        }));
     };
     FileReferences.prototype.dispose = function () {
         if (this._preview) {
             this._preview.dispose();
-            this._preview = null;
+            this._preview = undefined;
         }
     };
     return FileReferences;
@@ -183,8 +159,8 @@ export { FileReferences };
 var ReferencesModel = /** @class */ (function () {
     function ReferencesModel(references) {
         var _this = this;
-        this._groups = [];
-        this._references = [];
+        this.groups = [];
+        this.references = [];
         this._onDidChangeReferenceRange = new Emitter();
         this.onDidChangeReferenceRange = this._onDidChangeReferenceRange.event;
         this._disposables = [];
@@ -203,28 +179,14 @@ var ReferencesModel = /** @class */ (function () {
                 || !Range.equalsRange(ref.range, current.children[current.children.length - 1].range)) {
                 var oneRef = new OneReference(current, ref.range);
                 this._disposables.push(oneRef.onRefChanged(function (e) { return _this._onDidChangeReferenceRange.fire(e); }));
-                this._references.push(oneRef);
+                this.references.push(oneRef);
                 current.children.push(oneRef);
             }
         }
     }
     Object.defineProperty(ReferencesModel.prototype, "empty", {
         get: function () {
-            return this._groups.length === 0;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(ReferencesModel.prototype, "references", {
-        get: function () {
-            return this._references;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(ReferencesModel.prototype, "groups", {
-        get: function () {
-            return this._groups;
+            return this.groups.length === 0;
         },
         enumerable: true,
         configurable: true
@@ -269,7 +231,7 @@ var ReferencesModel = /** @class */ (function () {
         }
     };
     ReferencesModel.prototype.nearestReference = function (resource, position) {
-        var nearest = this._references.map(function (ref, idx) {
+        var nearest = this.references.map(function (ref, idx) {
             return {
                 idx: idx,
                 prefixLen: strings.commonPrefixLength(ref.uri.toString(), resource.toString()),
@@ -293,13 +255,14 @@ var ReferencesModel = /** @class */ (function () {
             }
         })[0];
         if (nearest) {
-            return this._references[nearest.idx];
+            return this.references[nearest.idx];
         }
         return undefined;
     };
     ReferencesModel.prototype.dispose = function () {
-        this._groups = dispose(this._groups);
+        dispose(this.groups);
         dispose(this._disposables);
+        this.groups.length = 0;
         this._disposables.length = 0;
     };
     ReferencesModel._compareReferences = function (a, b) {

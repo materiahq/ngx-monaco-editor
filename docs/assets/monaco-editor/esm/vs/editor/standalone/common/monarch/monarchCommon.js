@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 export function isFuzzyActionArr(what) {
     return (Array.isArray(what));
 }
@@ -42,11 +41,8 @@ export function log(lexer, msg) {
     console.log(lexer.languageId + ": " + msg);
 }
 // Throwing errors
-/**
- * Throws error. May actually just log the error and continue.
- */
-export function throwError(lexer, msg) {
-    throw new Error(lexer.languageId + ": " + msg);
+export function createError(lexer, msg) {
+    return new Error(lexer.languageId + ": " + msg);
 }
 // Helper functions for rule finding and substitution
 /**
@@ -87,7 +83,8 @@ export function substituteMatches(lexer, str, id, matches, state) {
 /**
  * Find the tokenizer rules for a specific state (i.e. next action)
  */
-export function findRules(lexer, state) {
+export function findRules(lexer, inState) {
+    var state = inState;
     while (state && state.length > 0) {
         var rules = lexer.tokenizer[state];
         if (rules) {
@@ -108,7 +105,8 @@ export function findRules(lexer, state) {
  * This is used during compilation where we may know the defined states
  * but not yet whether the corresponding rules are correct.
  */
-export function stateExists(lexer, state) {
+export function stateExists(lexer, inState) {
+    var state = inState;
     while (state && state.length > 0) {
         var exist = lexer.stateNames[state];
         if (exist) {

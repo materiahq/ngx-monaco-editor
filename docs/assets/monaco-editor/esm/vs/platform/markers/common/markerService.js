@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { isFalsyOrEmpty } from '../../../base/common/arrays.js';
 import { Schemas } from '../../../base/common/network.js';
 import { isEmptyObject } from '../../../base/common/types.js';
@@ -51,6 +50,9 @@ var MarkerStats = /** @class */ (function () {
         this._data = undefined;
     };
     MarkerStats.prototype._update = function (resources) {
+        if (!this._data) {
+            return;
+        }
         for (var _i = 0, resources_1 = resources; _i < resources_1.length; _i++) {
             var resource = resources_1[_i];
             var key = resource.toString();
@@ -122,7 +124,7 @@ var MarkerService = /** @class */ (function () {
         if (!isFalsyOrEmpty(resources)) {
             for (var _i = 0, resources_2 = resources; _i < resources_2.length; _i++) {
                 var resource = resources_2[_i];
-                this.changeOne(owner, resource, undefined);
+                this.changeOne(owner, resource, []);
             }
         }
     };
@@ -159,7 +161,6 @@ var MarkerService = /** @class */ (function () {
             return undefined;
         }
         // santize data
-        code = code || null;
         startLineNumber = startLineNumber > 0 ? startLineNumber : 1;
         startColumn = startColumn > 0 ? startColumn : 1;
         endLineNumber = endLineNumber >= startLineNumber ? endLineNumber : startLineNumber;
@@ -167,7 +168,7 @@ var MarkerService = /** @class */ (function () {
         return {
             resource: resource,
             owner: owner,
-            code: code,
+            code: code || undefined,
             severity: severity,
             message: message,
             source: source,
@@ -227,7 +228,7 @@ var MarkerService = /** @class */ (function () {
             // of one resource OR owner
             var map = owner
                 ? this._byOwner[owner]
-                : this._byResource[resource.toString()];
+                : resource ? this._byResource[resource.toString()] : undefined;
             if (!map) {
                 return [];
             }

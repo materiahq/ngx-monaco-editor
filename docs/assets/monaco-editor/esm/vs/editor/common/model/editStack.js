@@ -2,9 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { onUnexpectedError } from '../../../base/common/errors.js';
-import { EndOfLineSequence } from '../model.js';
 var EditStackElement = /** @class */ (function () {
     function EditStackElement(beforeVersionId, beforeCursorState) {
         this.beforeVersionId = beforeVersionId;
@@ -34,10 +32,10 @@ var EditStackElement = /** @class */ (function () {
 function getModelEOL(model) {
     var eol = model.getEOL();
     if (eol === '\n') {
-        return EndOfLineSequence.LF;
+        return 0 /* LF */;
     }
     else {
-        return EndOfLineSequence.CRLF;
+        return 1 /* CRLF */;
     }
 }
 var EOLStackElement = /** @class */ (function () {

@@ -2,9 +2,8 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
-import { isEmptyObject } from './types.js';
-import { forEach } from './collections.js';
+import { isEmptyObject } from '../../../base/common/types.js';
+import { forEach } from '../../../base/common/collections.js';
 function newNode(data) {
     return {
         data: data,
@@ -49,13 +48,12 @@ var Graph = /** @class */ (function () {
         }
         return node;
     };
-    Object.defineProperty(Graph.prototype, "length", {
-        get: function () {
-            return Object.keys(this._nodes).length;
-        },
-        enumerable: true,
-        configurable: true
-    });
+    Graph.prototype.isEmpty = function () {
+        for (var _key in this._nodes) {
+            return false;
+        }
+        return true;
+    };
     Graph.prototype.toString = function () {
         var data = [];
         forEach(this._nodes, function (entry) {

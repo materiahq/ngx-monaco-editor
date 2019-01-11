@@ -2,33 +2,21 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-import { Range } from './range.js';
 import { Position } from './position.js';
-/**
- * The direction of a selection.
- */
-export var SelectionDirection;
-(function (SelectionDirection) {
-    /**
-     * The selection starts above where it ends.
-     */
-    SelectionDirection[SelectionDirection["LTR"] = 0] = "LTR";
-    /**
-     * The selection starts below where it ends.
-     */
-    SelectionDirection[SelectionDirection["RTL"] = 1] = "RTL";
-})(SelectionDirection || (SelectionDirection = {}));
+import { Range } from './range.js';
 /**
  * A selection in the editor.
  * The selection is a range that has an orientation.
@@ -75,15 +63,15 @@ var Selection = /** @class */ (function (_super) {
      */
     Selection.prototype.getDirection = function () {
         if (this.selectionStartLineNumber === this.startLineNumber && this.selectionStartColumn === this.startColumn) {
-            return SelectionDirection.LTR;
+            return 0 /* LTR */;
         }
-        return SelectionDirection.RTL;
+        return 1 /* RTL */;
     };
     /**
      * Create a new selection with a different `positionLineNumber` and `positionColumn`.
      */
     Selection.prototype.setEndPosition = function (endLineNumber, endColumn) {
-        if (this.getDirection() === SelectionDirection.LTR) {
+        if (this.getDirection() === 0 /* LTR */) {
             return new Selection(this.startLineNumber, this.startColumn, endLineNumber, endColumn);
         }
         return new Selection(endLineNumber, endColumn, this.startLineNumber, this.startColumn);
@@ -98,7 +86,7 @@ var Selection = /** @class */ (function (_super) {
      * Create a new selection with a different `selectionStartLineNumber` and `selectionStartColumn`.
      */
     Selection.prototype.setStartPosition = function (startLineNumber, startColumn) {
-        if (this.getDirection() === SelectionDirection.LTR) {
+        if (this.getDirection() === 0 /* LTR */) {
             return new Selection(startLineNumber, startColumn, this.endLineNumber, this.endColumn);
         }
         return new Selection(this.endLineNumber, this.endColumn, startLineNumber, startColumn);
@@ -151,7 +139,7 @@ var Selection = /** @class */ (function (_super) {
      * Create with a direction.
      */
     Selection.createWithDirection = function (startLineNumber, startColumn, endLineNumber, endColumn, direction) {
-        if (direction === SelectionDirection.LTR) {
+        if (direction === 0 /* LTR */) {
             return new Selection(startLineNumber, startColumn, endLineNumber, endColumn);
         }
         return new Selection(endLineNumber, endColumn, startLineNumber, startColumn);

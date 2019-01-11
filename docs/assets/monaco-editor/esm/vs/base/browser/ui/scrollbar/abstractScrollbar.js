@@ -2,24 +2,26 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-import * as Platform from '../../../common/platform.js';
-import * as DomUtils from '../../dom.js';
-import { GlobalMouseMoveMonitor, standardMouseMoveMerger } from '../../globalMouseMoveMonitor.js';
-import { Widget } from '../widget.js';
+import * as dom from '../../dom.js';
 import { createFastDomNode } from '../../fastDomNode.js';
+import { GlobalMouseMoveMonitor, standardMouseMoveMerger } from '../../globalMouseMoveMonitor.js';
 import { ScrollbarArrow } from './scrollbarArrow.js';
 import { ScrollbarVisibilityController } from './scrollbarVisibilityController.js';
+import { Widget } from '../widget.js';
+import * as platform from '../../../common/platform.js';
 /**
  * The orthogonal distance to the slider at which dragging "resets". This implements "snapping"
  */
@@ -62,8 +64,12 @@ var AbstractScrollbar = /** @class */ (function (_super) {
         this.slider.setPosition('absolute');
         this.slider.setTop(top);
         this.slider.setLeft(left);
-        this.slider.setWidth(width);
-        this.slider.setHeight(height);
+        if (typeof width === 'number') {
+            this.slider.setWidth(width);
+        }
+        if (typeof height === 'number') {
+            this.slider.setHeight(height);
+        }
         this.slider.setLayerHinting(true);
         this.domNode.domNode.appendChild(this.slider.domNode);
         this.onmousedown(this.slider.domNode, function (e) {
@@ -151,7 +157,7 @@ var AbstractScrollbar = /** @class */ (function (_super) {
             offsetY = e.browserEvent.offsetY;
         }
         else {
-            var domNodePosition = DomUtils.getDomNodePagePosition(this.domNode.domNode);
+            var domNodePosition = dom.getDomNodePagePosition(this.domNode.domNode);
             offsetX = e.posx - domNodePosition.left;
             offsetY = e.posy - domNodePosition.top;
         }
@@ -170,7 +176,7 @@ var AbstractScrollbar = /** @class */ (function (_super) {
         this._mouseMoveMonitor.startMonitoring(standardMouseMoveMerger, function (mouseMoveData) {
             var mouseOrthogonalPosition = _this._sliderOrthogonalMousePosition(mouseMoveData);
             var mouseOrthogonalDelta = Math.abs(mouseOrthogonalPosition - initialMouseOrthogonalPosition);
-            if (Platform.isWindows && mouseOrthogonalDelta > MOUSE_DRAG_RESET_DISTANCE) {
+            if (platform.isWindows && mouseOrthogonalDelta > MOUSE_DRAG_RESET_DISTANCE) {
                 // The mouse has wondered away from the scrollbar => reset dragging
                 _this._setDesiredScrollPositionNow(initialScrollbarState.getScrollPosition());
                 return;

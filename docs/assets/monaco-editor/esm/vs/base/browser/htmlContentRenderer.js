@@ -2,12 +2,12 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import * as DOM from './dom.js';
 import { defaultGenerator } from '../common/idGenerator.js';
 import { escape } from '../common/strings.js';
 import { removeMarkdownEscapes } from '../common/htmlContent.js';
-import { marked } from '../common/marked/marked.js';
+import * as marked from '../common/marked/marked.js';
+import { onUnexpectedError } from '../common/errors.js';
 function createElement(options) {
     var tagName = options.inline ? 'span' : 'div';
     var element = document.createElement(tagName);
@@ -48,8 +48,8 @@ export function renderMarkdown(markdown, options) {
             if (parameters) {
                 var heightFromParams = /height=(\d+)/.exec(parameters);
                 var widthFromParams = /width=(\d+)/.exec(parameters);
-                var height = (heightFromParams && heightFromParams[1]);
-                var width = (widthFromParams && widthFromParams[1]);
+                var height = heightFromParams ? heightFromParams[1] : '';
+                var width = widthFromParams ? widthFromParams[1] : '';
                 var widthIsFinite = isFinite(parseInt(width));
                 var heightIsFinite = isFinite(parseInt(height));
                 if (widthIsFinite) {
@@ -84,7 +84,8 @@ export function renderMarkdown(markdown, options) {
         href = removeMarkdownEscapes(href);
         if (!href
             || href.match(/^data:|javascript:/i)
-            || (href.match(/^command:/i) && !markdown.isTrusted)) {
+            || (href.match(/^command:/i) && !markdown.isTrusted)
+            || href.match(/^command:(\/\/\/)?_workbench\.downloadResource/i)) {
             // drop the link
             return text;
         }
@@ -125,9 +126,17 @@ export function renderMarkdown(markdown, options) {
                     return;
                 }
             }
-            var href = target.dataset['href'];
-            if (href) {
-                options.actionHandler.callback(href, event);
+            try {
+                var href = target.dataset['href'];
+                if (href) {
+                    options.actionHandler.callback(href, event);
+                }
+            }
+            catch (err) {
+                onUnexpectedError(err);
+            }
+            finally {
+                event.preventDefault();
             }
         }));
     }
@@ -135,7 +144,7 @@ export function renderMarkdown(markdown, options) {
         sanitize: true,
         renderer: renderer
     };
-    element.innerHTML = marked(markdown.value, markedOptions);
+    element.innerHTML = marked.parse(markdown.value, markedOptions);
     signalInnerHTML();
     return element;
 }
@@ -164,7 +173,7 @@ var StringStream = /** @class */ (function () {
 function _renderFormattedText(element, treeNode, actionHandler) {
     var child;
     if (treeNode.type === 2 /* Text */) {
-        child = document.createTextNode(treeNode.content);
+        child = document.createTextNode(treeNode.content || '');
     }
     else if (treeNode.type === 3 /* Bold */) {
         child = document.createElement('b');
@@ -186,10 +195,10 @@ function _renderFormattedText(element, treeNode, actionHandler) {
     else if (treeNode.type === 1 /* Root */) {
         child = element;
     }
-    if (element !== child) {
+    if (child && element !== child) {
         element.appendChild(child);
     }
-    if (Array.isArray(treeNode.children)) {
+    if (child && Array.isArray(treeNode.children)) {
         treeNode.children.forEach(function (nodeChild) {
             _renderFormattedText(child, nodeChild, actionHandler);
         });

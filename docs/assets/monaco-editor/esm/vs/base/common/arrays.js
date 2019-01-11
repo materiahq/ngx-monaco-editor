@@ -1,8 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-'use strict';
 /**
  * Returns the last element of an array.
  * @param array The array.
@@ -12,8 +7,20 @@ export function tail(array, n) {
     if (n === void 0) { n = 0; }
     return array[array.length - (1 + n)];
 }
+export function tail2(arr) {
+    if (arr.length === 0) {
+        throw new Error('Invalid tail call');
+    }
+    return [arr.slice(0, arr.length - 1), arr[arr.length - 1]];
+}
 export function equals(one, other, itemEquals) {
     if (itemEquals === void 0) { itemEquals = function (a, b) { return a === b; }; }
+    if (one === other) {
+        return true;
+    }
+    if (!one || !other) {
+        return false;
+    }
     if (one.length !== other.length) {
         return false;
     }
@@ -111,7 +118,7 @@ function _sort(a, compare, lo, hi, aux) {
 }
 export function groupBy(data, compare) {
     var result = [];
-    var currentGroup;
+    var currentGroup = undefined;
     for (var _i = 0, _a = mergeSort(data.slice(0), compare); _i < _a.length; _i++) {
         var element = _a[_i];
         if (!currentGroup || compare(currentGroup[0], element) !== 0) {
@@ -124,25 +131,14 @@ export function groupBy(data, compare) {
     }
     return result;
 }
-export function coalesce(array, inplace) {
+/**
+ * @returns a new array with all falsy values removed. The original array IS NOT modified.
+ */
+export function coalesce(array) {
     if (!array) {
-        if (!inplace) {
-            return array;
-        }
+        return array;
     }
-    if (!inplace) {
-        return array.filter(function (e) { return !!e; });
-    }
-    else {
-        var to = 0;
-        for (var i = 0; i < array.length; i++) {
-            if (!!array[i]) {
-                array[to] = array[i];
-                to += 1;
-            }
-        }
-        array.length = to;
-    }
+    return array.filter(function (e) { return !!e; });
 }
 /**
  * @returns {{false}} if the provided object is an array
@@ -186,7 +182,8 @@ export function first(array, fn, notFoundValue) {
     return index < 0 ? notFoundValue : array[index];
 }
 export function flatten(arr) {
-    return [].concat.apply([], arr);
+    var _a;
+    return (_a = []).concat.apply(_a, arr);
 }
 export function range(arg, to) {
     var from = typeof to === 'number' ? arg : 0;

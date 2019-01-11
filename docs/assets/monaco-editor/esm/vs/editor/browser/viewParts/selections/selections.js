@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -14,10 +16,10 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import './selections.css';
-import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
-import { editorSelectionBackground, editorInactiveSelection, editorSelectionForeground } from '../../../../platform/theme/common/colorRegistry.js';
-import { DynamicViewOverlay } from '../../view/dynamicViewOverlay.js';
 import * as browser from '../../../../base/browser/browser.js';
+import { DynamicViewOverlay } from '../../view/dynamicViewOverlay.js';
+import { editorInactiveSelection, editorSelectionBackground, editorSelectionForeground } from '../../../../platform/theme/common/colorRegistry.js';
+import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
 var HorizontalRangeWithStyle = /** @class */ (function () {
     function HorizontalRangeWithStyle(other) {
         this.left = other.left;
@@ -60,8 +62,6 @@ var SelectionsOverlay = /** @class */ (function (_super) {
     }
     SelectionsOverlay.prototype.dispose = function () {
         this._context.removeEventHandler(this);
-        this._context = null;
-        this._selections = null;
         this._renderResult = null;
         _super.prototype.dispose.call(this);
     };
@@ -243,30 +243,32 @@ var SelectionsOverlay = /** @class */ (function (_super) {
             for (var j = 0, lenJ = lineVisibleRanges.ranges.length; j < lenJ; j++) {
                 var visibleRange = lineVisibleRanges.ranges[j];
                 if (visibleRangesHaveStyle) {
-                    if (visibleRange.startStyle.top === 1 /* INTERN */ || visibleRange.startStyle.bottom === 1 /* INTERN */) {
+                    var startStyle = visibleRange.startStyle;
+                    var endStyle = visibleRange.endStyle;
+                    if (startStyle.top === 1 /* INTERN */ || startStyle.bottom === 1 /* INTERN */) {
                         // Reverse rounded corner to the left
                         // First comes the selection (blue layer)
                         lineOutput += this._createSelectionPiece(top_1, lineHeight, SelectionsOverlay.SELECTION_CLASS_NAME, visibleRange.left - SelectionsOverlay.ROUNDED_PIECE_WIDTH, SelectionsOverlay.ROUNDED_PIECE_WIDTH);
                         // Second comes the background (white layer) with inverse border radius
                         var className_1 = SelectionsOverlay.EDITOR_BACKGROUND_CLASS_NAME;
-                        if (visibleRange.startStyle.top === 1 /* INTERN */) {
+                        if (startStyle.top === 1 /* INTERN */) {
                             className_1 += ' ' + SelectionsOverlay.SELECTION_TOP_RIGHT;
                         }
-                        if (visibleRange.startStyle.bottom === 1 /* INTERN */) {
+                        if (startStyle.bottom === 1 /* INTERN */) {
                             className_1 += ' ' + SelectionsOverlay.SELECTION_BOTTOM_RIGHT;
                         }
                         lineOutput += this._createSelectionPiece(top_1, lineHeight, className_1, visibleRange.left - SelectionsOverlay.ROUNDED_PIECE_WIDTH, SelectionsOverlay.ROUNDED_PIECE_WIDTH);
                     }
-                    if (visibleRange.endStyle.top === 1 /* INTERN */ || visibleRange.endStyle.bottom === 1 /* INTERN */) {
+                    if (endStyle.top === 1 /* INTERN */ || endStyle.bottom === 1 /* INTERN */) {
                         // Reverse rounded corner to the right
                         // First comes the selection (blue layer)
                         lineOutput += this._createSelectionPiece(top_1, lineHeight, SelectionsOverlay.SELECTION_CLASS_NAME, visibleRange.left + visibleRange.width, SelectionsOverlay.ROUNDED_PIECE_WIDTH);
                         // Second comes the background (white layer) with inverse border radius
                         var className_2 = SelectionsOverlay.EDITOR_BACKGROUND_CLASS_NAME;
-                        if (visibleRange.endStyle.top === 1 /* INTERN */) {
+                        if (endStyle.top === 1 /* INTERN */) {
                             className_2 += ' ' + SelectionsOverlay.SELECTION_TOP_LEFT;
                         }
-                        if (visibleRange.endStyle.bottom === 1 /* INTERN */) {
+                        if (endStyle.bottom === 1 /* INTERN */) {
                             className_2 += ' ' + SelectionsOverlay.SELECTION_BOTTOM_LEFT;
                         }
                         lineOutput += this._createSelectionPiece(top_1, lineHeight, className_2, visibleRange.left + visibleRange.width, SelectionsOverlay.ROUNDED_PIECE_WIDTH);
@@ -274,16 +276,18 @@ var SelectionsOverlay = /** @class */ (function (_super) {
                 }
                 var className = SelectionsOverlay.SELECTION_CLASS_NAME;
                 if (visibleRangesHaveStyle) {
-                    if (visibleRange.startStyle.top === 0 /* EXTERN */) {
+                    var startStyle = visibleRange.startStyle;
+                    var endStyle = visibleRange.endStyle;
+                    if (startStyle.top === 0 /* EXTERN */) {
                         className += ' ' + SelectionsOverlay.SELECTION_TOP_LEFT;
                     }
-                    if (visibleRange.startStyle.bottom === 0 /* EXTERN */) {
+                    if (startStyle.bottom === 0 /* EXTERN */) {
                         className += ' ' + SelectionsOverlay.SELECTION_BOTTOM_LEFT;
                     }
-                    if (visibleRange.endStyle.top === 0 /* EXTERN */) {
+                    if (endStyle.top === 0 /* EXTERN */) {
                         className += ' ' + SelectionsOverlay.SELECTION_TOP_RIGHT;
                     }
-                    if (visibleRange.endStyle.bottom === 0 /* EXTERN */) {
+                    if (endStyle.bottom === 0 /* EXTERN */) {
                         className += ' ' + SelectionsOverlay.SELECTION_BOTTOM_RIGHT;
                     }
                 }

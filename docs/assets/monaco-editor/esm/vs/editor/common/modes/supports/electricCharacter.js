@@ -2,10 +2,9 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
+import { StandardAutoClosingPairConditional } from '../languageConfiguration.js';
 import { ignoreBracketsInToken } from '../supports.js';
 import { BracketsUtils } from './richEditBrackets.js';
-import { StandardAutoClosingPairConditional } from '../languageConfiguration.js';
 var BracketElectricCharacterSupport = /** @class */ (function () {
     function BracketElectricCharacterSupport(richEditBrackets, autoClosePairs, contribution) {
         contribution = contribution || {};
@@ -81,7 +80,8 @@ var BracketElectricCharacterSupport = /** @class */ (function () {
                 continue;
             }
             // check if the full open bracket matches
-            var actual = line.substring(line.length - pair.open.length + 1) + character;
+            var start = column - pair.open.length + 1;
+            var actual = line.substring(start - 1, column - 1) + character;
             if (actual !== pair.open) {
                 continue;
             }

@@ -15,7 +15,7 @@ import { LESSParser } from './parser/lessParser.js';
 import { LESSCompletion } from './services/lessCompletion.js';
 import { getFoldingRanges } from './services/cssFolding.js';
 export * from './cssLanguageTypes.js';
-export * from '../vscode-languageserver-types/main.js';
+export * from './../vscode-languageserver-types/main.js';
 function createFacade(parser, completion, hover, navigation, codeActions, validation) {
     return {
         configure: validation.configure.bind(validation),

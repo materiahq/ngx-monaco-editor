@@ -2,13 +2,12 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
-import { SingleCursorState, CursorState } from './cursorCommon.js';
-import { Position } from '../core/position.js';
-import { Range } from '../core/range.js';
+import * as types from '../../../base/common/types.js';
+import { CursorState, SingleCursorState } from './cursorCommon.js';
 import { MoveOperations } from './cursorMoveOperations.js';
 import { WordOperations } from './cursorWordOperations.js';
-import * as types from '../../../base/common/types.js';
+import { Position } from '../core/position.js';
+import { Range } from '../core/range.js';
 var CursorMoveCommands = /** @class */ (function () {
     function CursorMoveCommands() {
     }

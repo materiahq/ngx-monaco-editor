@@ -2,12 +2,11 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import * as assert from '../../../base/common/assert.js';
+import { Emitter } from '../../../base/common/event.js';
+import { dispose } from '../../../base/common/lifecycle.js';
 import * as objects from '../../../base/common/objects.js';
 import { Range } from '../../common/core/range.js';
-import { dispose } from '../../../base/common/lifecycle.js';
-import { Emitter } from '../../../base/common/event.js';
 var defaultOptions = {
     followsCaret: true,
     ignoreCharChanges: true,
@@ -28,7 +27,7 @@ var DiffNavigator = /** @class */ (function () {
         this.nextIdx = -1;
         this.ranges = [];
         this.ignoreSelectionChange = false;
-        this.revealFirst = this._options.alwaysRevealFirst;
+        this.revealFirst = Boolean(this._options.alwaysRevealFirst);
         // hook up to diff editor for diff, disposal, and caret move
         this._disposables.push(this._editor.onDidDispose(function () { return _this.dispose(); }));
         this._disposables.push(this._editor.onDidUpdateDiff(function () { return _this._onDiffUpdated(); }));
@@ -106,6 +105,10 @@ var DiffNavigator = /** @class */ (function () {
     DiffNavigator.prototype._initIdx = function (fwd) {
         var found = false;
         var position = this._editor.getPosition();
+        if (!position) {
+            this.nextIdx = 0;
+            return;
+        }
         for (var i = 0, len = this.ranges.length; i < len && !found; i++) {
             var range = this.ranges[i].range;
             if (position.isBeforeOrEqual(range.getStartPosition())) {
@@ -167,7 +170,7 @@ var DiffNavigator = /** @class */ (function () {
         dispose(this._disposables);
         this._disposables.length = 0;
         this._onDidUpdate.dispose();
-        this.ranges = null;
+        this.ranges = [];
         this.disposed = true;
     };
     return DiffNavigator;

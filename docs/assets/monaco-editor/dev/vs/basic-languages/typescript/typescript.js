@@ -111,7 +111,7 @@ define(["require", "exports"], function (require, exports) {
                 // whitespace
                 { include: '@whitespace' },
                 // regular expression: ensure it is terminated before beginning (otherwise it is an opeator)
-                [/\/(?=([^\\\/]|\\.)+\/([gimuy]*)(\s*)(\.|;|\/|,|\)|\]|\}|$))/, { token: 'regexp', bracket: '@open', next: '@regexp' }],
+                [/\/(?=([^\\\/]|\\.)+\/([gimsuy]*)(\s*)(\.|;|\/|,|\)|\]|\}|$))/, { token: 'regexp', bracket: '@open', next: '@regexp' }],
                 // delimiters and operators
                 [/[()\[\]]/, '@brackets'],
                 [/[<>](?!@symbols)/, '@brackets'],
@@ -125,7 +125,7 @@ define(["require", "exports"], function (require, exports) {
                 [/(@digits)[eE]([\-+]?(@digits))?/, 'number.float'],
                 [/(@digits)\.(@digits)([eE][\-+]?(@digits))?/, 'number.float'],
                 [/0[xX](@hexdigits)/, 'number.hex'],
-                [/0(@octaldigits)/, 'number.octal'],
+                [/0[oO]?(@octaldigits)/, 'number.octal'],
                 [/0[bB](@binarydigits)/, 'number.binary'],
                 [/(@digits)/, 'number'],
                 // delimiter: after number because of .\d floats
@@ -163,7 +163,7 @@ define(["require", "exports"], function (require, exports) {
                 [/[^\\\/]/, 'regexp'],
                 [/@regexpesc/, 'regexp.escape'],
                 [/\\\./, 'regexp.invalid'],
-                ['/', { token: 'regexp', bracket: '@close' }, '@pop'],
+                [/(\/)([gimsuy]*)/, [{ token: 'regexp', bracket: '@close', next: '@pop' }, 'keyword.other']],
             ],
             regexrange: [
                 [/-/, 'regexp.escape.control'],

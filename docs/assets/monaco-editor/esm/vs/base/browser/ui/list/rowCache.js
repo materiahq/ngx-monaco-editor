@@ -5,7 +5,9 @@
 import { $, removeClass } from '../../dom.js';
 function removeFromParent(element) {
     try {
-        element.parentElement.removeChild(element);
+        if (element.parentElement) {
+            element.parentElement.removeChild(element);
+        }
     }
     catch (e) {
         // this will throw if this happens due to a blur event, nasty business
@@ -41,8 +43,10 @@ var RowCache = /** @class */ (function () {
     };
     RowCache.prototype.releaseRow = function (row) {
         var domNode = row.domNode, templateId = row.templateId;
-        removeClass(domNode, 'scrolling');
-        removeFromParent(domNode);
+        if (domNode) {
+            removeClass(domNode, 'scrolling');
+            removeFromParent(domNode);
+        }
         var cache = this.getTemplateCache(templateId);
         cache.push(row);
     };
@@ -73,7 +77,7 @@ var RowCache = /** @class */ (function () {
     RowCache.prototype.dispose = function () {
         this.garbageCollect();
         this.cache.clear();
-        this.renderers = null;
+        this.renderers = null; // StrictNullOverride: nulling out ok in dispose
     };
     return RowCache;
 }());

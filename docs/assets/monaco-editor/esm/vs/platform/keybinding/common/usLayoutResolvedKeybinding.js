@@ -2,19 +2,21 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-import { ResolvedKeybinding, ResolvedKeybindingPart, KeyCodeUtils } from '../../../base/common/keyCodes.js';
-import { UILabelProvider, AriaLabelProvider } from '../../../base/common/keybindingLabels.js';
+import { KeyCodeUtils, ResolvedKeybinding, ResolvedKeybindingPart } from '../../../base/common/keyCodes.js';
+import { AriaLabelProvider, UILabelProvider } from '../../../base/common/keybindingLabels.js';
 /**
  * Do not instantiate. Use KeybindingService to get a ResolvedKeybinding seeded with information about the current kb layout.
  */
@@ -23,7 +25,7 @@ var USLayoutResolvedKeybinding = /** @class */ (function (_super) {
     function USLayoutResolvedKeybinding(actual, OS) {
         var _this = _super.call(this) || this;
         _this._os = OS;
-        if (actual === null) {
+        if (!actual) {
             throw new Error("Invalid USLayoutResolvedKeybinding");
         }
         else if (actual.type === 2 /* Chord */) {
@@ -85,13 +87,10 @@ var USLayoutResolvedKeybinding = /** @class */ (function (_super) {
     USLayoutResolvedKeybinding.prototype.getParts = function () {
         return [
             this._toResolvedKeybindingPart(this._firstPart),
-            this._toResolvedKeybindingPart(this._chordPart)
+            this._chordPart ? this._toResolvedKeybindingPart(this._chordPart) : null
         ];
     };
     USLayoutResolvedKeybinding.prototype._toResolvedKeybindingPart = function (keybinding) {
-        if (!keybinding) {
-            return null;
-        }
         return new ResolvedKeybindingPart(keybinding.ctrlKey, keybinding.shiftKey, keybinding.altKey, keybinding.metaKey, this._getUILabelForKeybinding(keybinding), this._getAriaLabelForKeybinding(keybinding));
     };
     USLayoutResolvedKeybinding.prototype.getDispatchParts = function () {

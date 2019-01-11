@@ -3,5 +3,5 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import { createDecorator } from '../../instantiation/common/instantiation.js';
-var URI_DISPLAY_SERVICE_ID = 'uriDisplay';
-export var IUriDisplayService = createDecorator(URI_DISPLAY_SERVICE_ID);
+var LABEL_SERVICE_ID = 'label';
+export var ILabelService = createDecorator(LABEL_SERVICE_ID);

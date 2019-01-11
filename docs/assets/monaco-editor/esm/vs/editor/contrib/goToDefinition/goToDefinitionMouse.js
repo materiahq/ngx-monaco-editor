@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -14,14 +13,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 import './goToDefinitionMouse.css';
 import * as nls from '../../../nls.js';
-import { Throttler } from '../../../base/common/async.js';
+import { createCancelablePromise } from '../../../base/common/async.js';
 import { onUnexpectedError } from '../../../base/common/errors.js';
 import { MarkdownString } from '../../../base/common/htmlContent.js';
-import { TPromise } from '../../../base/common/winjs.base.js';
 import { IModeService } from '../../common/services/modeService.js';
 import { Range } from '../../common/core/range.js';
 import { DefinitionProviderRegistry } from '../../common/modes.js';
-import { MouseTargetType } from '../../browser/editorBrowser.js';
 import { registerEditorContribution } from '../../browser/editorExtensions.js';
 import { getDefinitionsAtPosition } from './goToDefinition.js';
 import { dispose } from '../../../base/common/lifecycle.js';
@@ -40,7 +37,7 @@ var GotoDefinitionWithMouseEditorContribution = /** @class */ (function () {
         this.toUnhook = [];
         this.decorations = [];
         this.editor = editor;
-        this.throttler = new Throttler();
+        this.previousPromise = null;
         var linkGesture = new ClickLinkGesture(editor);
         this.toUnhook.push(linkGesture);
         this.toUnhook.push(linkGesture.onMouseMoveOrRelevantKeyDown(function (_a) {
@@ -49,7 +46,7 @@ var GotoDefinitionWithMouseEditorContribution = /** @class */ (function () {
         }));
         this.toUnhook.push(linkGesture.onExecute(function (mouseEvent) {
             if (_this.isEnabled(mouseEvent)) {
-                _this.gotoDefinition(mouseEvent.target, mouseEvent.hasSideBySideModifier).done(function () {
+                _this.gotoDefinition(mouseEvent.target, mouseEvent.hasSideBySideModifier).then(function () {
                     _this.removeDecorations();
                 }, function (error) {
                     _this.removeDecorations();
@@ -84,11 +81,12 @@ var GotoDefinitionWithMouseEditorContribution = /** @class */ (function () {
         this.currentWordUnderMouse = word;
         // Find definition and decorate word if found
         var state = new EditorState(this.editor, 4 /* Position */ | 1 /* Value */ | 2 /* Selection */ | 8 /* Scroll */);
-        this.throttler.queue(function () {
-            return state.validate(_this.editor)
-                ? _this.findDefinition(mouseEvent.target)
-                : TPromise.wrap(null);
-        }).then(function (results) {
+        if (this.previousPromise) {
+            this.previousPromise.cancel();
+            this.previousPromise = null;
+        }
+        this.previousPromise = createCancelablePromise(function (token) { return _this.findDefinition(mouseEvent.target, token); });
+        this.previousPromise.then(function (results) {
             if (!results || !results.length || !state.validate(_this.editor)) {
                 _this.removeDecorations();
                 return;
@@ -110,7 +108,8 @@ var GotoDefinitionWithMouseEditorContribution = /** @class */ (function () {
                     }
                     var textEditorModel = ref.object.textEditorModel;
                     var startLineNumber = result_1.range.startLineNumber;
-                    if (textEditorModel.getLineMaxColumn(startLineNumber) === 0) {
+                    if (startLineNumber < 1 || startLineNumber > textEditorModel.getLineCount()) {
+                        // invalid range
                         ref.dispose();
                         return;
                     }
@@ -122,11 +121,11 @@ var GotoDefinitionWithMouseEditorContribution = /** @class */ (function () {
                     else {
                         wordRange = new Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn);
                     }
-                    _this.addDecoration(wordRange, new MarkdownString().appendCodeblock(_this.modeService.getModeIdByFilenameOrFirstLine(textEditorModel.uri.fsPath), previewValue));
+                    _this.addDecoration(wordRange, new MarkdownString().appendCodeblock(_this.modeService.getModeIdByFilepathOrFirstLine(textEditorModel.uri.fsPath), previewValue));
                     ref.dispose();
                 });
             }
-        }).done(undefined, onUnexpectedError);
+        }).then(undefined, onUnexpectedError);
     };
     GotoDefinitionWithMouseEditorContribution.prototype.getPreviewValue = function (textEditorModel, startLineNumber) {
         var rangeToUse = this.getPreviewRangeBasedOnBrackets(textEditorModel, startLineNumber);
@@ -217,16 +216,16 @@ var GotoDefinitionWithMouseEditorContribution = /** @class */ (function () {
     GotoDefinitionWithMouseEditorContribution.prototype.isEnabled = function (mouseEvent, withKey) {
         return this.editor.getModel() &&
             mouseEvent.isNoneOrSingleMouseDown &&
-            mouseEvent.target.type === MouseTargetType.CONTENT_TEXT &&
+            mouseEvent.target.type === 6 /* CONTENT_TEXT */ &&
             (mouseEvent.hasTriggerModifier || (withKey && withKey.keyCodeIsTriggerKey)) &&
             DefinitionProviderRegistry.has(this.editor.getModel());
     };
-    GotoDefinitionWithMouseEditorContribution.prototype.findDefinition = function (target) {
+    GotoDefinitionWithMouseEditorContribution.prototype.findDefinition = function (target, token) {
         var model = this.editor.getModel();
         if (!model) {
-            return TPromise.as(null);
+            return Promise.resolve(null);
         }
-        return getDefinitionsAtPosition(model, target.position);
+        return getDefinitionsAtPosition(model, target.position, token);
     };
     GotoDefinitionWithMouseEditorContribution.prototype.gotoDefinition = function (target, sideBySide) {
         var _this = this;

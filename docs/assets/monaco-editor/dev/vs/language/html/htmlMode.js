@@ -5,7 +5,6 @@ define('vs/language/html/workerManager',["require", "exports"], function (requir
      *--------------------------------------------------------------------------------------------*/
     'use strict';
     Object.defineProperty(exports, "__esModule", { value: true });
-    var Promise = monaco.Promise;
     var STOP_WHEN_IDLE_FOR = 2 * 60 * 1000; // 2min
     var WorkerManager = /** @class */ (function () {
         function WorkerManager(defaults) {
@@ -61,25 +60,15 @@ define('vs/language/html/workerManager',["require", "exports"], function (requir
                 resources[_i] = arguments[_i];
             }
             var _client;
-            return toShallowCancelPromise(this._getClient().then(function (client) {
+            return this._getClient().then(function (client) {
                 _client = client;
             }).then(function (_) {
                 return _this._worker.withSyncedResources(resources);
-            }).then(function (_) { return _client; }));
+            }).then(function (_) { return _client; });
         };
         return WorkerManager;
     }());
     exports.WorkerManager = WorkerManager;
-    function toShallowCancelPromise(p) {
-        var completeCallback;
-        var errorCallback;
-        var r = new Promise(function (c, e) {
-            completeCallback = c;
-            errorCallback = e;
-        }, function () { });
-        p.then(completeCallback, errorCallback);
-        return r;
-    }
 });
 
 (function (factory) {
@@ -1640,47 +1629,6 @@ define('vs/language/html/languageFeatures',["require", "exports", "vscode-langua
             text: textEdit.newText
         };
     }
-    function toCompletionItem(entry) {
-        return {
-            label: entry.label,
-            insertText: entry.insertText,
-            sortText: entry.sortText,
-            filterText: entry.filterText,
-            documentation: entry.documentation,
-            detail: entry.detail,
-            kind: toCompletionItemKind(entry.kind),
-            textEdit: toTextEdit(entry.textEdit),
-            data: entry.data
-        };
-    }
-    function fromMarkdownString(entry) {
-        return {
-            kind: (typeof entry === 'string' ? ls.MarkupKind.PlainText : ls.MarkupKind.Markdown),
-            value: (typeof entry === 'string' ? entry : entry.value)
-        };
-    }
-    function fromCompletionItem(entry) {
-        var item = {
-            label: entry.label,
-            sortText: entry.sortText,
-            filterText: entry.filterText,
-            documentation: fromMarkdownString(entry.documentation),
-            detail: entry.detail,
-            kind: fromCompletionItemKind(entry.kind),
-            data: entry.data
-        };
-        if (typeof entry.insertText === 'object' && typeof entry.insertText.value === 'string') {
-            item.insertText = entry.insertText.value;
-            item.insertTextFormat = ls.InsertTextFormat.Snippet;
-        }
-        else {
-            item.insertText = entry.insertText;
-        }
-        if (entry.range) {
-            item.textEdit = ls.TextEdit.replace(fromRange(entry.range), item.insertText);
-        }
-        return item;
-    }
     var CompletionAdapter = /** @class */ (function () {
         function CompletionAdapter(_worker) {
             this._worker = _worker;
@@ -1692,10 +1640,10 @@ define('vs/language/html/languageFeatures',["require", "exports", "vscode-langua
             enumerable: true,
             configurable: true
         });
-        CompletionAdapter.prototype.provideCompletionItems = function (model, position, token) {
+        CompletionAdapter.prototype.provideCompletionItems = function (model, position, context, token) {
             var wordInfo = model.getWordUntilPosition(position);
             var resource = model.uri;
-            return wireCancellationToken(token, this._worker(resource).then(function (worker) {
+            return this._worker(resource).then(function (worker) {
                 return worker.doComplete(resource.toString(), fromPosition(position));
             }).then(function (info) {
                 if (!info) {
@@ -1704,7 +1652,7 @@ define('vs/language/html/languageFeatures',["require", "exports", "vscode-langua
                 var items = info.items.map(function (entry) {
                     var item = {
                         label: entry.label,
-                        insertText: entry.insertText,
+                        insertText: entry.insertText || entry.label,
                         sortText: entry.sortText,
                         filterText: entry.filterText,
                         documentation: entry.documentation,
@@ -1715,16 +1663,19 @@ define('vs/language/html/languageFeatures',["require", "exports", "vscode-langua
                         item.range = toRange(entry.textEdit.range);
                         item.insertText = entry.textEdit.newText;
                     }
+                    if (entry.additionalTextEdits) {
+                        item.additionalTextEdits = entry.additionalTextEdits.map(toTextEdit);
+                    }
                     if (entry.insertTextFormat === ls.InsertTextFormat.Snippet) {
-                        item.insertText = { value: item.insertText };
+                        item.insertTextRules = monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet;
                     }
                     return item;
                 });
                 return {
                     isIncomplete: info.isIncomplete,
-                    items: items
+                    suggestions: items
                 };
-            }));
+            });
         };
         return CompletionAdapter;
     }());
@@ -1765,7 +1716,7 @@ define('vs/language/html/languageFeatures',["require", "exports", "vscode-langua
         }
         DocumentHighlightAdapter.prototype.provideDocumentHighlights = function (model, position, token) {
             var resource = model.uri;
-            return wireCancellationToken(token, this._worker(resource).then(function (worker) { return worker.findDocumentHighlights(resource.toString(), fromPosition(position)); }).then(function (items) {
+            return this._worker(resource).then(function (worker) { return worker.findDocumentHighlights(resource.toString(), fromPosition(position)); }).then(function (items) {
                 if (!items) {
                     return;
                 }
@@ -1773,7 +1724,7 @@ define('vs/language/html/languageFeatures',["require", "exports", "vscode-langua
                     range: toRange(item.range),
                     kind: toHighlighKind(item.kind)
                 }); });
-            }));
+            });
         };
         return DocumentHighlightAdapter;
     }());
@@ -1784,7 +1735,7 @@ define('vs/language/html/languageFeatures',["require", "exports", "vscode-langua
         }
         DocumentLinkAdapter.prototype.provideLinks = function (model, token) {
             var resource = model.uri;
-            return wireCancellationToken(token, this._worker(resource).then(function (worker) { return worker.findDocumentLinks(resource.toString()); }).then(function (items) {
+            return this._worker(resource).then(function (worker) { return worker.findDocumentLinks(resource.toString()); }).then(function (items) {
                 if (!items) {
                     return;
                 }
@@ -1792,7 +1743,7 @@ define('vs/language/html/languageFeatures',["require", "exports", "vscode-langua
                     range: toRange(item.range),
                     url: item.target
                 }); });
-            }));
+            });
         };
         return DocumentLinkAdapter;
     }());
@@ -1809,14 +1760,14 @@ define('vs/language/html/languageFeatures',["require", "exports", "vscode-langua
         }
         DocumentFormattingEditProvider.prototype.provideDocumentFormattingEdits = function (model, options, token) {
             var resource = model.uri;
-            return wireCancellationToken(token, this._worker(resource).then(function (worker) {
+            return this._worker(resource).then(function (worker) {
                 return worker.format(resource.toString(), null, fromFormattingOptions(options)).then(function (edits) {
                     if (!edits || edits.length === 0) {
                         return;
                     }
                     return edits.map(toTextEdit);
                 });
-            }));
+            });
         };
         return DocumentFormattingEditProvider;
     }());
@@ -1827,14 +1778,14 @@ define('vs/language/html/languageFeatures',["require", "exports", "vscode-langua
         }
         DocumentRangeFormattingEditProvider.prototype.provideDocumentRangeFormattingEdits = function (model, range, options, token) {
             var resource = model.uri;
-            return wireCancellationToken(token, this._worker(resource).then(function (worker) {
+            return this._worker(resource).then(function (worker) {
                 return worker.format(resource.toString(), fromRange(range), fromFormattingOptions(options)).then(function (edits) {
                     if (!edits || edits.length === 0) {
                         return;
                     }
                     return edits.map(toTextEdit);
                 });
-            }));
+            });
         };
         return DocumentRangeFormattingEditProvider;
     }());
@@ -1845,7 +1796,7 @@ define('vs/language/html/languageFeatures',["require", "exports", "vscode-langua
         }
         FoldingRangeAdapter.prototype.provideFoldingRanges = function (model, context, token) {
             var resource = model.uri;
-            return wireCancellationToken(token, this._worker(resource).then(function (worker) { return worker.provideFoldingRanges(resource.toString(), context); }).then(function (ranges) {
+            return this._worker(resource).then(function (worker) { return worker.provideFoldingRanges(resource.toString(), context); }).then(function (ranges) {
                 if (!ranges) {
                     return;
                 }
@@ -1859,7 +1810,7 @@ define('vs/language/html/languageFeatures',["require", "exports", "vscode-langua
                     }
                     return result;
                 });
-            }));
+            });
         };
         return FoldingRangeAdapter;
     }());
@@ -1871,15 +1822,6 @@ define('vs/language/html/languageFeatures',["require", "exports", "vscode-langua
             case ls.FoldingRangeKind.Region: return monaco.languages.FoldingRangeKind.Region;
         }
         return void 0;
-    }
-    /**
-     * Hook a cancellation token to a WinJS Promise
-     */
-    function wireCancellationToken(token, promise) {
-        if (promise.cancel) {
-            token.onCancellationRequested(function () { return promise.cancel(); });
-        }
-        return promise;
     }
 });
 

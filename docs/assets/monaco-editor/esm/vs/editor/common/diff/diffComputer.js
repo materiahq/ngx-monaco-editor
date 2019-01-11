@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { LcsDiff } from '../../../base/common/diff/diff.js';
 import * as strings from '../../../base/common/strings.js';
 var MAXIMUM_RUN_TIME = 5000; // 5 seconds
@@ -181,7 +180,7 @@ var LineChange = /** @class */ (function () {
         var originalEndLineNumber;
         var modifiedStartLineNumber;
         var modifiedEndLineNumber;
-        var charChanges;
+        var charChanges = undefined;
         if (diffChange.originalLength === 0) {
             originalStartLineNumber = originalLineSequence.getStartLineNumber(diffChange.originalStart) - 1;
             originalEndLineNumber = 0;
@@ -344,7 +343,7 @@ var DiffComputer = /** @class */ (function () {
             // Merged into previous
             return;
         }
-        var charChanges;
+        var charChanges = undefined;
         if (this.shouldComputeCharChanges) {
             charChanges = [new CharChange(originalLineNumber, originalStartColumn, originalLineNumber, originalEndColumn, modifiedLineNumber, modifiedStartColumn, modifiedLineNumber, modifiedEndColumn)];
         }

@@ -2,14 +2,14 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
-import { toDisposable } from '../../../base/common/lifecycle.js';
 import { Emitter } from '../../../base/common/event.js';
+import { toDisposable } from '../../../base/common/lifecycle.js';
 var TokenizationRegistryImpl = /** @class */ (function () {
     function TokenizationRegistryImpl() {
         this._onDidChange = new Emitter();
         this.onDidChange = this._onDidChange.event;
         this._map = Object.create(null);
+        this._promises = Object.create(null);
         this._colorMap = null;
     }
     TokenizationRegistryImpl.prototype.fire = function (languages) {
@@ -30,6 +30,18 @@ var TokenizationRegistryImpl = /** @class */ (function () {
             _this.fire([language]);
         });
     };
+    TokenizationRegistryImpl.prototype.getPromise = function (language) {
+        var _this = this;
+        var support = this.get(language);
+        if (support) {
+            return Promise.resolve(support);
+        }
+        var promise = this._promises[language];
+        if (promise) {
+            return promise.then(function (_) { return _this.get(language); });
+        }
+        return null;
+    };
     TokenizationRegistryImpl.prototype.get = function (language) {
         return (this._map[language] || null);
     };
@@ -44,7 +56,10 @@ var TokenizationRegistryImpl = /** @class */ (function () {
         return this._colorMap;
     };
     TokenizationRegistryImpl.prototype.getDefaultBackground = function () {
-        return this._colorMap[2 /* DefaultBackground */];
+        if (this._colorMap && this._colorMap.length > 2 /* DefaultBackground */) {
+            return this._colorMap[2 /* DefaultBackground */];
+        }
+        return null;
     };
     return TokenizationRegistryImpl;
 }());

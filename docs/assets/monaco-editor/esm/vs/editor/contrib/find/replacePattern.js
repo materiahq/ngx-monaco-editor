@@ -2,19 +2,36 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+/**
+ * Assigned when the replace pattern is entirely static.
+ */
+var StaticValueReplacePattern = /** @class */ (function () {
+    function StaticValueReplacePattern(staticValue) {
+        this.staticValue = staticValue;
+        this.kind = 0 /* StaticValue */;
+    }
+    return StaticValueReplacePattern;
+}());
+/**
+ * Assigned when the replace pattern has replacemend patterns.
+ */
+var DynamicPiecesReplacePattern = /** @class */ (function () {
+    function DynamicPiecesReplacePattern(pieces) {
+        this.pieces = pieces;
+        this.kind = 1 /* DynamicPieces */;
+    }
+    return DynamicPiecesReplacePattern;
+}());
 var ReplacePattern = /** @class */ (function () {
     function ReplacePattern(pieces) {
         if (!pieces || pieces.length === 0) {
-            this._staticValue = '';
-            this._pieces = null;
+            this._state = new StaticValueReplacePattern('');
         }
         else if (pieces.length === 1 && pieces[0].staticValue !== null) {
-            this._staticValue = pieces[0].staticValue;
-            this._pieces = null;
+            this._state = new StaticValueReplacePattern(pieces[0].staticValue);
         }
         else {
-            this._staticValue = null;
-            this._pieces = pieces;
+            this._state = new DynamicPiecesReplacePattern(pieces);
         }
     }
     ReplacePattern.fromStaticValue = function (value) {
@@ -22,18 +39,18 @@ var ReplacePattern = /** @class */ (function () {
     };
     Object.defineProperty(ReplacePattern.prototype, "hasReplacementPatterns", {
         get: function () {
-            return this._staticValue === null;
+            return (this._state.kind === 1 /* DynamicPieces */);
         },
         enumerable: true,
         configurable: true
     });
     ReplacePattern.prototype.buildReplaceString = function (matches) {
-        if (this._staticValue !== null) {
-            return this._staticValue;
+        if (this._state.kind === 0 /* StaticValue */) {
+            return this._state.staticValue;
         }
         var result = '';
-        for (var i = 0, len = this._pieces.length; i < len; i++) {
-            var piece = this._pieces[i];
+        for (var i = 0, len = this._state.pieces.length; i < len; i++) {
+            var piece = this._state.pieces[i];
             if (piece.staticValue !== null) {
                 // static value ReplacePiece
                 result += piece.staticValue;
@@ -45,6 +62,9 @@ var ReplacePattern = /** @class */ (function () {
         return result;
     };
     ReplacePattern._substitute = function (matchIndex, matches) {
+        if (matches === null) {
+            return '';
+        }
         if (matchIndex === 0) {
             return matches[0];
         }
@@ -146,7 +166,7 @@ export function parseReplaceString(replaceString) {
                 break;
             }
             var nextChCode = replaceString.charCodeAt(i);
-            // let replaceWithCharacter: string = null;
+            // let replaceWithCharacter: string | null = null;
             switch (nextChCode) {
                 case 92 /* Backslash */:
                     // \\ => inserts a "\"

@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 /**
  * Represent whitespaces in between lines and provide fast CRUD management methods.
  * The whitespaces are sorted ascending by `afterLineNumber`.

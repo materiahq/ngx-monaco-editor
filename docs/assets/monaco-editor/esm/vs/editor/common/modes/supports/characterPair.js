@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { StandardAutoClosingPairConditional } from '../languageConfiguration.js';
 var CharacterPairSupport = /** @class */ (function () {
     function CharacterPairSupport(config) {
@@ -15,10 +14,14 @@ var CharacterPairSupport = /** @class */ (function () {
         else {
             this._autoClosingPairs = [];
         }
+        this._autoCloseBefore = typeof config.autoCloseBefore === 'string' ? config.autoCloseBefore : CharacterPairSupport.DEFAULT_AUTOCLOSE_BEFORE_LANGUAGE_DEFINED;
         this._surroundingPairs = config.surroundingPairs || this._autoClosingPairs;
     }
     CharacterPairSupport.prototype.getAutoClosingPairs = function () {
         return this._autoClosingPairs;
+    };
+    CharacterPairSupport.prototype.getAutoCloseBeforeSet = function () {
+        return this._autoCloseBefore;
     };
     CharacterPairSupport.prototype.shouldAutoClosePair = function (character, context, column) {
         // Always complete on empty line
@@ -38,6 +41,7 @@ var CharacterPairSupport = /** @class */ (function () {
     CharacterPairSupport.prototype.getSurroundingPairs = function () {
         return this._surroundingPairs;
     };
+    CharacterPairSupport.DEFAULT_AUTOCLOSE_BEFORE_LANGUAGE_DEFINED = ';:.,=}])> \n\t';
     return CharacterPairSupport;
 }());
 export { CharacterPairSupport };

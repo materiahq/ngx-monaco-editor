@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { toUint32 } from '../core/uint.js';
 var PrefixSumIndexOfResult = /** @class */ (function () {
     function PrefixSumIndexOfResult(index, remainder) {
@@ -119,9 +118,9 @@ var PrefixSumComputer = /** @class */ (function () {
         this.getTotalValue();
         var low = 0;
         var high = this.values.length - 1;
-        var mid;
-        var midStop;
-        var midStart;
+        var mid = 0;
+        var midStop = 0;
+        var midStart = 0;
         while (low <= high) {
             mid = low + ((high - low) / 2) | 0;
             midStop = this.prefixSum[mid];

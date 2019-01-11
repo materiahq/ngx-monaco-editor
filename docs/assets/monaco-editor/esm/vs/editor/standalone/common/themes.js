@@ -2,10 +2,9 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var _a, _b, _c;
-import { editorBackground, editorForeground, editorSelectionHighlight, editorInactiveSelection } from '../../../platform/theme/common/colorRegistry.js';
-import { editorIndentGuides, editorActiveIndentGuides } from '../../common/view/editorColorRegistry.js';
+import { editorActiveIndentGuides, editorIndentGuides } from '../../common/view/editorColorRegistry.js';
+import { editorBackground, editorForeground, editorInactiveSelection, editorSelectionHighlight } from '../../../platform/theme/common/colorRegistry.js';
 /* -------------------------------- Begin vs theme -------------------------------- */
 export var vs = {
     base: 'vs',
@@ -178,3 +177,4 @@ export var hc_black = {
         _c[editorActiveIndentGuides] = '#FFFFFF',
         _c)
 };
+/* -------------------------------- End hc-black theme -------------------------------- */

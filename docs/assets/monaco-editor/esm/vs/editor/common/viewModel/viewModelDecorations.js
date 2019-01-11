@@ -2,9 +2,8 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
-import { Range } from '../core/range.js';
 import { Position } from '../core/position.js';
+import { Range } from '../core/range.js';
 import { InlineDecoration, ViewModelDecoration } from './viewModel.js';
 var ViewModelDecorations = /** @class */ (function () {
     function ViewModelDecorations(editorId, model, configuration, linesCollection, coordinatesConverter) {
@@ -21,7 +20,7 @@ var ViewModelDecorations = /** @class */ (function () {
         this._cachedModelDecorationsResolverViewRange = null;
     };
     ViewModelDecorations.prototype.dispose = function () {
-        this._decorationsCache = null;
+        this._decorationsCache = Object.create(null);
         this._clearCachedModelDecorationsResolver();
     };
     ViewModelDecorations.prototype.reset = function () {

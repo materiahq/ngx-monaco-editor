@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -14,16 +16,14 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import * as nls from '../../../../nls.js';
+import * as browser from '../../../../base/browser/browser.js';
 import { onUnexpectedError } from '../../../../base/common/errors.js';
 import { matchesFuzzy } from '../../../../base/common/filters.js';
-import { TPromise } from '../../../../base/common/winjs.base.js';
 import { QuickOpenEntryGroup, QuickOpenModel } from '../../../../base/parts/quickopen/browser/quickOpenModel.js';
-import { Mode } from '../../../../base/parts/quickopen/common/quickOpen.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
+import { registerEditorAction } from '../../../browser/editorExtensions.js';
 import { EditorContextKeys } from '../../../common/editorContextKeys.js';
 import { BaseEditorQuickOpenAction } from './editorQuickOpen.js';
-import { registerEditorAction } from '../../../browser/editorExtensions.js';
-import * as browser from '../../../../base/browser/browser.js';
+import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
 var EditorActionCommandEntry = /** @class */ (function (_super) {
     __extends(EditorActionCommandEntry, _super);
     function EditorActionCommandEntry(key, highlights, action, editor) {
@@ -45,19 +45,19 @@ var EditorActionCommandEntry = /** @class */ (function (_super) {
     };
     EditorActionCommandEntry.prototype.run = function (mode, context) {
         var _this = this;
-        if (mode === Mode.OPEN) {
+        if (mode === 1 /* OPEN */) {
             // Use a timeout to give the quick open widget a chance to close itself first
-            TPromise.timeout(50).done(function () {
+            setTimeout(function () {
                 // Some actions are enabled only when editor has focus
                 _this.editor.focus();
                 try {
-                    var promise = _this.action.run() || TPromise.as(null);
-                    promise.done(null, onUnexpectedError);
+                    var promise = _this.action.run() || Promise.resolve();
+                    promise.then(null, onUnexpectedError);
                 }
                 catch (error) {
                     onUnexpectedError(error);
                 }
-            }, onUnexpectedError);
+            }, 50);
             return true;
         }
         return false;

@@ -41,15 +41,11 @@ define(["require", "exports"], function (require, exports) {
             '__DATA__',
             'else',
             'lock',
-            'qw',
             '__END__',
             'elsif',
             'lt',
-            'qx',
             '__FILE__',
             'eq',
-            'm',
-            's',
             '__LINE__',
             'exp',
             'ne',
@@ -57,7 +53,6 @@ define(["require", "exports"], function (require, exports) {
             '__PACKAGE__',
             'for',
             'no',
-            'tr',
             'and',
             'foreach',
             'or',
@@ -68,16 +63,12 @@ define(["require", "exports"], function (require, exports) {
             'until',
             'continue',
             'gt',
-            'q',
             'while',
             'CORE',
             'if',
-            'qq',
             'xor',
             'do',
             'le',
-            'qr',
-            'y',
             '__DIE__',
             '__WARN__',
         ],
@@ -456,18 +447,20 @@ define(["require", "exports"], function (require, exports) {
         ],
         // operators
         symbols: /[:+\-\^*$&%@=<>!?|\/~\.]/,
+        quoteLikeOps: ['qr', 'm', 's', 'q', 'qq', 'qx', 'qw', 'tr', 'y'],
         escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
         // The main tokenizer for our languages
         tokenizer: {
             root: [
                 { include: '@whitespace' },
                 [
-                    /[a-zA-Z\-_][\w\-_]+/,
+                    /[a-zA-Z\-_][\w\-_]*/,
                     {
                         cases: {
                             '@keywords': 'keyword',
                             '@builtinFunctions': 'type.identifier',
                             '@builtinFileHandlers': 'variable.predefined',
+                            '@quoteLikeOps': { token: '@rematch', next: 'quotedConstructs' },
                             '@default': '',
                         },
                     },
@@ -491,7 +484,7 @@ define(["require", "exports"], function (require, exports) {
                 [/[{}\[\]()]/, '@brackets'],
                 // RegExp
                 [
-                    /[goseximacplud]*[\/](?:(?:\[(?:\\]|[^\]])+\])|(?:\\\/|[^\]\/]))*[\/]\w*\s*(?=[).,;]|$)/,
+                    /[\/](?:(?:\[(?:\\]|[^\]])+\])|(?:\\\/|[^\]\/]))*[\/]\w*\s*(?=[).,;]|$)/,
                     'regexp',
                 ],
                 [/@symbols/, 'operators'],
@@ -523,6 +516,72 @@ define(["require", "exports"], function (require, exports) {
                 [/\\./, 'string.escape.invalid'],
                 { include: '@variables' },
                 [/./, 'string'],
+            ],
+            // Quoted constructs
+            // Percent strings in Ruby are similar to quote-like operators in Perl.
+            // This is adapted from pstrings in ../ruby/ruby.ts.
+            quotedConstructs: [
+                [/(q|qw|tr|y)\s*\(/, { token: 'string.delim', switchTo: '@qstring.(.)' }],
+                [/(q|qw|tr|y)\s*\[/, { token: 'string.delim', switchTo: '@qstring.[.]' }],
+                [/(q|qw|tr|y)\s*\{/, { token: 'string.delim', switchTo: '@qstring.{.}' }],
+                [/(q|qw|tr|y)\s*</, { token: 'string.delim', switchTo: '@qstring.<.>' }],
+                [/(q|qw|tr|y)#/, { token: 'string.delim', switchTo: '@qstring.#.#' }],
+                [/(q|qw|tr|y)\s*([^A-Za-z0-9#\s])/, { token: 'string.delim', switchTo: '@qstring.$2.$2' }],
+                [/(q|qw|tr|y)\s+(\w)/, { token: 'string.delim', switchTo: '@qstring.$2.$2' }],
+                [/(qr|m|s)\s*\(/, { token: 'regexp.delim', switchTo: '@qregexp.(.)' }],
+                [/(qr|m|s)\s*\[/, { token: 'regexp.delim', switchTo: '@qregexp.[.]' }],
+                [/(qr|m|s)\s*\{/, { token: 'regexp.delim', switchTo: '@qregexp.{.}' }],
+                [/(qr|m|s)\s*</, { token: 'regexp.delim', switchTo: '@qregexp.<.>' }],
+                [/(qr|m|s)#/, { token: 'regexp.delim', switchTo: '@qregexp.#.#' }],
+                [/(qr|m|s)\s*([^A-Za-z0-9_#\s])/, { token: 'regexp.delim', switchTo: '@qregexp.$2.$2' }],
+                [/(qr|m|s)\s+(\w)/, { token: 'regexp.delim', switchTo: '@qregexp.$2.$2' }],
+                [/(qq|qx)\s*\(/, { token: 'string.delim', switchTo: '@qqstring.(.)' }],
+                [/(qq|qx)\s*\[/, { token: 'string.delim', switchTo: '@qqstring.[.]' }],
+                [/(qq|qx)\s*\{/, { token: 'string.delim', switchTo: '@qqstring.{.}' }],
+                [/(qq|qx)\s*</, { token: 'string.delim', switchTo: '@qqstring.<.>' }],
+                [/(qq|qx)#/, { token: 'string.delim', switchTo: '@qqstring.#.#' }],
+                [/(qq|qx)\s*([^A-Za-z0-9#\s])/, { token: 'string.delim', switchTo: '@qqstring.$2.$2' }],
+                [/(qq|qx)\s+(\w)/, { token: 'string.delim', switchTo: '@qqstring.$2.$2' }],
+            ],
+            // Non-expanded quoted string
+            // qstring<open>.<close>
+            //  open = open delimiter
+            //  close = close delimiter
+            qstring: [
+                [/\\./, 'string.escape'],
+                [/./, {
+                        cases: {
+                            '$#==$S3': { token: 'string.delim', next: '@pop' },
+                            '$#==$S2': { token: 'string.delim', next: '@push' },
+                            '@default': 'string'
+                        }
+                    }],
+            ],
+            // Quoted regexp
+            // qregexp.<open>.<close>
+            //  open = open delimiter
+            //  close = close delimiter
+            qregexp: [
+                { include: '@variables' },
+                [/\\./, 'regexp.escape'],
+                [/./, {
+                        cases: {
+                            '$#==$S3': { token: 'regexp.delim', next: '@regexpModifiers' },
+                            '$#==$S2': { token: 'regexp.delim', next: '@push' },
+                            '@default': 'regexp'
+                        }
+                    }],
+            ],
+            regexpModifiers: [
+                [/[msixpodualngcer]+/, { token: 'regexp.modifier', next: '@popall' }],
+            ],
+            // Expanded quoted string
+            // qqstring.<open>.<close>
+            //  open = open delimiter
+            //  close = close delimiter
+            qqstring: [
+                { include: '@variables' },
+                { include: '@qstring' },
             ],
             heredoc: [
                 [

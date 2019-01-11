@@ -109,7 +109,7 @@ export var language = {
             // whitespace
             { include: '@whitespace' },
             // regular expression: ensure it is terminated before beginning (otherwise it is an opeator)
-            [/\/(?=([^\\\/]|\\.)+\/([gimuy]*)(\s*)(\.|;|\/|,|\)|\]|\}|$))/, { token: 'regexp', bracket: '@open', next: '@regexp' }],
+            [/\/(?=([^\\\/]|\\.)+\/([gimsuy]*)(\s*)(\.|;|\/|,|\)|\]|\}|$))/, { token: 'regexp', bracket: '@open', next: '@regexp' }],
             // delimiters and operators
             [/[()\[\]]/, '@brackets'],
             [/[<>](?!@symbols)/, '@brackets'],
@@ -123,7 +123,7 @@ export var language = {
             [/(@digits)[eE]([\-+]?(@digits))?/, 'number.float'],
             [/(@digits)\.(@digits)([eE][\-+]?(@digits))?/, 'number.float'],
             [/0[xX](@hexdigits)/, 'number.hex'],
-            [/0(@octaldigits)/, 'number.octal'],
+            [/0[oO]?(@octaldigits)/, 'number.octal'],
             [/0[bB](@binarydigits)/, 'number.binary'],
             [/(@digits)/, 'number'],
             // delimiter: after number because of .\d floats
@@ -161,7 +161,7 @@ export var language = {
             [/[^\\\/]/, 'regexp'],
             [/@regexpesc/, 'regexp.escape'],
             [/\\\./, 'regexp.invalid'],
-            ['/', { token: 'regexp', bracket: '@close' }, '@pop'],
+            [/(\/)([gimsuy]*)/, [{ token: 'regexp', bracket: '@close', next: '@pop' }, 'keyword.other']],
         ],
         regexrange: [
             [/-/, 'regexp.escape.control'],

@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -59,22 +61,21 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 import './links.css';
 import * as nls from '../../../nls.js';
-import { onUnexpectedError } from '../../../base/common/errors.js';
-import * as platform from '../../../base/common/platform.js';
-import { IOpenerService } from '../../../platform/opener/common/opener.js';
-import { registerEditorAction, registerEditorContribution, EditorAction } from '../../browser/editorExtensions.js';
-import { LinkProviderRegistry } from '../../common/modes.js';
-import { MouseTargetType } from '../../browser/editorBrowser.js';
-import { getLinks } from './getLinks.js';
-import { dispose } from '../../../base/common/lifecycle.js';
-import { registerThemingParticipant } from '../../../platform/theme/common/themeService.js';
-import { editorActiveLinkForeground } from '../../../platform/theme/common/colorRegistry.js';
-import { ModelDecorationOptions } from '../../common/model/textModel.js';
-import { ClickLinkGesture } from '../goToDefinition/clickLinkGesture.js';
-import { MarkdownString } from '../../../base/common/htmlContent.js';
-import { TrackedRangeStickiness } from '../../common/model.js';
-import { INotificationService } from '../../../platform/notification/common/notification.js';
 import * as async from '../../../base/common/async.js';
+import { CancellationToken } from '../../../base/common/cancellation.js';
+import { onUnexpectedError } from '../../../base/common/errors.js';
+import { MarkdownString } from '../../../base/common/htmlContent.js';
+import { dispose } from '../../../base/common/lifecycle.js';
+import * as platform from '../../../base/common/platform.js';
+import { EditorAction, registerEditorAction, registerEditorContribution } from '../../browser/editorExtensions.js';
+import { ModelDecorationOptions } from '../../common/model/textModel.js';
+import { LinkProviderRegistry } from '../../common/modes.js';
+import { ClickLinkGesture } from '../goToDefinition/clickLinkGesture.js';
+import { getLinks } from './getLinks.js';
+import { INotificationService } from '../../../platform/notification/common/notification.js';
+import { IOpenerService } from '../../../platform/opener/common/opener.js';
+import { editorActiveLinkForeground } from '../../../platform/theme/common/colorRegistry.js';
+import { registerThemingParticipant } from '../../../platform/theme/common/themeService.js';
 var HOVER_MESSAGE_GENERAL_META = new MarkdownString().appendText(platform.isMacintosh
     ? nls.localize('links.navigate.mac', "Cmd + click to follow link")
     : nls.localize('links.navigate', "Ctrl + click to follow link"));
@@ -89,42 +90,50 @@ var HOVER_MESSAGE_COMMAND_ALT = new MarkdownString().appendText(platform.isMacin
     : nls.localize('links.command.al', "Alt + click to execute command"));
 var decoration = {
     meta: ModelDecorationOptions.register({
-        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
+        collapseOnReplaceEdit: true,
         inlineClassName: 'detected-link',
         hoverMessage: HOVER_MESSAGE_GENERAL_META
     }),
     metaActive: ModelDecorationOptions.register({
-        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
+        collapseOnReplaceEdit: true,
         inlineClassName: 'detected-link-active',
         hoverMessage: HOVER_MESSAGE_GENERAL_META
     }),
     alt: ModelDecorationOptions.register({
-        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
+        collapseOnReplaceEdit: true,
         inlineClassName: 'detected-link',
         hoverMessage: HOVER_MESSAGE_GENERAL_ALT
     }),
     altActive: ModelDecorationOptions.register({
-        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
+        collapseOnReplaceEdit: true,
         inlineClassName: 'detected-link-active',
         hoverMessage: HOVER_MESSAGE_GENERAL_ALT
     }),
     altCommand: ModelDecorationOptions.register({
-        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
+        collapseOnReplaceEdit: true,
         inlineClassName: 'detected-link',
         hoverMessage: HOVER_MESSAGE_COMMAND_ALT
     }),
     altCommandActive: ModelDecorationOptions.register({
-        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
+        collapseOnReplaceEdit: true,
         inlineClassName: 'detected-link-active',
         hoverMessage: HOVER_MESSAGE_COMMAND_ALT
     }),
     metaCommand: ModelDecorationOptions.register({
-        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
+        collapseOnReplaceEdit: true,
         inlineClassName: 'detected-link',
         hoverMessage: HOVER_MESSAGE_COMMAND_META
     }),
     metaCommandActive: ModelDecorationOptions.register({
-        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
+        collapseOnReplaceEdit: true,
         inlineClassName: 'detected-link-active',
         hoverMessage: HOVER_MESSAGE_COMMAND_META
     }),
@@ -141,7 +150,7 @@ var LinkOccurrence = /** @class */ (function () {
         };
     };
     LinkOccurrence._getOptions = function (link, useMetaKey, isActive) {
-        if (/^command:/i.test(link.url)) {
+        if (link.url && /^command:/i.test(link.url)) {
             if (useMetaKey) {
                 return (isActive ? decoration.metaCommandActive : decoration.metaCommand);
             }
@@ -232,18 +241,18 @@ var LinkDetector = /** @class */ (function () {
     };
     LinkDetector.prototype.beginCompute = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var links, err_1;
-            var _this = this;
+            var model, links, err_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        if (!this.editor.getModel() || !this.enabled) {
+                        if (!this.editor.hasModel() || !this.enabled) {
                             return [2 /*return*/];
                         }
-                        if (!LinkProviderRegistry.has(this.editor.getModel())) {
+                        model = this.editor.getModel();
+                        if (!LinkProviderRegistry.has(model)) {
                             return [2 /*return*/];
                         }
-                        this.computePromise = async.createCancelablePromise(function (token) { return getLinks(_this.editor.getModel(), token); });
+                        this.computePromise = async.createCancelablePromise(function (token) { return getLinks(model, token); });
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, 4, 5]);
@@ -333,7 +342,7 @@ var LinkDetector = /** @class */ (function () {
             return;
         }
         var link = occurrence.link;
-        link.resolve().then(function (uri) {
+        link.resolve(CancellationToken.None).then(function (uri) {
             // open the uri
             return _this.openerService.open(uri, { openToSide: openToSide });
         }, function (err) {
@@ -347,9 +356,12 @@ var LinkDetector = /** @class */ (function () {
             else {
                 onUnexpectedError(err);
             }
-        }).done(null, onUnexpectedError);
+        });
     };
     LinkDetector.prototype.getLinkOccurrence = function (position) {
+        if (!this.editor.hasModel() || !position) {
+            return null;
+        }
         var decorations = this.editor.getModel().getDecorationsInRange({
             startLineNumber: position.lineNumber,
             startColumn: position.column,
@@ -366,7 +378,7 @@ var LinkDetector = /** @class */ (function () {
         return null;
     };
     LinkDetector.prototype.isEnabled = function (mouseEvent, withKey) {
-        return (mouseEvent.target.type === MouseTargetType.CONTENT_TEXT
+        return Boolean((mouseEvent.target.type === 6 /* CONTENT_TEXT */)
             && (mouseEvent.hasTriggerModifier || (withKey && withKey.keyCodeIsTriggerKey)));
     };
     LinkDetector.prototype.stop = function () {
@@ -402,6 +414,9 @@ var OpenLinkAction = /** @class */ (function (_super) {
     OpenLinkAction.prototype.run = function (accessor, editor) {
         var linkDetector = LinkDetector.get(editor);
         if (!linkDetector) {
+            return;
+        }
+        if (!editor.hasModel()) {
             return;
         }
         var selections = editor.getSelections();

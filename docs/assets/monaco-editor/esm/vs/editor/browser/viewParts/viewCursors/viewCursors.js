@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -14,13 +16,13 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import './viewCursors.css';
+import { createFastDomNode } from '../../../../base/browser/fastDomNode.js';
+import { IntervalTimer, TimeoutTimer } from '../../../../base/common/async.js';
 import { ViewPart } from '../../view/viewPart.js';
 import { ViewCursor } from './viewCursor.js';
-import { createFastDomNode } from '../../../../base/browser/fastDomNode.js';
-import { TimeoutTimer, IntervalTimer } from '../../../../base/common/async.js';
+import { TextEditorCursorStyle } from '../../../common/config/editorOptions.js';
+import { editorCursorBackground, editorCursorForeground } from '../../../common/view/editorColorRegistry.js';
 import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
-import { editorCursorForeground, editorCursorBackground } from '../../../common/view/editorColorRegistry.js';
-import { TextEditorCursorBlinkingStyle, TextEditorCursorStyle } from '../../../common/config/editorOptions.js';
 var ViewCursors = /** @class */ (function (_super) {
     __extends(ViewCursors, _super);
     function ViewCursors(context) {
@@ -158,10 +160,10 @@ var ViewCursors = /** @class */ (function (_super) {
     // ---- blinking logic
     ViewCursors.prototype._getCursorBlinking = function () {
         if (!this._editorHasFocus) {
-            return TextEditorCursorBlinkingStyle.Hidden;
+            return 0 /* Hidden */;
         }
         if (this._readOnly) {
-            return TextEditorCursorBlinkingStyle.Solid;
+            return 5 /* Solid */;
         }
         return this._cursorBlinking;
     };
@@ -171,8 +173,8 @@ var ViewCursors = /** @class */ (function (_super) {
         this._cursorFlatBlinkInterval.cancel();
         var blinkingStyle = this._getCursorBlinking();
         // hidden and solid are special as they involve no animations
-        var isHidden = (blinkingStyle === TextEditorCursorBlinkingStyle.Hidden);
-        var isSolid = (blinkingStyle === TextEditorCursorBlinkingStyle.Solid);
+        var isHidden = (blinkingStyle === 0 /* Hidden */);
+        var isSolid = (blinkingStyle === 5 /* Solid */);
         if (isHidden) {
             this._hide();
         }
@@ -182,7 +184,7 @@ var ViewCursors = /** @class */ (function (_super) {
         this._blinkingEnabled = false;
         this._updateDomClassName();
         if (!isHidden && !isSolid) {
-            if (blinkingStyle === TextEditorCursorBlinkingStyle.Blink) {
+            if (blinkingStyle === 1 /* Blink */) {
                 // flat blinking is handled by JavaScript to save battery life due to Chromium step timing issue https://bugs.chromium.org/p/chromium/issues/detail?id=361587
                 this._cursorFlatBlinkInterval.cancelAndSet(function () {
                     if (_this._isVisible) {
@@ -234,19 +236,19 @@ var ViewCursors = /** @class */ (function (_super) {
         }
         if (this._blinkingEnabled) {
             switch (this._getCursorBlinking()) {
-                case TextEditorCursorBlinkingStyle.Blink:
+                case 1 /* Blink */:
                     result += ' cursor-blink';
                     break;
-                case TextEditorCursorBlinkingStyle.Smooth:
+                case 2 /* Smooth */:
                     result += ' cursor-smooth';
                     break;
-                case TextEditorCursorBlinkingStyle.Phase:
+                case 3 /* Phase */:
                     result += ' cursor-phase';
                     break;
-                case TextEditorCursorBlinkingStyle.Expand:
+                case 4 /* Expand */:
                     result += ' cursor-expand';
                     break;
-                case TextEditorCursorBlinkingStyle.Solid:
+                case 5 /* Solid */:
                     result += ' cursor-solid';
                     break;
                 default:

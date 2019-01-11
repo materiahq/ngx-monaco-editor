@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -52,12 +54,11 @@ var Lock = /** @class */ (function () {
         var _this = this;
         var lock = this.getLock(item);
         if (lock) {
-            var unbindListener;
             return new WinJS.TPromise(function (c, e) {
-                unbindListener = once(lock.onDispose)(function () {
+                once(lock.onDispose)(function () {
                     return _this.run(item, fn).then(c, e);
                 });
-            }, function () { unbindListener.dispose(); });
+            });
         }
         var result;
         return new WinJS.TPromise(function (c, e) {
@@ -71,7 +72,7 @@ var Lock = /** @class */ (function () {
                 return r;
             }).then(c, e);
             return result;
-        }, function () { return result.cancel(); });
+        });
     };
     Lock.prototype.getLock = function (item) {
         var key;
@@ -240,6 +241,9 @@ var Item = /** @class */ (function () {
             return WinJS.TPromise.as(false);
         }
         var result = this.lock.run(this, function () {
+            if (_this.isExpanded() || !_this.doesHaveChildren) {
+                return WinJS.TPromise.as(false);
+            }
             var eventData = { item: _this };
             var result;
             _this._onExpand.fire(eventData);
@@ -322,7 +326,11 @@ var Item = /** @class */ (function () {
         if (safe === void 0) { safe = false; }
         if (force === void 0) { force = false; }
         if (!force && !this.isExpanded()) {
-            this.needsChildrenRefresh = true;
+            var setNeedsChildrenRefresh_1 = function (item) {
+                item.needsChildrenRefresh = true;
+                item.forEachChild(setNeedsChildrenRefresh_1);
+            };
+            setNeedsChildrenRefresh_1(this);
             return WinJS.TPromise.as(this);
         }
         this.needsChildrenRefresh = false;
@@ -372,8 +380,15 @@ var Item = /** @class */ (function () {
                     }));
                 }
                 else {
-                    _this.mapEachChild(function (child) { return child.updateVisibility(); });
-                    return WinJS.TPromise.as(null);
+                    return WinJS.Promise.join(_this.mapEachChild(function (child) {
+                        if (child.isExpanded() && child.needsChildrenRefresh) {
+                            return child.doRefresh(recursive, true);
+                        }
+                        else {
+                            child.updateVisibility();
+                            return WinJS.TPromise.as(null);
+                        }
+                    }));
                 }
             });
             return result

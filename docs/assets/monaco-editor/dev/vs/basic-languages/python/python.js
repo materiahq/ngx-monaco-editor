@@ -200,19 +200,20 @@ define(["require", "exports"], function (require, exports) {
             whitespace: [
                 [/\s+/, 'white'],
                 [/(^#.*$)/, 'comment'],
-                [/('''.*''')|(""".*""")/, 'string'],
-                [/'''.*$/, 'string', '@endDocString'],
-                [/""".*$/, 'string', '@endDblDocString']
+                [/'''/, 'string', '@endDocString'],
+                [/"""/, 'string', '@endDblDocString']
             ],
             endDocString: [
+                [/[^']+/, 'string'],
                 [/\\'/, 'string'],
-                [/.*'''/, 'string', '@popall'],
-                [/.*$/, 'string']
+                [/'''/, 'string', '@popall'],
+                [/'/, 'string']
             ],
             endDblDocString: [
+                [/[^"]+/, 'string'],
                 [/\\"/, 'string'],
-                [/.*"""/, 'string', '@popall'],
-                [/.*$/, 'string']
+                [/"""/, 'string', '@popall'],
+                [/"/, 'string']
             ],
             // Recognize hex, negatives, decimals, imaginaries, longs, and scientific notation
             numbers: [
@@ -227,18 +228,18 @@ define(["require", "exports"], function (require, exports) {
                 [/"/, 'string.escape', '@dblStringBody']
             ],
             stringBody: [
+                [/[^\\']+$/, 'string', '@popall'],
+                [/[^\\']+/, 'string'],
                 [/\\./, 'string'],
                 [/'/, 'string.escape', '@popall'],
-                [/.(?=.*')/, 'string'],
-                [/.*\\$/, 'string'],
-                [/.*$/, 'string', '@popall']
+                [/\\$/, 'string']
             ],
             dblStringBody: [
+                [/[^\\"]+$/, 'string', '@popall'],
+                [/[^\\"]+/, 'string'],
                 [/\\./, 'string'],
                 [/"/, 'string.escape', '@popall'],
-                [/.(?=.*")/, 'string'],
-                [/.*\\$/, 'string'],
-                [/.*$/, 'string', '@popall']
+                [/\\$/, 'string']
             ]
         }
     };

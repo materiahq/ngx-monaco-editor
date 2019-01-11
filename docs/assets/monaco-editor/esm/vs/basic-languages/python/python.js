@@ -198,19 +198,20 @@ export var language = {
         whitespace: [
             [/\s+/, 'white'],
             [/(^#.*$)/, 'comment'],
-            [/('''.*''')|(""".*""")/, 'string'],
-            [/'''.*$/, 'string', '@endDocString'],
-            [/""".*$/, 'string', '@endDblDocString']
+            [/'''/, 'string', '@endDocString'],
+            [/"""/, 'string', '@endDblDocString']
         ],
         endDocString: [
+            [/[^']+/, 'string'],
             [/\\'/, 'string'],
-            [/.*'''/, 'string', '@popall'],
-            [/.*$/, 'string']
+            [/'''/, 'string', '@popall'],
+            [/'/, 'string']
         ],
         endDblDocString: [
+            [/[^"]+/, 'string'],
             [/\\"/, 'string'],
-            [/.*"""/, 'string', '@popall'],
-            [/.*$/, 'string']
+            [/"""/, 'string', '@popall'],
+            [/"/, 'string']
         ],
         // Recognize hex, negatives, decimals, imaginaries, longs, and scientific notation
         numbers: [
@@ -225,18 +226,18 @@ export var language = {
             [/"/, 'string.escape', '@dblStringBody']
         ],
         stringBody: [
+            [/[^\\']+$/, 'string', '@popall'],
+            [/[^\\']+/, 'string'],
             [/\\./, 'string'],
             [/'/, 'string.escape', '@popall'],
-            [/.(?=.*')/, 'string'],
-            [/.*\\$/, 'string'],
-            [/.*$/, 'string', '@popall']
+            [/\\$/, 'string']
         ],
         dblStringBody: [
+            [/[^\\"]+$/, 'string', '@popall'],
+            [/[^\\"]+/, 'string'],
             [/\\./, 'string'],
             [/"/, 'string.escape', '@popall'],
-            [/.(?=.*")/, 'string'],
-            [/.*\\$/, 'string'],
-            [/.*$/, 'string', '@popall']
+            [/\\$/, 'string']
         ]
     }
 };

@@ -2,20 +2,18 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
-import { Position } from '../../common/core/position.js';
 import { CoreNavigationCommands } from '../controller/coreCommands.js';
+import { Position } from '../../common/core/position.js';
 var ViewController = /** @class */ (function () {
-    function ViewController(configuration, viewModel, execCommandFunc, outgoingEvents, commandDelegate) {
+    function ViewController(configuration, viewModel, outgoingEvents, commandDelegate) {
         this.configuration = configuration;
         this.viewModel = viewModel;
-        this._execCoreEditorCommandFunc = execCommandFunc;
         this.outgoingEvents = outgoingEvents;
         this.commandDelegate = commandDelegate;
     }
     ViewController.prototype._execMouseCommand = function (editorCommand, args) {
         args.source = 'mouse';
-        this._execCoreEditorCommandFunc(editorCommand, args);
+        this.commandDelegate.executeEditorCommand(editorCommand, args);
     };
     ViewController.prototype.paste = function (source, text, pasteOnNewLine, multicursorText) {
         this.commandDelegate.paste(source, text, pasteOnNewLine, multicursorText);
@@ -36,7 +34,7 @@ var ViewController = /** @class */ (function () {
         this.commandDelegate.cut(source);
     };
     ViewController.prototype.setSelection = function (source, modelSelection) {
-        this._execCoreEditorCommandFunc(CoreNavigationCommands.SetSelection, {
+        this.commandDelegate.executeEditorCommand(CoreNavigationCommands.SetSelection, {
             source: source,
             selection: modelSelection
         });

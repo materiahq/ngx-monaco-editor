@@ -2,20 +2,19 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { first2 } from '../../../base/common/async.js';
+import { first } from '../../../base/common/async.js';
 import { isFalsyOrEmpty } from '../../../base/common/arrays.js';
-import { compareIgnoreCase } from '../../../base/common/strings.js';
 import { assign } from '../../../base/common/objects.js';
-import { onUnexpectedExternalError } from '../../../base/common/errors.js';
+import { onUnexpectedExternalError, canceled } from '../../../base/common/errors.js';
 import { registerDefaultLanguageCommand } from '../../browser/editorExtensions.js';
-import { SuggestRegistry, SuggestTriggerKind } from '../../common/modes.js';
+import { CompletionProviderRegistry } from '../../common/modes.js';
 import { RawContextKey } from '../../../platform/contextkey/common/contextkey.js';
 import { CancellationToken } from '../../../base/common/cancellation.js';
+import { Range } from '../../common/core/range.js';
 export var Context = {
     Visible: new RawContextKey('suggestWidgetVisible', false),
     MultipleSuggestions: new RawContextKey('suggestWidgetMultipleSuggestions', false),
     MakesTextEdit: new RawContextKey('suggestionMakesTextEdit', true),
-    AcceptOnKey: new RawContextKey('suggestionSupportsAcceptOnKey', true),
     AcceptSuggestionsOnEnter: new RawContextKey('acceptSuggestionOnEnter', true)
 };
 var _snippetSuggestSupport;
@@ -27,14 +26,16 @@ export function provideSuggestionItems(model, position, snippetConfig, onlyFrom,
     if (token === void 0) { token = CancellationToken.None; }
     var allSuggestions = [];
     var acceptSuggestion = createSuggesionFilter(snippetConfig);
+    var wordUntil = model.getWordUntilPosition(position);
+    var defaultRange = new Range(position.lineNumber, wordUntil.startColumn, position.lineNumber, wordUntil.endColumn);
     position = position.clone();
     // get provider groups, always add snippet suggestion provider
-    var supports = SuggestRegistry.orderedGroups(model);
+    var supports = CompletionProviderRegistry.orderedGroups(model);
     // add snippets provider unless turned off
     if (snippetConfig !== 'none' && _snippetSuggestSupport) {
         supports.unshift([_snippetSuggestSupport]);
     }
-    var suggestConext = context || { triggerKind: SuggestTriggerKind.Invoke };
+    var suggestConext = context || { triggerKind: 0 /* Invoke */ };
     // add suggestions from contributed providers - providers are ordered in groups of
     // equal score and once a group produces a result the process stops
     var hasResult = false;
@@ -50,7 +51,12 @@ export function provideSuggestionItems(model, position, snippetConfig, onlyFrom,
                     for (var _i = 0, _a = container.suggestions; _i < _a.length; _i++) {
                         var suggestion = _a[_i];
                         if (acceptSuggestion(suggestion)) {
-                            fixOverwriteBeforeAfter(suggestion, container);
+                            // fill in default range when missing
+                            if (!suggestion.range) {
+                                suggestion.range = defaultRange;
+                            }
+                            // fill in lower-case text
+                            ensureLowerCaseVariants(suggestion);
                             allSuggestions.push({
                                 position: position,
                                 container: container,
@@ -67,7 +73,15 @@ export function provideSuggestionItems(model, position, snippetConfig, onlyFrom,
             }, onUnexpectedExternalError);
         }));
     }; });
-    var result = first2(factory, function () { return hasResult; }).then(function () { return allSuggestions.sort(getSuggestionComparator(snippetConfig)); });
+    var result = first(factory, function () {
+        // stop on result or cancellation
+        return hasResult || token.isCancellationRequested;
+    }).then(function () {
+        if (token.isCancellationRequested) {
+            return Promise.reject(canceled());
+        }
+        return allSuggestions.sort(getSuggestionComparator(snippetConfig));
+    });
     // result.then(items => {
     // 	console.log(model.getWordUntilPosition(position), items.map(item => `${item.suggestion.label}, type=${item.suggestion.type}, incomplete?${item.container.incomplete}, overwriteBefore=${item.suggestion.overwriteBefore}`));
     // 	return items;
@@ -76,70 +90,76 @@ export function provideSuggestionItems(model, position, snippetConfig, onlyFrom,
     // });
     return result;
 }
-function fixOverwriteBeforeAfter(suggestion, container) {
-    if (typeof suggestion.overwriteBefore !== 'number') {
-        suggestion.overwriteBefore = 0;
+export function ensureLowerCaseVariants(suggestion) {
+    if (!suggestion._labelLow) {
+        suggestion._labelLow = suggestion.label.toLowerCase();
     }
-    if (typeof suggestion.overwriteAfter !== 'number' || suggestion.overwriteAfter < 0) {
-        suggestion.overwriteAfter = 0;
+    if (suggestion.sortText && !suggestion._sortTextLow) {
+        suggestion._sortTextLow = suggestion.sortText.toLowerCase();
+    }
+    if (suggestion.filterText && !suggestion._filterTextLow) {
+        suggestion._filterTextLow = suggestion.filterText.toLowerCase();
     }
 }
 function createSuggestionResolver(provider, suggestion, model, position) {
+    var cached;
     return function (token) {
-        if (typeof provider.resolveCompletionItem === 'function') {
-            return Promise.resolve(provider.resolveCompletionItem(model, position, suggestion, token)).then(function (value) { assign(suggestion, value); });
+        if (!cached) {
+            if (typeof provider.resolveCompletionItem === 'function') {
+                cached = Promise.resolve(provider.resolveCompletionItem(model, position, suggestion, token)).then(function (value) { assign(suggestion, value); });
+            }
+            else {
+                cached = Promise.resolve(void 0);
+            }
         }
-        else {
-            return Promise.resolve(void 0);
-        }
+        return cached;
     };
 }
 function createSuggesionFilter(snippetConfig) {
     if (snippetConfig === 'none') {
-        return function (suggestion) { return suggestion.type !== 'snippet'; };
+        return function (suggestion) { return suggestion.kind !== 25 /* Snippet */; };
     }
     else {
         return function () { return true; };
     }
 }
 function defaultComparator(a, b) {
-    var ret = 0;
     // check with 'sortText'
-    if (typeof a.suggestion.sortText === 'string' && typeof b.suggestion.sortText === 'string') {
-        ret = compareIgnoreCase(a.suggestion.sortText, b.suggestion.sortText);
-    }
-    // check with 'label'
-    if (ret === 0) {
-        ret = compareIgnoreCase(a.suggestion.label, b.suggestion.label);
-    }
-    // check with 'type' and lower snippets
-    if (ret === 0 && a.suggestion.type !== b.suggestion.type) {
-        if (a.suggestion.type === 'snippet') {
-            ret = 1;
-        }
-        else if (b.suggestion.type === 'snippet') {
-            ret = -1;
-        }
-    }
-    return ret;
-}
-function snippetUpComparator(a, b) {
-    if (a.suggestion.type !== b.suggestion.type) {
-        if (a.suggestion.type === 'snippet') {
+    if (a.suggestion._sortTextLow && b.suggestion._sortTextLow) {
+        if (a.suggestion._sortTextLow < b.suggestion._sortTextLow) {
             return -1;
         }
-        else if (b.suggestion.type === 'snippet') {
+        else if (a.suggestion._sortTextLow > b.suggestion._sortTextLow) {
+            return 1;
+        }
+    }
+    // check with 'label'
+    if (a.suggestion.label < b.suggestion.label) {
+        return -1;
+    }
+    else if (a.suggestion.label > b.suggestion.label) {
+        return 1;
+    }
+    // check with 'type'
+    return a.suggestion.kind - b.suggestion.kind;
+}
+function snippetUpComparator(a, b) {
+    if (a.suggestion.kind !== b.suggestion.kind) {
+        if (a.suggestion.kind === 25 /* Snippet */) {
+            return -1;
+        }
+        else if (b.suggestion.kind === 25 /* Snippet */) {
             return 1;
         }
     }
     return defaultComparator(a, b);
 }
 function snippetDownComparator(a, b) {
-    if (a.suggestion.type !== b.suggestion.type) {
-        if (a.suggestion.type === 'snippet') {
+    if (a.suggestion.kind !== b.suggestion.kind) {
+        if (a.suggestion.kind === 25 /* Snippet */) {
             return 1;
         }
-        else if (b.suggestion.type === 'snippet') {
+        else if (b.suggestion.kind === 25 /* Snippet */) {
             return -1;
         }
     }
@@ -190,7 +210,7 @@ var _provider = new /** @class */ (function () {
     };
     return class_1;
 }());
-SuggestRegistry.register('*', _provider);
+CompletionProviderRegistry.register('*', _provider);
 export function showSimpleSuggestions(editor, suggestions) {
     setTimeout(function () {
         var _a;

@@ -2,11 +2,10 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import * as strings from '../../../base/common/strings.js';
 import { CursorColumns } from '../controller/cursorCommon.js';
 import { Range } from '../core/range.js';
-import { Selection, SelectionDirection } from '../core/selection.js';
+import { Selection } from '../core/selection.js';
 import { LanguageConfigurationRegistry } from '../modes/languageConfigurationRegistry.js';
 var ShiftCommand = /** @class */ (function () {
     function ShiftCommand(range, opts) {
@@ -183,7 +182,7 @@ var ShiftCommand = /** @class */ (function () {
             if (resultStartColumn <= initialStartColumn) {
                 return result;
             }
-            if (result.getDirection() === SelectionDirection.LTR) {
+            if (result.getDirection() === 0 /* LTR */) {
                 return new Selection(result.startLineNumber, initialStartColumn, result.endLineNumber, result.endColumn);
             }
             return new Selection(result.endLineNumber, result.endColumn, result.startLineNumber, initialStartColumn);

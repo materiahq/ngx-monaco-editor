@@ -5,7 +5,6 @@ define(["require", "exports"], function (require, exports) {
      *--------------------------------------------------------------------------------------------*/
     'use strict';
     Object.defineProperty(exports, "__esModule", { value: true });
-    var Promise = monaco.Promise;
     var WorkerManager = /** @class */ (function () {
         function WorkerManager(modeId, defaults) {
             var _this = this;
@@ -71,23 +70,13 @@ define(["require", "exports"], function (require, exports) {
                 resources[_i] = arguments[_i];
             }
             var _client;
-            return toShallowCancelPromise(this._getClient().then(function (client) {
+            return this._getClient().then(function (client) {
                 _client = client;
             }).then(function (_) {
                 return _this._worker.withSyncedResources(resources);
-            }).then(function (_) { return _client; }));
+            }).then(function (_) { return _client; });
         };
         return WorkerManager;
     }());
     exports.WorkerManager = WorkerManager;
-    function toShallowCancelPromise(p) {
-        var completeCallback;
-        var errorCallback;
-        var r = new Promise(function (c, e) {
-            completeCallback = c;
-            errorCallback = e;
-        }, function () { });
-        p.then(completeCallback, errorCallback);
-        return r;
-    }
 });

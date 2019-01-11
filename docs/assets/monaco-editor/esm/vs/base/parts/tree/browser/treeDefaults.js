@@ -1,28 +1,7 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-'use strict';
 import * as platform from '../../../common/platform.js';
 import * as errors from '../../../common/errors.js';
 import * as dom from '../../../browser/dom.js';
 import { createKeybinding } from '../../../common/keyCodes.js';
-export var ClickBehavior;
-(function (ClickBehavior) {
-    /**
-     * Handle the click when the mouse button is pressed but not released yet.
-     */
-    ClickBehavior[ClickBehavior["ON_MOUSE_DOWN"] = 0] = "ON_MOUSE_DOWN";
-    /**
-     * Handle the click when the mouse button is released.
-     */
-    ClickBehavior[ClickBehavior["ON_MOUSE_UP"] = 1] = "ON_MOUSE_UP";
-})(ClickBehavior || (ClickBehavior = {}));
-export var OpenMode;
-(function (OpenMode) {
-    OpenMode[OpenMode["SINGLE_CLICK"] = 0] = "SINGLE_CLICK";
-    OpenMode[OpenMode["DOUBLE_CLICK"] = 1] = "DOUBLE_CLICK";
-})(OpenMode || (OpenMode = {}));
 var KeybindingDispatcher = /** @class */ (function () {
     function KeybindingDispatcher() {
         this._arr = [];
@@ -48,7 +27,7 @@ var KeybindingDispatcher = /** @class */ (function () {
 export { KeybindingDispatcher };
 var DefaultController = /** @class */ (function () {
     function DefaultController(options) {
-        if (options === void 0) { options = { clickBehavior: ClickBehavior.ON_MOUSE_DOWN, keyboardSupport: true, openMode: OpenMode.SINGLE_CLICK }; }
+        if (options === void 0) { options = { clickBehavior: 0 /* ON_MOUSE_DOWN */, keyboardSupport: true, openMode: 0 /* SINGLE_CLICK */ }; }
         var _this = this;
         this.options = options;
         this.downKeyBindingDispatcher = new KeybindingDispatcher();
@@ -75,7 +54,7 @@ var DefaultController = /** @class */ (function () {
     }
     DefaultController.prototype.onMouseDown = function (tree, element, event, origin) {
         if (origin === void 0) { origin = 'mouse'; }
-        if (this.options.clickBehavior === ClickBehavior.ON_MOUSE_DOWN && (event.leftButton || event.middleButton)) {
+        if (this.options.clickBehavior === 0 /* ON_MOUSE_DOWN */ && (event.leftButton || event.middleButton)) {
             if (event.target) {
                 if (event.target.tagName && event.target.tagName.toLowerCase() === 'input') {
                     return false; // Ignore event if target is a form input field (avoids browser specific issues)
@@ -103,7 +82,7 @@ var DefaultController = /** @class */ (function () {
         if (event.target && event.target.tagName && event.target.tagName.toLowerCase() === 'input') {
             return false; // Ignore event if target is a form input field (avoids browser specific issues)
         }
-        if (this.options.clickBehavior === ClickBehavior.ON_MOUSE_DOWN && (event.leftButton || event.middleButton)) {
+        if (this.options.clickBehavior === 0 /* ON_MOUSE_DOWN */ && (event.leftButton || event.middleButton)) {
             return false; // Already handled by onMouseDown
         }
         return this.onLeftClick(tree, element, event);
@@ -127,10 +106,10 @@ var DefaultController = /** @class */ (function () {
             tree.setFocus(element, payload);
             if (this.shouldToggleExpansion(element, event, origin)) {
                 if (tree.isExpanded(element)) {
-                    tree.collapse(element).done(null, errors.onUnexpectedError);
+                    tree.collapse(element).then(null, errors.onUnexpectedError);
                 }
                 else {
-                    tree.expand(element).done(null, errors.onUnexpectedError);
+                    tree.expand(element).then(null, errors.onUnexpectedError);
                 }
             }
         }
@@ -145,7 +124,7 @@ var DefaultController = /** @class */ (function () {
     };
     Object.defineProperty(DefaultController.prototype, "openOnSingleClick", {
         get: function () {
-            return this.options.openMode === OpenMode.SINGLE_CLICK;
+            return this.options.openMode === 0 /* SINGLE_CLICK */;
         },
         enumerable: true,
         configurable: true
@@ -189,6 +168,7 @@ var DefaultController = /** @class */ (function () {
     DefaultController.prototype.onKey = function (bindings, tree, event) {
         var handler = bindings.dispatch(event.toKeybinding());
         if (handler) {
+            // TODO: TS 3.1 upgrade. Why are we checking against void?
             if (handler(tree, event)) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -204,7 +184,7 @@ var DefaultController = /** @class */ (function () {
         }
         else {
             tree.focusPrevious(1, payload);
-            tree.reveal(tree.getFocus()).done(null, errors.onUnexpectedError);
+            tree.reveal(tree.getFocus()).then(null, errors.onUnexpectedError);
         }
         return true;
     };
@@ -215,7 +195,7 @@ var DefaultController = /** @class */ (function () {
         }
         else {
             tree.focusPreviousPage(payload);
-            tree.reveal(tree.getFocus()).done(null, errors.onUnexpectedError);
+            tree.reveal(tree.getFocus()).then(null, errors.onUnexpectedError);
         }
         return true;
     };
@@ -226,7 +206,7 @@ var DefaultController = /** @class */ (function () {
         }
         else {
             tree.focusNext(1, payload);
-            tree.reveal(tree.getFocus()).done(null, errors.onUnexpectedError);
+            tree.reveal(tree.getFocus()).then(null, errors.onUnexpectedError);
         }
         return true;
     };
@@ -237,7 +217,7 @@ var DefaultController = /** @class */ (function () {
         }
         else {
             tree.focusNextPage(payload);
-            tree.reveal(tree.getFocus()).done(null, errors.onUnexpectedError);
+            tree.reveal(tree.getFocus()).then(null, errors.onUnexpectedError);
         }
         return true;
     };
@@ -248,7 +228,7 @@ var DefaultController = /** @class */ (function () {
         }
         else {
             tree.focusFirst(payload);
-            tree.reveal(tree.getFocus()).done(null, errors.onUnexpectedError);
+            tree.reveal(tree.getFocus()).then(null, errors.onUnexpectedError);
         }
         return true;
     };
@@ -259,7 +239,7 @@ var DefaultController = /** @class */ (function () {
         }
         else {
             tree.focusLast(payload);
-            tree.reveal(tree.getFocus()).done(null, errors.onUnexpectedError);
+            tree.reveal(tree.getFocus()).then(null, errors.onUnexpectedError);
         }
         return true;
     };
@@ -276,7 +256,7 @@ var DefaultController = /** @class */ (function () {
                     return tree.reveal(tree.getFocus());
                 }
                 return undefined;
-            }).done(null, errors.onUnexpectedError);
+            }).then(null, errors.onUnexpectedError);
         }
         return true;
     };
@@ -293,7 +273,7 @@ var DefaultController = /** @class */ (function () {
                     return tree.reveal(tree.getFocus());
                 }
                 return undefined;
-            }).done(null, errors.onUnexpectedError);
+            }).then(null, errors.onUnexpectedError);
         }
         return true;
     };

@@ -2,14 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import * as strings from '../../../base/common/strings.js';
 import { EditOperation } from '../../common/core/editOperation.js';
 import { Position } from '../../common/core/position.js';
 import { Range } from '../../common/core/range.js';
 import { Selection } from '../../common/core/selection.js';
-import { BlockCommentCommand } from './blockCommentCommand.js';
 import { LanguageConfigurationRegistry } from '../../common/modes/languageConfigurationRegistry.js';
+import { BlockCommentCommand } from './blockCommentCommand.js';
 var LineCommentCommand = /** @class */ (function () {
     function LineCommentCommand(selection, tabSize, type) {
         this._selection = selection;
@@ -119,9 +118,7 @@ var LineCommentCommand = /** @class */ (function () {
         var lines = LineCommentCommand._gatherPreflightCommentStrings(model, startLineNumber, endLineNumber);
         if (lines === null) {
             return {
-                supported: false,
-                shouldRemoveComments: false,
-                lines: null
+                supported: false
             };
         }
         return LineCommentCommand._analyzeLines(type, model, lines, startLineNumber);
@@ -144,7 +141,7 @@ var LineCommentCommand = /** @class */ (function () {
             if (ops[i].range.isEmpty() && ops[i].range.getStartPosition().equals(cursorPosition)) {
                 var lineContent = model.getLineContent(cursorPosition.lineNumber);
                 if (lineContent.length + 1 === cursorPosition.column) {
-                    this._deltaColumn = ops[i].text.length;
+                    this._deltaColumn = (ops[i].text || '').length;
                 }
             }
         }

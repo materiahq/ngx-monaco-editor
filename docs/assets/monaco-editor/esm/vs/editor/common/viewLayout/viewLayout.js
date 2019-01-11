@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -14,7 +16,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import { Disposable } from '../../../base/common/lifecycle.js';
-import { Scrollable, ScrollbarVisibility } from '../../../base/common/scrollable.js';
+import { Scrollable } from '../../../base/common/scrollable.js';
 import { LinesLayout } from './linesLayout.js';
 import { Viewport } from '../viewModel/viewModel.js';
 var SMOOTH_SCROLLING_TIME = 125;
@@ -70,7 +72,7 @@ var ViewLayout = /** @class */ (function (_super) {
     };
     // ---- end view event handlers
     ViewLayout.prototype._getHorizontalScrollbarHeight = function (scrollDimensions) {
-        if (this._configuration.editor.viewInfo.scrollbar.horizontal === ScrollbarVisibility.Hidden) {
+        if (this._configuration.editor.viewInfo.scrollbar.horizontal === 2 /* Hidden */) {
             // horizontal scrollbar not visible
             return 0;
         }

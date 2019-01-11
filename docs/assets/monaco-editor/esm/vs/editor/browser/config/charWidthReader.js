@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var CharWidthRequest = /** @class */ (function () {
     function CharWidthRequest(chr, type) {
         this.chr = chr;
@@ -40,21 +39,21 @@ var DomCharWidthReader = /** @class */ (function () {
         container.style.top = '-50000px';
         container.style.width = '50000px';
         var regularDomNode = document.createElement('div');
-        regularDomNode.style.fontFamily = this._bareFontInfo.fontFamily;
+        regularDomNode.style.fontFamily = this._bareFontInfo.getMassagedFontFamily();
         regularDomNode.style.fontWeight = this._bareFontInfo.fontWeight;
         regularDomNode.style.fontSize = this._bareFontInfo.fontSize + 'px';
         regularDomNode.style.lineHeight = this._bareFontInfo.lineHeight + 'px';
         regularDomNode.style.letterSpacing = this._bareFontInfo.letterSpacing + 'px';
         container.appendChild(regularDomNode);
         var boldDomNode = document.createElement('div');
-        boldDomNode.style.fontFamily = this._bareFontInfo.fontFamily;
+        boldDomNode.style.fontFamily = this._bareFontInfo.getMassagedFontFamily();
         boldDomNode.style.fontWeight = 'bold';
         boldDomNode.style.fontSize = this._bareFontInfo.fontSize + 'px';
         boldDomNode.style.lineHeight = this._bareFontInfo.lineHeight + 'px';
         boldDomNode.style.letterSpacing = this._bareFontInfo.letterSpacing + 'px';
         container.appendChild(boldDomNode);
         var italicDomNode = document.createElement('div');
-        italicDomNode.style.fontFamily = this._bareFontInfo.fontFamily;
+        italicDomNode.style.fontFamily = this._bareFontInfo.getMassagedFontFamily();
         italicDomNode.style.fontWeight = this._bareFontInfo.fontWeight;
         italicDomNode.style.fontSize = this._bareFontInfo.fontSize + 'px';
         italicDomNode.style.lineHeight = this._bareFontInfo.lineHeight + 'px';

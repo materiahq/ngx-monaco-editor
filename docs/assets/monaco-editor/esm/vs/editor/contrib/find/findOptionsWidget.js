@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -14,13 +16,12 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import * as dom from '../../../base/browser/dom.js';
+import { CaseSensitiveCheckbox, RegexCheckbox, WholeWordsCheckbox } from '../../../base/browser/ui/findinput/findInputCheckboxes.js';
 import { Widget } from '../../../base/browser/ui/widget.js';
-import { OverlayWidgetPositionPreference } from '../../browser/editorBrowser.js';
-import { FIND_IDS } from './findModel.js';
-import { CaseSensitiveCheckbox, WholeWordsCheckbox, RegexCheckbox } from '../../../base/browser/ui/findinput/findInputCheckboxes.js';
 import { RunOnceScheduler } from '../../../base/common/async.js';
+import { FIND_IDS } from './findModel.js';
+import { contrastBorder, editorWidgetBackground, inputActiveOptionBorder, widgetShadow } from '../../../platform/theme/common/colorRegistry.js';
 import { registerThemingParticipant } from '../../../platform/theme/common/themeService.js';
-import { inputActiveOptionBorder, editorWidgetBackground, contrastBorder, widgetShadow } from '../../../platform/theme/common/colorRegistry.js';
 var FindOptionsWidget = /** @class */ (function (_super) {
     __extends(FindOptionsWidget, _super);
     function FindOptionsWidget(editor, state, keybindingService, themeService) {
@@ -115,7 +116,7 @@ var FindOptionsWidget = /** @class */ (function (_super) {
     };
     FindOptionsWidget.prototype.getPosition = function () {
         return {
-            preference: OverlayWidgetPositionPreference.TOP_RIGHT_CORNER
+            preference: 0 /* TOP_RIGHT_CORNER */
         };
     };
     FindOptionsWidget.prototype.highlightFindOptions = function () {

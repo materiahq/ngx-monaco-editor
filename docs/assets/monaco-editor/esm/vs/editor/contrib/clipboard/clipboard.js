@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -17,9 +19,9 @@ import './clipboard.css';
 import * as nls from '../../../nls.js';
 import * as browser from '../../../base/browser/browser.js';
 import * as platform from '../../../base/common/platform.js';
-import { ICodeEditorService } from '../../browser/services/codeEditorService.js';
-import { registerEditorAction, EditorAction } from '../../browser/editorExtensions.js';
 import { CopyOptions } from '../../browser/controller/textAreaInput.js';
+import { EditorAction, registerEditorAction } from '../../browser/editorExtensions.js';
+import { ICodeEditorService } from '../../browser/services/codeEditorService.js';
 import { EditorContextKeys } from '../../common/editorContextKeys.js';
 import { MenuId } from '../../../platform/actions/common/actions.js';
 var CLIPBOARD_CONTEXT_MENU_GROUP = '9_cutcopypaste';
@@ -88,6 +90,9 @@ var ExecCommandCutAction = /** @class */ (function (_super) {
         return _this;
     }
     ExecCommandCutAction.prototype.run = function (accessor, editor) {
+        if (!editor.hasModel()) {
+            return;
+        }
         var emptySelectionClipboard = editor.getConfiguration().emptySelectionClipboard;
         if (!emptySelectionClipboard && editor.getSelection().isEmpty()) {
             return;
@@ -131,6 +136,9 @@ var ExecCommandCopyAction = /** @class */ (function (_super) {
         return _this;
     }
     ExecCommandCopyAction.prototype.run = function (accessor, editor) {
+        if (!editor.hasModel()) {
+            return;
+        }
         var emptySelectionClipboard = editor.getConfiguration().emptySelectionClipboard;
         if (!emptySelectionClipboard && editor.getSelection().isEmpty()) {
             return;
@@ -185,12 +193,15 @@ var ExecCommandCopyWithSyntaxHighlightingAction = /** @class */ (function (_supe
             precondition: null,
             kbOpts: {
                 kbExpr: EditorContextKeys.textInputFocus,
-                primary: null,
+                primary: 0,
                 weight: 100 /* EditorContrib */
             }
         }) || this;
     }
     ExecCommandCopyWithSyntaxHighlightingAction.prototype.run = function (accessor, editor) {
+        if (!editor.hasModel()) {
+            return;
+        }
         var emptySelectionClipboard = editor.getConfiguration().emptySelectionClipboard;
         if (!emptySelectionClipboard && editor.getSelection().isEmpty()) {
             return;

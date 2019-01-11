@@ -2,12 +2,11 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { Range } from '../../common/core/range.js';
+import { OverviewRulerLane } from '../../common/model.js';
 import { ModelDecorationOptions } from '../../common/model/textModel.js';
 import { overviewRulerFindMatchForeground } from '../../../platform/theme/common/colorRegistry.js';
 import { themeColorFromId } from '../../../platform/theme/common/themeService.js';
-import { TrackedRangeStickiness, OverviewRulerLane } from '../../common/model.js';
 var FindDecorations = /** @class */ (function () {
     function FindDecorations(editor) {
         this._editor = editor;
@@ -20,13 +19,11 @@ var FindDecorations = /** @class */ (function () {
     }
     FindDecorations.prototype.dispose = function () {
         this._editor.deltaDecorations(this._allDecorations(), []);
-        this._editor = null;
         this._decorations = [];
         this._overviewRulerApproximateDecorations = [];
         this._findScopeDecorationId = null;
         this._rangeHighlightDecorationId = null;
         this._highlightedDecorationId = null;
-        this._startPosition = null;
     };
     FindDecorations.prototype.reset = function () {
         this._decorations = [];
@@ -227,41 +224,38 @@ var FindDecorations = /** @class */ (function () {
         return result;
     };
     FindDecorations._CURRENT_FIND_MATCH_DECORATION = ModelDecorationOptions.register({
-        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
         zIndex: 13,
         className: 'currentFindMatch',
         showIfCollapsed: true,
         overviewRuler: {
             color: themeColorFromId(overviewRulerFindMatchForeground),
-            darkColor: themeColorFromId(overviewRulerFindMatchForeground),
             position: OverviewRulerLane.Center
         }
     });
     FindDecorations._FIND_MATCH_DECORATION = ModelDecorationOptions.register({
-        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
         className: 'findMatch',
         showIfCollapsed: true,
         overviewRuler: {
             color: themeColorFromId(overviewRulerFindMatchForeground),
-            darkColor: themeColorFromId(overviewRulerFindMatchForeground),
             position: OverviewRulerLane.Center
         }
     });
     FindDecorations._FIND_MATCH_NO_OVERVIEW_DECORATION = ModelDecorationOptions.register({
-        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
         className: 'findMatch',
         showIfCollapsed: true
     });
     FindDecorations._FIND_MATCH_ONLY_OVERVIEW_DECORATION = ModelDecorationOptions.register({
-        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
         overviewRuler: {
             color: themeColorFromId(overviewRulerFindMatchForeground),
-            darkColor: themeColorFromId(overviewRulerFindMatchForeground),
             position: OverviewRulerLane.Center
         }
     });
     FindDecorations._RANGE_HIGHLIGHT_DECORATION = ModelDecorationOptions.register({
-        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        stickiness: 1 /* NeverGrowsWhenTypingAtEdges */,
         className: 'rangeHighlight',
         isWholeLine: true
     });

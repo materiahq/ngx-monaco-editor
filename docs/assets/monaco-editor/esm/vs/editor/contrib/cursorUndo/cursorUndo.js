@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -14,8 +16,8 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import * as nls from '../../../nls.js';
-import { registerEditorContribution, EditorAction, registerEditorAction } from '../../browser/editorExtensions.js';
 import { Disposable } from '../../../base/common/lifecycle.js';
+import { EditorAction, registerEditorAction, registerEditorContribution } from '../../browser/editorExtensions.js';
 import { EditorContextKeys } from '../../common/editorContextKeys.js';
 var CursorState = /** @class */ (function () {
     function CursorState(selections) {
@@ -68,7 +70,7 @@ var CursorUndoController = /** @class */ (function (_super) {
         return editor.getContribution(CursorUndoController.ID);
     };
     CursorUndoController.prototype._readState = function () {
-        if (!this._editor.getModel()) {
+        if (!this._editor.hasModel()) {
             // no model => no state
             return null;
         }
@@ -78,6 +80,9 @@ var CursorUndoController = /** @class */ (function (_super) {
         return CursorUndoController.ID;
     };
     CursorUndoController.prototype.cursorUndo = function () {
+        if (!this._editor.hasModel()) {
+            return;
+        }
         var currState = new CursorState(this._editor.getSelections());
         while (this._undoStack.length > 0) {
             var prevState = this._undoStack.pop();

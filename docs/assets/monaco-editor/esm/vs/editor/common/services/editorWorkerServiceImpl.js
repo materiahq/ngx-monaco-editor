@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -22,15 +24,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { IntervalTimer, ShallowCancelThenPromise, wireCancellationToken } from '../../../base/common/async.js';
+import { IntervalTimer } from '../../../base/common/async.js';
 import { Disposable, dispose, toDisposable } from '../../../base/common/lifecycle.js';
-import { TPromise } from '../../../base/common/winjs.base.js';
 import { SimpleWorkerClient, logOnceWebWorkerWarning } from '../../../base/common/worker/simpleWorker.js';
 import { DefaultWorkerFactory } from '../../../base/worker/defaultWorkerFactory.js';
 import * as modes from '../modes.js';
-import { IModelService } from './modelService.js';
-import { EditorSimpleWorkerImpl } from './editorSimpleWorker.js';
 import { LanguageConfigurationRegistry } from '../modes/languageConfigurationRegistry.js';
+import { EditorSimpleWorkerImpl } from './editorSimpleWorker.js';
+import { IModelService } from './modelService.js';
 import { ITextResourceConfigurationService } from './resourceConfiguration.js';
 /**
  * Stop syncing a model to the worker if it was not needed for 1 min.
@@ -60,12 +61,12 @@ var EditorWorkerServiceImpl = /** @class */ (function (_super) {
         _this._register(modes.LinkProviderRegistry.register('*', {
             provideLinks: function (model, token) {
                 if (!canSyncModel(_this._modelService, model.uri)) {
-                    return TPromise.as([]); // File too large
+                    return Promise.resolve([]); // File too large
                 }
-                return wireCancellationToken(token, _this._workerManager.withWorker().then(function (client) { return client.computeLinks(model.uri); }));
+                return _this._workerManager.withWorker().then(function (client) { return client.computeLinks(model.uri); });
             }
         }));
-        _this._register(modes.SuggestRegistry.register('*', new WordBasedCompletionItemProvider(_this._workerManager, configurationService, _this._modelService)));
+        _this._register(modes.CompletionProviderRegistry.register('*', new WordBasedCompletionItemProvider(_this._workerManager, configurationService, _this._modelService)));
         return _this;
     }
     EditorWorkerServiceImpl.prototype.dispose = function () {
@@ -79,11 +80,11 @@ var EditorWorkerServiceImpl = /** @class */ (function (_super) {
     };
     EditorWorkerServiceImpl.prototype.computeMoreMinimalEdits = function (resource, edits) {
         if (!Array.isArray(edits) || edits.length === 0) {
-            return TPromise.as(edits);
+            return Promise.resolve(edits);
         }
         else {
             if (!canSyncModel(this._modelService, resource)) {
-                return TPromise.as(edits); // File too large
+                return Promise.resolve(edits); // File too large
             }
             return this._workerManager.withWorker().then(function (client) { return client.computeMoreMinimalEdits(resource, edits); });
         }
@@ -93,6 +94,12 @@ var EditorWorkerServiceImpl = /** @class */ (function (_super) {
     };
     EditorWorkerServiceImpl.prototype.navigateValueSet = function (resource, range, up) {
         return this._workerManager.withWorker().then(function (client) { return client.navigateValueSet(resource, range, up); });
+    };
+    EditorWorkerServiceImpl.prototype.canComputeWordRanges = function (resource) {
+        return canSyncModel(this._modelService, resource);
+    };
+    EditorWorkerServiceImpl.prototype.computeWordRanges = function (resource, range) {
+        return this._workerManager.withWorker().then(function (client) { return client.computeWordRanges(resource, range); });
     };
     EditorWorkerServiceImpl = __decorate([
         __param(0, IModelService),
@@ -169,7 +176,7 @@ var WorkerManager = /** @class */ (function (_super) {
         if (!this._editorWorkerClient) {
             this._editorWorkerClient = new EditorWorkerClient(this._modelService, 'editorWorkerService');
         }
-        return TPromise.as(this._editorWorkerClient);
+        return Promise.resolve(this._editorWorkerClient);
     };
     return WorkerManager;
 }(Disposable));
@@ -260,15 +267,13 @@ var EditorModelManager = /** @class */ (function (_super) {
 var SynchronousWorkerClient = /** @class */ (function () {
     function SynchronousWorkerClient(instance) {
         this._instance = instance;
-        this._proxyObj = TPromise.as(this._instance);
+        this._proxyObj = Promise.resolve(this._instance);
     }
     SynchronousWorkerClient.prototype.dispose = function () {
         this._instance.dispose();
-        this._instance = null;
-        this._proxyObj = null;
     };
     SynchronousWorkerClient.prototype.getProxyObject = function () {
-        return new ShallowCancelThenPromise(this._proxyObj);
+        return this._proxyObj;
     };
     return SynchronousWorkerClient;
 }());
@@ -296,11 +301,11 @@ var EditorWorkerClient = /** @class */ (function (_super) {
     };
     EditorWorkerClient.prototype._getProxy = function () {
         var _this = this;
-        return new ShallowCancelThenPromise(this._getOrCreateWorker().getProxyObject().then(null, function (err) {
+        return this._getOrCreateWorker().getProxyObject().then(null, function (err) {
             logOnceWebWorkerWarning(err);
             _this._worker = new SynchronousWorkerClient(new EditorSimpleWorkerImpl(null));
             return _this._getOrCreateWorker().getProxyObject();
-        }));
+        });
     };
     EditorWorkerClient.prototype._getOrCreateModelManager = function (proxy) {
         if (!this._modelManager) {
@@ -341,6 +346,19 @@ var EditorWorkerClient = /** @class */ (function (_super) {
             var wordDef = wordDefRegExp.source;
             var wordDefFlags = (wordDefRegExp.global ? 'g' : '') + (wordDefRegExp.ignoreCase ? 'i' : '') + (wordDefRegExp.multiline ? 'm' : '');
             return proxy.textualSuggest(resource.toString(), position, wordDef, wordDefFlags);
+        });
+    };
+    EditorWorkerClient.prototype.computeWordRanges = function (resource, range) {
+        var _this = this;
+        return this._withSyncedResources([resource]).then(function (proxy) {
+            var model = _this._modelService.getModel(resource);
+            if (!model) {
+                return Promise.resolve(null);
+            }
+            var wordDefRegExp = LanguageConfigurationRegistry.getWordDefinition(model.getLanguageIdentifier().id);
+            var wordDef = wordDefRegExp.source;
+            var wordDefFlags = (wordDefRegExp.global ? 'g' : '') + (wordDefRegExp.ignoreCase ? 'i' : '') + (wordDefRegExp.multiline ? 'm' : '');
+            return proxy.computeWordRanges(resource.toString(), range, wordDef, wordDefFlags);
         });
     };
     EditorWorkerClient.prototype.navigateValueSet = function (resource, range, up) {

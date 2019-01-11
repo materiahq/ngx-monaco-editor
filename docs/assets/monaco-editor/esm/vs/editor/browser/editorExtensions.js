@@ -2,36 +2,43 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var __assign = (this && this.__assign) || Object.assign || function(t) {
-    for (var s, i = 1, n = arguments.length; i < n; i++) {
-        s = arguments[i];
-        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-            t[p] = s[p];
-    }
-    return t;
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
 };
+import { always } from '../../base/common/async.js';
 import { illegalArgument } from '../../base/common/errors.js';
-import URI from '../../base/common/uri.js';
+import { URI } from '../../base/common/uri.js';
+import { ICodeEditorService } from './services/codeEditorService.js';
+import { Position } from '../common/core/position.js';
+import { IModelService } from '../common/services/modelService.js';
+import { ITextModelService } from '../common/services/resolverService.js';
+import { MenuId, MenuRegistry } from '../../platform/actions/common/actions.js';
 import { CommandsRegistry } from '../../platform/commands/common/commands.js';
+import { ContextKeyExpr, IContextKeyService } from '../../platform/contextkey/common/contextkey.js';
 import { KeybindingsRegistry } from '../../platform/keybinding/common/keybindingsRegistry.js';
 import { Registry } from '../../platform/registry/common/platform.js';
 import { ITelemetryService } from '../../platform/telemetry/common/telemetry.js';
-import { Position } from '../common/core/position.js';
-import { IModelService } from '../common/services/modelService.js';
-import { MenuId, MenuRegistry } from '../../platform/actions/common/actions.js';
-import { IContextKeyService, ContextKeyExpr } from '../../platform/contextkey/common/contextkey.js';
-import { ICodeEditorService } from './services/codeEditorService.js';
 var Command = /** @class */ (function () {
     function Command(opts) {
         this.id = opts.id;
@@ -67,7 +74,7 @@ var Command = /** @class */ (function () {
                 id: this.id,
                 handler: function (accessor, args) { return _this.runCommand(accessor, args); },
                 weight: this._kbOpts.weight,
-                when: kbWhen,
+                when: kbWhen || null,
                 primary: this._kbOpts.primary,
                 secondary: this._kbOpts.secondary,
                 win: this._kbOpts.win,
@@ -190,11 +197,23 @@ export function registerDefaultLanguageCommand(id, handler) {
             throw illegalArgument('position');
         }
         var model = accessor.get(IModelService).getModel(resource);
-        if (!model) {
-            throw illegalArgument('Can not find open model for ' + resource);
+        if (model) {
+            var editorPosition = Position.lift(position);
+            return handler(model, editorPosition, args);
         }
-        var editorPosition = Position.lift(position);
-        return handler(model, editorPosition, args);
+        return accessor.get(ITextModelService).createModelReference(resource).then(function (reference) {
+            return always(new Promise(function (resolve, reject) {
+                try {
+                    var result = handler(reference.object.textEditorModel, Position.lift(position), args);
+                    resolve(result);
+                }
+                catch (err) {
+                    reject(err);
+                }
+            }), function () {
+                reference.dispose();
+            });
+        });
     });
 }
 export function registerEditorCommand(editorCommand) {

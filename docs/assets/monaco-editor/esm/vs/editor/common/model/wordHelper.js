@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 export var USUAL_WORD_SEPARATORS = '`~!@#$%^&*()-=+[{]}\\|;:\'",.<>/?';
 /**
  * Create a word definition regular expression based on default word separators.
@@ -56,10 +55,11 @@ function getWordAtPosFast(column, wordDefinition, text, textOffset) {
     wordDefinition.lastIndex = start;
     var match;
     while (match = wordDefinition.exec(text)) {
-        if (match.index <= pos && wordDefinition.lastIndex >= pos) {
+        var matchIndex = match.index || 0;
+        if (matchIndex <= pos && wordDefinition.lastIndex >= pos) {
             return {
                 word: match[0],
-                startColumn: textOffset + 1 + match.index,
+                startColumn: textOffset + 1 + matchIndex,
                 endColumn: textOffset + 1 + wordDefinition.lastIndex
             };
         }
@@ -74,7 +74,8 @@ function getWordAtPosSlow(column, wordDefinition, text, textOffset) {
     wordDefinition.lastIndex = 0;
     var match;
     while (match = wordDefinition.exec(text)) {
-        if (match.index > pos) {
+        var matchIndex = match.index || 0;
+        if (matchIndex > pos) {
             // |nW -> matched only after the pos
             return null;
         }
@@ -82,7 +83,7 @@ function getWordAtPosSlow(column, wordDefinition, text, textOffset) {
             // W|W -> match encloses pos
             return {
                 word: match[0],
-                startColumn: textOffset + 1 + match.index,
+                startColumn: textOffset + 1 + matchIndex,
                 endColumn: textOffset + 1 + wordDefinition.lastIndex
             };
         }

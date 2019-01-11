@@ -43,7 +43,8 @@ export { LanguageServiceDefaultsImpl };
 var diagnosticDefault = {
     validate: true,
     allowComments: true,
-    schemas: []
+    schemas: [],
+    enableSchemaRequest: false
 };
 var jsonDefaults = new LanguageServiceDefaultsImpl('json', diagnosticDefault);
 // Export API

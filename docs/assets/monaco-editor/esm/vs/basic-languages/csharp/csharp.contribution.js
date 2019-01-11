@@ -8,7 +8,7 @@ import { registerLanguage } from '../_.contribution.js';
 var _monaco = (typeof monaco === 'undefined' ? self.monaco : monaco);
 registerLanguage({
     id: 'csharp',
-    extensions: ['.cs', '.csx'],
+    extensions: ['.cs', '.csx', '.cake'],
     aliases: ['C#', 'csharp'],
     loader: function () { return _monaco.Promise.wrap(import('./csharp.js')); }
 });

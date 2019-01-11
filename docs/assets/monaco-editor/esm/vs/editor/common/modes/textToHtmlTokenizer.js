@@ -2,13 +2,16 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import * as strings from '../../../base/common/strings.js';
-import { TokenizationRegistry } from '../modes.js';
-import { NULL_STATE, nullTokenize2 } from './nullMode.js';
 import { LineTokens } from '../core/lineTokens.js';
-export function tokenizeToString(text, languageId) {
-    return _tokenizeToString(text, _getSafeTokenizationSupport(languageId));
+import { NULL_STATE, nullTokenize2 } from './nullMode.js';
+var fallback = {
+    getInitialState: function () { return NULL_STATE; },
+    tokenize2: function (buffer, state, deltaOffset) { return nullTokenize2(0 /* Null */, buffer, state, deltaOffset); }
+};
+export function tokenizeToString(text, tokenizationSupport) {
+    if (tokenizationSupport === void 0) { tokenizationSupport = fallback; }
+    return _tokenizeToString(text, tokenizationSupport || fallback);
 }
 export function tokenizeLineToHTML(text, viewLineTokens, colorMap, startOffset, endOffset, tabSize) {
     var result = "<div>";
@@ -62,17 +65,6 @@ export function tokenizeLineToHTML(text, viewLineTokens, colorMap, startOffset, 
     }
     result += "</div>";
     return result;
-}
-function _getSafeTokenizationSupport(languageId) {
-    var tokenizationSupport = TokenizationRegistry.get(languageId);
-    if (tokenizationSupport) {
-        return tokenizationSupport;
-    }
-    return {
-        getInitialState: function () { return NULL_STATE; },
-        tokenize: undefined,
-        tokenize2: function (buffer, state, deltaOffset) { return nullTokenize2(0 /* Null */, buffer, state, deltaOffset); }
-    };
 }
 function _tokenizeToString(text, tokenizationSupport) {
     var result = "<div class=\"monaco-tokenized-source\">";

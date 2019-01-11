@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import * as strings from '../../../../base/common/strings.js';
 import { Range } from '../../core/range.js';
 var RichEditBracket = /** @class */ (function () {
@@ -108,7 +107,7 @@ var BracketsUtils = /** @class */ (function () {
         if (!m) {
             return null;
         }
-        var matchOffset = reversedText.length - m.index;
+        var matchOffset = reversedText.length - (m.index || 0);
         var matchLength = m[0].length;
         var absoluteMatchOffset = offset + matchOffset;
         return new Range(lineNumber, absoluteMatchOffset - matchLength + 1, lineNumber, absoluteMatchOffset + 1);
@@ -124,7 +123,7 @@ var BracketsUtils = /** @class */ (function () {
         if (!m) {
             return null;
         }
-        var matchOffset = m.index;
+        var matchOffset = m.index || 0;
         var matchLength = m[0].length;
         if (matchLength === 0) {
             return null;

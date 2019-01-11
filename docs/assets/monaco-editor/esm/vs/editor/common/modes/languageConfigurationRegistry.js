@@ -2,20 +2,19 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
+import { onUnexpectedError } from '../../../base/common/errors.js';
+import { Emitter } from '../../../base/common/event.js';
+import { toDisposable } from '../../../base/common/lifecycle.js';
+import * as strings from '../../../base/common/strings.js';
+import { Range } from '../core/range.js';
+import { DEFAULT_WORD_REGEXP, ensureValidWordDefinition } from '../model/wordHelper.js';
+import { IndentAction } from './languageConfiguration.js';
+import { createScopedLineTokens } from './supports.js';
 import { CharacterPairSupport } from './supports/characterPair.js';
 import { BracketElectricCharacterSupport } from './supports/electricCharacter.js';
-import { OnEnterSupport } from './supports/onEnter.js';
 import { IndentRulesSupport } from './supports/indentRules.js';
+import { OnEnterSupport } from './supports/onEnter.js';
 import { RichEditBrackets } from './supports/richEditBrackets.js';
-import { Emitter } from '../../../base/common/event.js';
-import { onUnexpectedError } from '../../../base/common/errors.js';
-import * as strings from '../../../base/common/strings.js';
-import { toDisposable } from '../../../base/common/lifecycle.js';
-import { DEFAULT_WORD_REGEXP, ensureValidWordDefinition } from '../model/wordHelper.js';
-import { createScopedLineTokens } from './supports.js';
-import { Range } from '../core/range.js';
-import { IndentAction } from './languageConfiguration.js';
 var RichEditSupport = /** @class */ (function () {
     function RichEditSupport(languageIdentifier, previous, rawConf) {
         this._languageIdentifier = languageIdentifier;
@@ -74,6 +73,7 @@ var RichEditSupport = /** @class */ (function () {
             onEnterRules: (prev ? current.onEnterRules || prev.onEnterRules : current.onEnterRules),
             autoClosingPairs: (prev ? current.autoClosingPairs || prev.autoClosingPairs : current.autoClosingPairs),
             surroundingPairs: (prev ? current.surroundingPairs || prev.surroundingPairs : current.surroundingPairs),
+            autoCloseBefore: (prev ? current.autoCloseBefore || prev.autoCloseBefore : current.autoCloseBefore),
             folding: (prev ? current.folding || prev.folding : current.folding),
             __electricCharacterSupport: (prev ? current.__electricCharacterSupport || prev.__electricCharacterSupport : current.__electricCharacterSupport),
         };
@@ -194,6 +194,13 @@ var LanguageConfigurationRegistryImpl = /** @class */ (function () {
             return [];
         }
         return characterPairSupport.getAutoClosingPairs();
+    };
+    LanguageConfigurationRegistryImpl.prototype.getAutoCloseBeforeSet = function (languageId) {
+        var characterPairSupport = this._getCharacterPairSupport(languageId);
+        if (!characterPairSupport) {
+            return CharacterPairSupport.DEFAULT_AUTOCLOSE_BEFORE_LANGUAGE_DEFINED;
+        }
+        return characterPairSupport.getAutoCloseBeforeSet();
     };
     LanguageConfigurationRegistryImpl.prototype.getSurroundingPairs = function (languageId) {
         var characterPairSupport = this._getCharacterPairSupport(languageId);
@@ -401,7 +408,9 @@ var LanguageConfigurationRegistryImpl = /** @class */ (function () {
                 var onEnterSupport = this._getOnEnterSupport(languageId);
                 var enterResult = null;
                 try {
-                    enterResult = onEnterSupport.onEnter('', virtualModel.getLineContent(inheritLine), '');
+                    if (onEnterSupport) {
+                        enterResult = onEnterSupport.onEnter('', virtualModel.getLineContent(inheritLine), '');
+                    }
                 }
                 catch (e) {
                     onUnexpectedError(e);
@@ -657,7 +666,7 @@ var LanguageConfigurationRegistryImpl = /** @class */ (function () {
     LanguageConfigurationRegistryImpl.prototype.getScopedLineTokens = function (model, lineNumber, columnNumber) {
         model.forceTokenization(lineNumber);
         var lineTokens = model.getLineTokens(lineNumber);
-        var column = isNaN(columnNumber) ? model.getLineMaxColumn(lineNumber) - 1 : columnNumber - 1;
+        var column = (typeof columnNumber === 'undefined' ? model.getLineMaxColumn(lineNumber) - 1 : columnNumber - 1);
         var scopedLineTokens = createScopedLineTokens(lineTokens, column);
         return scopedLineTokens;
     };

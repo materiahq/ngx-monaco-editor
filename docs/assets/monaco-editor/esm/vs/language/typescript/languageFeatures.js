@@ -164,7 +164,7 @@ var DiagnostcsAdapter = /** @class */ (function (_super) {
                 .reduce(function (p, c) { return c.concat(p); }, [])
                 .map(function (d) { return _this._convertDiagnostics(resource, d); });
             monaco.editor.setModelMarkers(monaco.editor.getModel(resource), _this._selector, markers);
-        }).done(undefined, function (err) {
+        }).then(undefined, function (err) {
             console.error(err);
         });
     };
@@ -195,11 +195,11 @@ var SuggestAdapter = /** @class */ (function (_super) {
         enumerable: true,
         configurable: true
     });
-    SuggestAdapter.prototype.provideCompletionItems = function (model, position, token) {
+    SuggestAdapter.prototype.provideCompletionItems = function (model, position, _context, token) {
         var wordInfo = model.getWordUntilPosition(position);
         var resource = model.uri;
         var offset = this._positionToOffset(resource, position);
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) {
+        return this._worker(resource).then(function (worker) {
             return worker.getCompletionsAtPosition(resource.toString(), offset);
         }).then(function (info) {
             if (!info) {
@@ -210,19 +210,22 @@ var SuggestAdapter = /** @class */ (function (_super) {
                     uri: resource,
                     position: position,
                     label: entry.name,
+                    insertText: entry.name,
                     sortText: entry.sortText,
                     kind: SuggestAdapter.convertKind(entry.kind)
                 };
             });
-            return suggestions;
-        }));
+            return {
+                suggestions: suggestions
+            };
+        });
     };
-    SuggestAdapter.prototype.resolveCompletionItem = function (item, token) {
+    SuggestAdapter.prototype.resolveCompletionItem = function (_model, _position, item, token) {
         var _this = this;
         var myItem = item;
         var resource = myItem.uri;
         var position = myItem.position;
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) {
+        return this._worker(resource).then(function (worker) {
             return worker.getCompletionEntryDetails(resource.toString(), _this._positionToOffset(resource, position), myItem.label);
         }).then(function (details) {
             if (!details) {
@@ -234,9 +237,11 @@ var SuggestAdapter = /** @class */ (function (_super) {
                 label: details.name,
                 kind: SuggestAdapter.convertKind(details.kind),
                 detail: displayPartsToString(details.displayParts),
-                documentation: displayPartsToString(details.documentation)
+                documentation: {
+                    value: displayPartsToString(details.documentation)
+                }
             };
-        }));
+        });
     };
     SuggestAdapter.convertKind = function (kind) {
         switch (kind) {
@@ -282,7 +287,7 @@ var SignatureHelpAdapter = /** @class */ (function (_super) {
     SignatureHelpAdapter.prototype.provideSignatureHelp = function (model, position, token) {
         var _this = this;
         var resource = model.uri;
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) { return worker.getSignatureHelpItems(resource.toString(), _this._positionToOffset(resource, position)); }).then(function (info) {
+        return this._worker(resource).then(function (worker) { return worker.getSignatureHelpItems(resource.toString(), _this._positionToOffset(resource, position)); }).then(function (info) {
             if (!info) {
                 return;
             }
@@ -314,7 +319,7 @@ var SignatureHelpAdapter = /** @class */ (function (_super) {
                 ret.signatures.push(signature);
             });
             return ret;
-        }));
+        });
     };
     return SignatureHelpAdapter;
 }(Adapter));
@@ -328,7 +333,7 @@ var QuickInfoAdapter = /** @class */ (function (_super) {
     QuickInfoAdapter.prototype.provideHover = function (model, position, token) {
         var _this = this;
         var resource = model.uri;
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) {
+        return this._worker(resource).then(function (worker) {
             return worker.getQuickInfoAtPosition(resource.toString(), _this._positionToOffset(resource, position));
         }).then(function (info) {
             if (!info) {
@@ -352,7 +357,7 @@ var QuickInfoAdapter = /** @class */ (function (_super) {
                         value: documentation + (tags ? '\n\n' + tags : '')
                     }]
             };
-        }));
+        });
     };
     return QuickInfoAdapter;
 }(Adapter));
@@ -366,7 +371,7 @@ var OccurrencesAdapter = /** @class */ (function (_super) {
     OccurrencesAdapter.prototype.provideDocumentHighlights = function (model, position, token) {
         var _this = this;
         var resource = model.uri;
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) {
+        return this._worker(resource).then(function (worker) {
             return worker.getOccurrencesAtPosition(resource.toString(), _this._positionToOffset(resource, position));
         }).then(function (entries) {
             if (!entries) {
@@ -378,7 +383,7 @@ var OccurrencesAdapter = /** @class */ (function (_super) {
                     kind: entry.isWriteAccess ? monaco.languages.DocumentHighlightKind.Write : monaco.languages.DocumentHighlightKind.Text
                 };
             });
-        }));
+        });
     };
     return OccurrencesAdapter;
 }(Adapter));
@@ -392,7 +397,7 @@ var DefinitionAdapter = /** @class */ (function (_super) {
     DefinitionAdapter.prototype.provideDefinition = function (model, position, token) {
         var _this = this;
         var resource = model.uri;
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) {
+        return this._worker(resource).then(function (worker) {
             return worker.getDefinitionAtPosition(resource.toString(), _this._positionToOffset(resource, position));
         }).then(function (entries) {
             if (!entries) {
@@ -410,7 +415,7 @@ var DefinitionAdapter = /** @class */ (function (_super) {
                 }
             }
             return result;
-        }));
+        });
     };
     return DefinitionAdapter;
 }(Adapter));
@@ -424,7 +429,7 @@ var ReferenceAdapter = /** @class */ (function (_super) {
     ReferenceAdapter.prototype.provideReferences = function (model, position, context, token) {
         var _this = this;
         var resource = model.uri;
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) {
+        return this._worker(resource).then(function (worker) {
             return worker.getReferencesAtPosition(resource.toString(), _this._positionToOffset(resource, position));
         }).then(function (entries) {
             if (!entries) {
@@ -442,7 +447,7 @@ var ReferenceAdapter = /** @class */ (function (_super) {
                 }
             }
             return result;
-        }));
+        });
     };
     return ReferenceAdapter;
 }(Adapter));
@@ -456,7 +461,7 @@ var OutlineAdapter = /** @class */ (function (_super) {
     OutlineAdapter.prototype.provideDocumentSymbols = function (model, token) {
         var _this = this;
         var resource = model.uri;
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) { return worker.getNavigationBarItems(resource.toString()); }).then(function (items) {
+        return this._worker(resource).then(function (worker) { return worker.getNavigationBarItems(resource.toString()); }).then(function (items) {
             if (!items) {
                 return;
             }
@@ -480,7 +485,7 @@ var OutlineAdapter = /** @class */ (function (_super) {
             var result = [];
             items.forEach(function (item) { return convert(result, item); });
             return result;
-        }));
+        });
     };
     return OutlineAdapter;
 }(Adapter));
@@ -576,13 +581,13 @@ var FormatAdapter = /** @class */ (function (_super) {
     FormatAdapter.prototype.provideDocumentRangeFormattingEdits = function (model, range, options, token) {
         var _this = this;
         var resource = model.uri;
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) {
+        return this._worker(resource).then(function (worker) {
             return worker.getFormattingEditsForRange(resource.toString(), _this._positionToOffset(resource, { lineNumber: range.startLineNumber, column: range.startColumn }), _this._positionToOffset(resource, { lineNumber: range.endLineNumber, column: range.endColumn }), FormatHelper._convertOptions(options));
         }).then(function (edits) {
             if (edits) {
                 return edits.map(function (edit) { return _this._convertTextChanges(resource, edit); });
             }
-        }));
+        });
     };
     return FormatAdapter;
 }(FormatHelper));
@@ -602,21 +607,14 @@ var FormatOnTypeAdapter = /** @class */ (function (_super) {
     FormatOnTypeAdapter.prototype.provideOnTypeFormattingEdits = function (model, position, ch, options, token) {
         var _this = this;
         var resource = model.uri;
-        return wireCancellationToken(token, this._worker(resource).then(function (worker) {
+        return this._worker(resource).then(function (worker) {
             return worker.getFormattingEditsAfterKeystroke(resource.toString(), _this._positionToOffset(resource, position), ch, FormatHelper._convertOptions(options));
         }).then(function (edits) {
             if (edits) {
                 return edits.map(function (edit) { return _this._convertTextChanges(resource, edit); });
             }
-        }));
+        });
     };
     return FormatOnTypeAdapter;
 }(FormatHelper));
 export { FormatOnTypeAdapter };
-/**
- * Hook a cancellation token to a WinJS Promise
- */
-function wireCancellationToken(token, promise) {
-    token.onCancellationRequested(function () { return promise.cancel(); });
-    return promise;
-}

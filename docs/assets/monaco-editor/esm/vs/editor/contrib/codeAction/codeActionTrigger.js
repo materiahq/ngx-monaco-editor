@@ -18,9 +18,3 @@ var CodeActionKind = /** @class */ (function () {
     return CodeActionKind;
 }());
 export { CodeActionKind };
-export var CodeActionAutoApply;
-(function (CodeActionAutoApply) {
-    CodeActionAutoApply[CodeActionAutoApply["IfSingle"] = 1] = "IfSingle";
-    CodeActionAutoApply[CodeActionAutoApply["First"] = 2] = "First";
-    CodeActionAutoApply[CodeActionAutoApply["Never"] = 3] = "Never";
-})(CodeActionAutoApply || (CodeActionAutoApply = {}));

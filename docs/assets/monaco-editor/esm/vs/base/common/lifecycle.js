@@ -1,8 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-'use strict';
 export function isDisposable(thing) {
     return typeof thing.dispose === 'function'
         && thing.dispose.length === 0;
@@ -39,11 +34,6 @@ var Disposable = /** @class */ (function () {
     function Disposable() {
         this._toDispose = [];
     }
-    Object.defineProperty(Disposable.prototype, "toDispose", {
-        get: function () { return this._toDispose; },
-        enumerable: true,
-        configurable: true
-    });
     Disposable.prototype.dispose = function () {
         this._toDispose = dispose(this._toDispose);
     };

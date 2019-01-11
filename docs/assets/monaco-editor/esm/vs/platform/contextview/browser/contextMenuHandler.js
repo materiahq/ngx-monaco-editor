@@ -2,38 +2,42 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import './contextMenuHandler.css';
-import { $ } from '../../../base/browser/builder.js';
-import { combinedDisposable } from '../../../base/common/lifecycle.js';
+import { combinedDisposable, dispose } from '../../../base/common/lifecycle.js';
 import { StandardMouseEvent } from '../../../base/browser/mouseEvent.js';
 import { ActionRunner } from '../../../base/common/actions.js';
 import { Menu } from '../../../base/browser/ui/menu/menu.js';
+import { addDisposableListener, EventType } from '../../../base/browser/dom.js';
+import { attachMenuStyler } from '../../theme/common/styler.js';
+import { domEvent } from '../../../base/browser/event.js';
 var ContextMenuHandler = /** @class */ (function () {
-    function ContextMenuHandler(element, contextViewService, telemetryService, notificationService) {
-        this.setContainer(element);
+    function ContextMenuHandler(element, contextViewService, telemetryService, notificationService, keybindingService, themeService) {
         this.contextViewService = contextViewService;
         this.telemetryService = telemetryService;
         this.notificationService = notificationService;
-        this.menuContainerElement = null;
+        this.keybindingService = keybindingService;
+        this.themeService = themeService;
+        this.setContainer(element);
     }
     ContextMenuHandler.prototype.setContainer = function (container) {
         var _this = this;
-        if (this.$el) {
-            this.$el.off(['click', 'mousedown']);
-            this.$el = null;
+        if (this.element) {
+            this.elementDisposable = dispose(this.elementDisposable);
+            this.element = null;
         }
         if (container) {
-            this.$el = $(container);
-            this.$el.on('mousedown', function (e) { return _this.onMouseDown(e); });
+            this.element = container;
+            this.elementDisposable = addDisposableListener(this.element, EventType.MOUSE_DOWN, function (e) { return _this.onMouseDown(e); });
         }
     };
     ContextMenuHandler.prototype.showContextMenu = function (delegate) {
         var _this = this;
-        delegate.getActions().done(function (actions) {
+        delegate.getActions().then(function (actions) {
             if (!actions.length) {
                 return; // Don't render an empty context menu
             }
+            _this.focusToReturn = document.activeElement;
+            var menu;
             _this.contextViewService.showContextView({
                 getAnchor: function () { return delegate.getAnchor(); },
                 canRelayout: false,
@@ -47,16 +51,20 @@ var ContextMenuHandler = /** @class */ (function () {
                     var actionRunner = delegate.actionRunner || new ActionRunner();
                     actionRunner.onDidBeforeRun(_this.onActionRun, _this, menuDisposables);
                     actionRunner.onDidRun(_this.onDidActionRun, _this, menuDisposables);
-                    var menu = new Menu(container, actions, {
+                    menu = new Menu(container, actions, {
                         actionItemProvider: delegate.getActionItem,
                         context: delegate.getActionsContext ? delegate.getActionsContext() : null,
                         actionRunner: actionRunner,
-                        getKeyBinding: delegate.getKeyBinding
+                        getKeyBinding: delegate.getKeyBinding ? delegate.getKeyBinding : function (action) { return _this.keybindingService.lookupKeybinding(action.id); }
                     });
+                    menuDisposables.push(attachMenuStyler(menu, _this.themeService));
                     menu.onDidCancel(function () { return _this.contextViewService.hideContextView(true); }, null, menuDisposables);
                     menu.onDidBlur(function () { return _this.contextViewService.hideContextView(true); }, null, menuDisposables);
-                    menu.focus(!!delegate.autoSelectFirstItem);
+                    domEvent(window, EventType.BLUR)(function () { _this.contextViewService.hideContextView(true); }, null, menuDisposables);
                     return combinedDisposable(menuDisposables.concat([menu]));
+                },
+                focus: function () {
+                    menu.focus(!!delegate.autoSelectFirstItem);
                 },
                 onHide: function (didCancel) {
                     if (delegate.onHide) {
@@ -78,6 +86,10 @@ var ContextMenuHandler = /** @class */ (function () {
             this.telemetryService.publicLog('workbenchActionExecuted', { id: e.action.id, from: 'contextMenu' });
         }
         this.contextViewService.hideContextView(false);
+        // Restore focus here
+        if (this.focusToReturn) {
+            this.focusToReturn.focus();
+        }
     };
     ContextMenuHandler.prototype.onDidActionRun = function (e) {
         if (e.error && this.notificationService) {

@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -15,8 +17,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 import './overlayWidgets.css';
 import { createFastDomNode } from '../../../../base/browser/fastDomNode.js';
-import { OverlayWidgetPositionPreference } from '../../editorBrowser.js';
-import { ViewPart, PartFingerprints } from '../../view/viewPart.js';
+import { PartFingerprints, ViewPart } from '../../view/viewPart.js';
 var ViewOverlayWidgets = /** @class */ (function (_super) {
     __extends(ViewOverlayWidgets, _super);
     function ViewOverlayWidgets(context) {
@@ -34,7 +35,7 @@ var ViewOverlayWidgets = /** @class */ (function (_super) {
     }
     ViewOverlayWidgets.prototype.dispose = function () {
         _super.prototype.dispose.call(this);
-        this._widgets = null;
+        this._widgets = {};
     };
     ViewOverlayWidgets.prototype.getDomNode = function () {
         return this._domNode;
@@ -90,16 +91,16 @@ var ViewOverlayWidgets = /** @class */ (function (_super) {
             domNode.unsetTop();
             return;
         }
-        if (widgetData.preference === OverlayWidgetPositionPreference.TOP_RIGHT_CORNER) {
+        if (widgetData.preference === 0 /* TOP_RIGHT_CORNER */) {
             domNode.setTop(0);
             domNode.setRight((2 * this._verticalScrollbarWidth) + this._minimapWidth);
         }
-        else if (widgetData.preference === OverlayWidgetPositionPreference.BOTTOM_RIGHT_CORNER) {
+        else if (widgetData.preference === 1 /* BOTTOM_RIGHT_CORNER */) {
             var widgetHeight = domNode.domNode.clientHeight;
             domNode.setTop((this._editorHeight - widgetHeight - 2 * this._horizontalScrollbarHeight));
             domNode.setRight((2 * this._verticalScrollbarWidth) + this._minimapWidth);
         }
-        else if (widgetData.preference === OverlayWidgetPositionPreference.TOP_CENTER) {
+        else if (widgetData.preference === 2 /* TOP_CENTER */) {
             domNode.setTop(0);
             domNode.domNode.style.right = '50%';
         }

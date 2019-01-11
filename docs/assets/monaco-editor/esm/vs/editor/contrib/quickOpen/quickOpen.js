@@ -2,19 +2,17 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import { illegalArgument, onUnexpectedExternalError } from '../../../base/common/errors.js';
-import URI from '../../../base/common/uri.js';
-import { TPromise } from '../../../base/common/winjs.base.js';
+import { URI } from '../../../base/common/uri.js';
 import { Range } from '../../common/core/range.js';
 import { registerLanguageCommand } from '../../browser/editorExtensions.js';
 import { DocumentSymbolProviderRegistry } from '../../common/modes.js';
 import { IModelService } from '../../common/services/modelService.js';
-import { asWinJsPromise } from '../../../base/common/async.js';
-export function getDocumentSymbols(model) {
+import { CancellationToken } from '../../../base/common/cancellation.js';
+export function getDocumentSymbols(model, flat, token) {
     var roots = [];
     var promises = DocumentSymbolProviderRegistry.all(model).map(function (support) {
-        return asWinJsPromise(function (token) { return support.provideDocumentSymbols(model, token); }).then(function (result) {
+        return Promise.resolve(support.provideDocumentSymbols(model, token)).then(function (result) {
             if (Array.isArray(result)) {
                 roots.push.apply(roots, result);
             }
@@ -22,9 +20,17 @@ export function getDocumentSymbols(model) {
             onUnexpectedExternalError(err);
         });
     });
-    return TPromise.join(promises).then(function () {
+    return Promise.all(promises).then(function () {
         var flatEntries = [];
-        flatten(flatEntries, roots, '');
+        if (token.isCancellationRequested) {
+            return flatEntries;
+        }
+        if (flat) {
+            flatten(flatEntries, roots, '');
+        }
+        else {
+            flatEntries = roots;
+        }
         flatEntries.sort(compareEntriesUsingStart);
         return flatEntries;
     });
@@ -58,5 +64,5 @@ registerLanguageCommand('_executeDocumentSymbolProvider', function (accessor, ar
     if (!model) {
         throw illegalArgument('resource');
     }
-    return getDocumentSymbols(model);
+    return getDocumentSymbols(model, false, CancellationToken.None);
 });

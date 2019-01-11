@@ -142,7 +142,7 @@ var FoldingModel = /** @class */ (function () {
         if (collapsedRanges.length > 0) {
             return collapsedRanges;
         }
-        return null;
+        return void 0;
     };
     /**
      * Apply persisted state, for persistence only
@@ -191,14 +191,13 @@ var FoldingModel = /** @class */ (function () {
     };
     FoldingModel.prototype.getRegionsInside = function (region, filter) {
         var result = [];
-        var trackLevel = filter && filter.length === 2;
-        var levelStack = trackLevel ? [] : null;
         var index = region ? region.regionIndex + 1 : 0;
         var endLineNumber = region ? region.endLineNumber : Number.MAX_VALUE;
-        for (var i = index, len = this._regions.length; i < len; i++) {
-            var current = this._regions.toRegion(i);
-            if (this._regions.getStartLineNumber(i) < endLineNumber) {
-                if (trackLevel) {
+        if (filter && filter.length === 2) {
+            var levelStack = [];
+            for (var i = index, len = this._regions.length; i < len; i++) {
+                var current = this._regions.toRegion(i);
+                if (this._regions.getStartLineNumber(i) < endLineNumber) {
                     while (levelStack.length > 0 && !current.containedBy(levelStack[levelStack.length - 1])) {
                         levelStack.pop();
                     }
@@ -207,12 +206,22 @@ var FoldingModel = /** @class */ (function () {
                         result.push(current);
                     }
                 }
-                else if (!filter || filter(current)) {
-                    result.push(current);
+                else {
+                    break;
                 }
             }
-            else {
-                break;
+        }
+        else {
+            for (var i = index, len = this._regions.length; i < len; i++) {
+                var current = this._regions.toRegion(i);
+                if (this._regions.getStartLineNumber(i) < endLineNumber) {
+                    if (!filter || filter(current)) {
+                        result.push(current);
+                    }
+                }
+                else {
+                    break;
+                }
             }
         }
         return result;

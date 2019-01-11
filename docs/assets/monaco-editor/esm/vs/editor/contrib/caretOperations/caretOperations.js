@@ -2,11 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -14,8 +16,8 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 import * as nls from '../../../nls.js';
+import { EditorAction, registerEditorAction } from '../../browser/editorExtensions.js';
 import { EditorContextKeys } from '../../common/editorContextKeys.js';
-import { registerEditorAction, EditorAction } from '../../browser/editorExtensions.js';
 import { MoveCaretCommand } from './moveCaretCommand.js';
 var MoveCaretAction = /** @class */ (function (_super) {
     __extends(MoveCaretAction, _super);
@@ -25,6 +27,9 @@ var MoveCaretAction = /** @class */ (function (_super) {
         return _this;
     }
     MoveCaretAction.prototype.run = function (accessor, editor) {
+        if (!editor.hasModel()) {
+            return;
+        }
         var commands = [];
         var selections = editor.getSelections();
         for (var i = 0; i < selections.length; i++) {

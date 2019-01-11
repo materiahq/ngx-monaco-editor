@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
 import './browser/controller/coreCommands.js';
 import './browser/widget/codeEditorWidget.js';
 import './browser/widget/diffEditorWidget.js';
@@ -11,6 +10,7 @@ import './contrib/bracketMatching/bracketMatching.js';
 import './contrib/caretOperations/caretOperations.js';
 import './contrib/caretOperations/transpose.js';
 import './contrib/clipboard/clipboard.js';
+import './contrib/codeAction/codeActionContributions.js';
 import './contrib/codelens/codelensController.js';
 import './contrib/colorPicker/colorDetector.js';
 import './contrib/comment/comment.js';
@@ -30,7 +30,6 @@ import './contrib/linesOperations/linesOperations.js';
 import './contrib/links/links.js';
 import './contrib/multicursor/multicursor.js';
 import './contrib/parameterHints/parameterHints.js';
-import './contrib/codeAction/codeActionContributions.js';
 import './contrib/referenceSearch/referenceSearch.js';
 import './contrib/rename/rename.js';
 import './contrib/smartSelect/smartSelect.js';
