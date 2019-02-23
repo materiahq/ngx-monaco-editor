@@ -6,10 +6,10 @@ import {
     OnChanges,
     OnDestroy,
     Input,
-    Output,
-    EventEmitter,
-    ChangeDetectionStrategy
+    ChangeDetectionStrategy,
+    forwardRef
 } from '@angular/core';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { MonacoEditorLoaderService } from '../../services/monaco-editor-loader.service';
 import { MonacoOptions } from '../../interfaces/monaco-options';
 
@@ -50,23 +50,31 @@ declare const monaco: any;
 	height: 100%;
 }`
     ],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => MonacoEditorComponent),
+            multi: true
+        }
+    ]
 })
-export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy {
+export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor {
     container: HTMLDivElement;
     editor: any;
 
-    @Input() code: string;
+    value: string;
     @Input() options: MonacoOptions;
-    @Output() codeChange = new EventEmitter<string>();
 
     @ViewChild('editor') editorContent: ElementRef;
+
+    private propagateChange = (_: any) => { };
+    private onTouched = () => { };
 
     constructor(private monacoLoader: MonacoEditorLoaderService) { }
 
     ngOnInit() {
         this.container = this.editorContent.nativeElement;
-        this.codeChange.next(this.code);
         this.monacoLoader.isMonacoLoaded.subscribe(value => {
             if (value) {
                 this.initMonaco();
@@ -75,12 +83,8 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnChanges(changes) {
-        if (this.editor && changes.code) {
-            if (changes.code.currentValue !== this.editor.getValue()) {
-                changes.code.currentValue ? this.editor.setValue(changes.code.currentValue) : this.editor.setValue('');
-            }
-
-            if ( ! this.options.language ) {
+        if (this.editor) {
+            if (!this.options.language) {
                 this.options.language = 'text';
             }
             monaco.editor.setModelLanguage(
@@ -93,9 +97,24 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy {
         }
     }
 
+    writeValue(obj: any): void {
+        this.value = obj;
+        if (this.editor && obj) {
+            this.editor.setValue(obj);
+        }
+    }
+
+    registerOnChange(fn: any): void {
+        this.propagateChange = fn;
+    }
+
+    registerOnTouched(fn: any): void {
+        this.onTouched = fn;
+    }
+
     private initMonaco() {
         const opts: any = {
-            value: [this.code].join('\n'),
+            value: [this.value].join('\n'),
             language: 'json',
             automaticLayout: true,
             scrollBeyondLastLine: false
@@ -110,13 +129,18 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy {
         this.editor.layout();
 
         this.editor.onDidChangeModelContent((changes) => {
-            this.codeChange.next(this.editor.getValue());
+            this.propagateChange(this.editor.getValue());
         });
+
+        this.editor.onDidBlurEditorText((e: any) => {
+            this.onTouched();
+        });
+
         if (this.options.theme) {
             monaco.editor.setTheme(this.options.theme);
         }
 
-        if ( ! this.options.language ) {
+        if (!this.options.language) {
             this.options.language = 'text';
         }
         monaco.editor.setModelLanguage(
