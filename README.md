@@ -84,10 +84,10 @@ export class AppComponent {
 ```
 
 
-Include editor in html with options and ngModel bindings.(eg: app.component.html)
+Include editor in html with options and ngModel bindings (eg: app.component.html). You can also include the ngx-monaco-editor in a form.
 
 ```html
-<ngx-monaco-editor [options]="editorOptions" [(code)]="code"></ngx-monaco-editor>
+<ngx-monaco-editor [options]="editorOptions" [(ngModel)]="code"></ngx-monaco-editor>
 ```
 
 Include dif-editor in html with options and ngModel bindings.(eg: app.component.html)
