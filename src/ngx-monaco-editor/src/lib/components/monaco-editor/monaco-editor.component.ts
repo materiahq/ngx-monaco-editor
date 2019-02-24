@@ -9,9 +9,12 @@ import {
     ChangeDetectionStrategy,
     forwardRef
 } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR, Validator, NG_VALIDATORS, AsyncValidator, NG_ASYNC_VALIDATORS } from '@angular/forms';
 import { MonacoEditorLoaderService } from '../../services/monaco-editor-loader.service';
 import { MonacoOptions } from '../../interfaces/monaco-options';
+import { Subject, BehaviorSubject, of } from 'rxjs';
+
+import { map, tap } from 'rxjs/operators';
 
 declare const monaco: any;
 
@@ -56,20 +59,27 @@ declare const monaco: any;
             provide: NG_VALUE_ACCESSOR,
             useExisting: forwardRef(() => MonacoEditorComponent),
             multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() => MonacoEditorComponent),
+            multi: true,
         }
     ]
 })
-export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor {
+export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor, Validator {
     container: HTMLDivElement;
     editor: any;
 
     value: string;
-    @Input() options: MonacoOptions;
+    parseError: boolean;
 
+    @Input() options: MonacoOptions;
     @ViewChild('editor') editorContent: ElementRef;
 
     private propagateChange = (_: any) => { };
     private onTouched = () => { };
+    private onErrorStatusChange: () => void;
 
     constructor(private monacoLoader: MonacoEditorLoaderService) { }
 
@@ -112,6 +122,18 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
         this.onTouched = fn;
     }
 
+    validate(control: import("@angular/forms").AbstractControl): import("@angular/forms").ValidationErrors {
+        return (!this.parseError) ? null : {
+            parseError: {
+                valid: false,
+            },
+        };
+    }
+
+    registerOnValidatorChange?(fn: () => void): void {
+        this.onErrorStatusChange = fn;
+    }
+
     private initMonaco() {
         const opts: any = {
             value: [this.value].join('\n'),
@@ -130,6 +152,19 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
 
         this.editor.onDidChangeModelContent((changes) => {
             this.propagateChange(this.editor.getValue());
+        });
+
+        this.editor.onDidChangeModelDecorations((changes) => {
+            const pastParseError = this.parseError;
+            if (monaco.editor.getModelMarkers({}).map(m => m.message).join(', ')) {
+                this.parseError = true;
+            } else {
+                this.parseError = false;
+            }
+
+            if (pastParseError !== this.parseError) {
+                this.onErrorStatusChange();
+            }
         });
 
         this.editor.onDidBlurEditorText((e: any) => {
