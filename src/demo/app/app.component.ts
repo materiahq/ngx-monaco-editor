@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { FormGroup, FormBuilder } from '@angular/forms';
 
 @Component({
   selector: 'app-root',
@@ -24,5 +25,16 @@ export class AppComponent {
 
   setTheme(theme) {
     this.options = Object.assign({}, { theme: theme });
+  }
+
+  public reactiveForm: FormGroup;
+
+  constructor(private fb: FormBuilder) {
+    this.reactiveForm = this.fb.group({
+      result: [
+        `{
+  "test123":"test456"
+}`]
+    })
   }
 }
