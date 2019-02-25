@@ -31,7 +31,7 @@ export class AppComponent {
 
   constructor(private fb: FormBuilder) {
     this.reactiveForm = this.fb.group({
-      result: [
+      code: [
         `{
   "test123":"test456"
 }`]
