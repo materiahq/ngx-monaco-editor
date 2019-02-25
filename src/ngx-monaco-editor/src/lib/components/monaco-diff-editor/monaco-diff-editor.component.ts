@@ -11,8 +11,6 @@ import {
 import { MonacoEditorLoaderService } from '../../services/monaco-editor-loader.service';
 import { MonacoOptions } from '../../interfaces/monaco-options';
 
-declare const monaco: any;
-
 @Component({
     selector: 'ngx-monaco-diff-editor',
     template: `<div #container materiaResized (resized)="onResized($event)" class="editor-container" fxFlex>
@@ -52,7 +50,7 @@ height: 100%;
 })
 export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
     container: HTMLDivElement;
-    editor: any;
+    editor: monaco.editor.IStandaloneDiffEditor;
 
     @Input() original: string;
     @Input() modified: string;
@@ -88,7 +86,7 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     private initMonaco() {
-        const opts = {
+        const opts: monaco.editor.IDiffEditorConstructionOptions = {
             enableSplitViewResizing: this.enableSplitViewResizing,
             renderSideBySide: !this.inline,
             readOnly: true

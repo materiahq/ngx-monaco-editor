@@ -13,9 +13,6 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, Validator, NG_VALIDATORS, Vali
 import { MonacoEditorLoaderService } from '../../services/monaco-editor-loader.service';
 import { MonacoOptions } from '../../interfaces/monaco-options';
 
-
-declare const monaco: any;
-
 @Component({
     selector: 'ngx-monaco-editor',
     template: `<div #container materiaResized (resized)="onResized($event)" class="editor-container" fxFlex>
@@ -67,7 +64,7 @@ declare const monaco: any;
 })
 export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor, Validator {
     container: HTMLDivElement;
-    editor: any;
+    editor: monaco.editor.IStandaloneCodeEditor;
 
     value: string;
     parseError: boolean;
@@ -133,7 +130,7 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
     }
 
     private initMonaco() {
-        const opts: any = {
+        const opts: monaco.editor.IEditorConstructionOptions = {
             value: [this.value].join('\n'),
             language: 'json',
             automaticLayout: true,
