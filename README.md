@@ -57,6 +57,7 @@ import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
   ],
   imports: [
     BrowserModule,
+    FormsModule,
     MonacoEditorModule
   ],
   providers: [],
