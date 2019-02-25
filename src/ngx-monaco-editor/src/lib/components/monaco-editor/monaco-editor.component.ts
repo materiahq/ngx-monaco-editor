@@ -9,12 +9,10 @@ import {
     ChangeDetectionStrategy,
     forwardRef
 } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR, Validator, NG_VALIDATORS, AsyncValidator, NG_ASYNC_VALIDATORS } from '@angular/forms';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR, Validator, NG_VALIDATORS } from '@angular/forms';
 import { MonacoEditorLoaderService } from '../../services/monaco-editor-loader.service';
 import { MonacoOptions } from '../../interfaces/monaco-options';
-import { Subject, BehaviorSubject, of } from 'rxjs';
 
-import { map, tap } from 'rxjs/operators';
 
 declare const monaco: any;
 
@@ -122,7 +120,7 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
         this.onTouched = fn;
     }
 
-    validate(control: import("@angular/forms").AbstractControl): import("@angular/forms").ValidationErrors {
+    validate(): import("@angular/forms").ValidationErrors {
         return (!this.parseError) ? null : {
             parseError: {
                 valid: false,
@@ -150,11 +148,11 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
         this.editor = monaco.editor.create(this.container, opts);
         this.editor.layout();
 
-        this.editor.onDidChangeModelContent((changes) => {
+        this.editor.onDidChangeModelContent(() => {
             this.propagateChange(this.editor.getValue());
         });
 
-        this.editor.onDidChangeModelDecorations((changes) => {
+        this.editor.onDidChangeModelDecorations(() => {
             const pastParseError = this.parseError;
             if (monaco.editor.getModelMarkers({}).map(m => m.message).join(', ')) {
                 this.parseError = true;
@@ -167,7 +165,7 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
             }
         });
 
-        this.editor.onDidBlurEditorText((e: any) => {
+        this.editor.onDidBlurEditorText(() => {
             this.onTouched();
         });
 
