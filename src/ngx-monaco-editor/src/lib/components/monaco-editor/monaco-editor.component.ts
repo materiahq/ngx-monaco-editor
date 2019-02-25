@@ -9,7 +9,7 @@ import {
     ChangeDetectionStrategy,
     forwardRef
 } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR, Validator, NG_VALIDATORS } from '@angular/forms';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR, Validator, NG_VALIDATORS, ValidationErrors } from '@angular/forms';
 import { MonacoEditorLoaderService } from '../../services/monaco-editor-loader.service';
 import { MonacoOptions } from '../../interfaces/monaco-options';
 
@@ -75,8 +75,8 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
     @Input() options: MonacoOptions;
     @ViewChild('editor') editorContent: ElementRef;
 
-    private propagateChange = (_: any) => { };
-    private onTouched = () => { };
+    private propagateChange: (_: any) => any;
+    private onTouched: () => void;
     private onErrorStatusChange: () => void;
 
     constructor(private monacoLoader: MonacoEditorLoaderService) { }
@@ -105,10 +105,10 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
         }
     }
 
-    writeValue(obj: any): void {
-        this.value = obj;
-        if (this.editor && obj) {
-            this.editor.setValue(obj);
+    writeValue(value: any): void {
+        this.value = value;
+        if (this.editor && value) {
+            this.editor.setValue(value);
         }
     }
 
@@ -120,11 +120,11 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
         this.onTouched = fn;
     }
 
-    validate(): import("@angular/forms").ValidationErrors {
+    validate(): ValidationErrors {
         return (!this.parseError) ? null : {
             parseError: {
                 valid: false,
-            },
+            }
         };
     }
 
