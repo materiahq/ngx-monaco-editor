@@ -19,10 +19,7 @@
         </div>
 
         <div class="xs-menu menu" id="mobile-menu">
-                <div id="book-search-input" role="search">
-    <input type="text" placeholder="Type to search">
-</div>
-            <compodoc-menu></compodoc-menu>
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
         </div>
 
         <div class="container-fluid main">
@@ -50,6 +47,9 @@
             <a href="#source" role="tab" id="source-tab" data-toggle="tab" data-link="source">Source</a>
         </li>
         <li >
+            <a href="#styleData" role="tab" id="styleData-tab" data-toggle="tab" data-link="style">Styles</a>
+        </li>
+        <li >
             <a href="#tree" role="tab" id="tree-tab" data-toggle="tab" data-link="dom-tree">DOM Tree</a>
         </li>
 </ul>
@@ -71,6 +71,8 @@
                 <code><a href="https://angular.io/api/core/OnInit" target="_blank" >OnInit</a></code>
                 <code><a href="https://angular.io/api/core/OnChanges" target="_blank" >OnChanges</a></code>
                 <code><a href="https://angular.io/api/core/OnDestroy" target="_blank" >OnDestroy</a></code>
+                <code><a href="https://angular.io/api/forms/ControlValueAccessor" target="_blank" >ControlValueAccessor</a></code>
+                <code><a href="https://angular.io/api/forms/Validator" target="_blank" >Validator</a></code>
     </p>
 
 
@@ -91,6 +93,17 @@
 
 
 
+            <tr>
+                <td class="col-md-3">providers</td>
+                <td class="col-md-9">
+                            <code><a href="../components/MonacoEditorComponent.html" target="_self" >{
+    provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() &#x3D;&gt; MonacoEditorComponent), multi: true
+}</a></code>
+                            <code><a href="../components/MonacoEditorComponent.html" target="_self" >{
+    provide: NG_VALIDATORS, useExisting: forwardRef(() &#x3D;&gt; MonacoEditorComponent), multi: true,
+}</a></code>
+                </td>
+            </tr>
 
 
             <tr>
@@ -139,6 +152,12 @@
 
 
 
+
+
+
+
+
+
         </tbody>
     </table>
 </section>
@@ -163,6 +182,24 @@
                             </li>
                             <li>
                                 <a href="#editorContent">editorContent</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                <a href="#onErrorStatusChange">onErrorStatusChange</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                <a href="#onTouched">onTouched</a>
+                            </li>
+                            <li>
+                                <a href="#parseError">parseError</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                <a href="#propagateChange">propagateChange</a>
+                            </li>
+                            <li>
+                                <a href="#value">value</a>
                             </li>
                         </ul>
                     </td>
@@ -192,6 +229,22 @@
                             <li>
                                 <a href="#onResized">onResized</a>
                             </li>
+                            <li>
+                                <a href="#registerOnChange">registerOnChange</a>
+                            </li>
+                            <li>
+                                <a href="#registerOnTouched">registerOnTouched</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Optional</span>
+                                <a href="#registerOnValidatorChange">registerOnValidatorChange</a>
+                            </li>
+                            <li>
+                                <a href="#validate">validate</a>
+                            </li>
+                            <li>
+                                <a href="#writeValue">writeValue</a>
+                            </li>
                         </ul>
                     </td>
                 </tr>
@@ -205,29 +258,12 @@
                     <td class="col-md-4">
                         <ul class="index-list">
                             <li>
-                                <a href="#code">code</a>
-                            </li>
-                            <li>
                                 <a href="#options">options</a>
                             </li>
                         </ul>
                     </td>
                 </tr>
 
-                <tr>
-                    <td class="col-md-4">
-                        <h6><b>Outputs</b></h6>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="col-md-4">
-                        <ul class="index-list">
-                            <li>
-                                <a href="#codeChange">codeChange</a>
-                            </li>
-                        </ul>
-                    </td>
-                </tr>
 
 
 
@@ -246,7 +282,7 @@
                 </tr>
                         <tr>
                             <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="63" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:63</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="82" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:82</a></div>
                             </td>
                         </tr>
 
@@ -289,68 +325,26 @@
         <table class="table table-sm table-bordered">
             <tbody>
                 <tr>
-                    <td class="col-md-2">
-                        <a name="code"></a>
-                        <code>code</code>
-                    </td>
-                    <td class="col-md-10">
-                            <p>
-                            <em>Type :</em>    <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
-
-                            </p>
-                    </td>
-                </tr>
-                        <tr>
-                            <td class="col-md-2" colspan="2">
-                                    <div class="io-line">Defined in <a href="" data-line="59" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:59</a></div>
-                            </td>
-                        </tr>
-            </tbody>
-        </table>
-        <table class="table table-sm table-bordered">
-            <tbody>
-                <tr>
-                    <td class="col-md-2">
+                    <td class="col-md-4">
                         <a name="options"></a>
-                        <code>options</code>
-                    </td>
-                    <td class="col-md-10">
-                            <p>
-                            <em>Type :</em>    <code><a href="../interfaces/MonacoOptions.html" target="_self" >MonacoOptions</a></code>
-
-                            </p>
+                        <b>options</b>
                     </td>
                 </tr>
-                        <tr>
-                            <td class="col-md-2" colspan="2">
-                                    <div class="io-line">Defined in <a href="" data-line="60" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:60</a></div>
-                            </td>
-                        </tr>
-            </tbody>
-        </table>
-</section>
-    <section>
-    <h3 id="outputs">Outputs</h3>
-        <table class="table table-sm table-bordered">
-            <tbody>
                 <tr>
-                    <td class="col-md-2">
-                        <a name="codeChange"></a>
-                        <code>codeChange</code>
-                    </td>
-                    <td class="col-md-10">
-                        <em><code>$event</code> Type:</em>    <code><a href="https://angular.io/api/core/EventEmitter" target="_blank" >EventEmitter</a></code>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>editor.IEditorConstructionOptions</code>
 
                     </td>
                 </tr>
                         <tr>
                             <td class="col-md-2" colspan="2">
-                                    <div class="io-line">Defined in <a href="" data-line="61" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:61</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="77" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:77</a></div>
                             </td>
                         </tr>
             </tbody>
         </table>
 </section>
+
 
 
     <section>
@@ -382,7 +376,7 @@
 
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="96" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:96</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="137" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:137</a></div>
                             </td>
                         </tr>
 
@@ -413,14 +407,14 @@
                 </tr>
                 <tr>
                     <td class="col-md-4">
-<code>ngOnChanges(changes: )</code>
+<code>ngOnChanges(changes: <a href="https://angular.io/api/core/SimpleChanges" target="_blank">SimpleChanges</a>)</code>
                     </td>
                 </tr>
 
 
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="77" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:77</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="96" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:96</a></div>
                             </td>
                         </tr>
 
@@ -434,12 +428,16 @@
                                         <thead>
                                             <tr>
                                                 <td>Name</td>
+                                                    <td>Type</td>
                                                 <td>Optional</td>
                                             </tr>
                                         </thead>
                                         <tbody>
                                                 <tr>
                                                         <td>changes</td>
+                                                        <td>
+                                                                    <code><a href="https://angular.io/api/core/SimpleChanges" target="_blank" >SimpleChanges</a></code>
+                                                        </td>
                                                     
                                                     <td>
                                                             No
@@ -485,7 +483,7 @@
 
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="137" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:137</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="181" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:181</a></div>
                             </td>
                         </tr>
 
@@ -523,7 +521,7 @@
 
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="67" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:67</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="86" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:86</a></div>
                             </td>
                         </tr>
 
@@ -554,14 +552,14 @@
                 </tr>
                 <tr>
                     <td class="col-md-4">
-<code>onResized(event: )</code>
+<code>onResized(event)</code>
                     </td>
                 </tr>
 
 
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="128" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:128</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="172" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:172</a></div>
                             </td>
                         </tr>
 
@@ -604,6 +602,321 @@
                 </tr>
             </tbody>
         </table>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <a name="registerOnChange"></a>
+                        <span class="name">
+                            <b>
+                            registerOnChange
+                            </b>
+                            <a href="#registerOnChange"><span class="icon ion-ios-link"></span></a>
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+<code>registerOnChange(fn: <a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank">any</a>)</code>
+                    </td>
+                </tr>
+
+
+                        <tr>
+                            <td class="col-md-4">
+                                    <div class="io-line">Defined in <a href="" data-line="117" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:117</a></div>
+                            </td>
+                        </tr>
+
+
+                <tr>
+                    <td class="col-md-4">
+
+                            <div class="io-description">
+                                    <b>Parameters :</b>
+                                    <table class="params">
+                                        <thead>
+                                            <tr>
+                                                <td>Name</td>
+                                                    <td>Type</td>
+                                                <td>Optional</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                                <tr>
+                                                        <td>fn</td>
+                                                        <td>
+                                                                    <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+                                                        </td>
+                                                    
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+
+                                                </tr>
+                                        </tbody>
+                                    </table>
+                            </div>
+                            <div>
+                            </div>
+                            <div class="io-description">
+                                <b>Returns : </b>    <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
+
+                            </div>
+                                <div class="io-description">
+                                    
+                                </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <a name="registerOnTouched"></a>
+                        <span class="name">
+                            <b>
+                            registerOnTouched
+                            </b>
+                            <a href="#registerOnTouched"><span class="icon ion-ios-link"></span></a>
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+<code>registerOnTouched(fn: <a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank">any</a>)</code>
+                    </td>
+                </tr>
+
+
+                        <tr>
+                            <td class="col-md-4">
+                                    <div class="io-line">Defined in <a href="" data-line="121" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:121</a></div>
+                            </td>
+                        </tr>
+
+
+                <tr>
+                    <td class="col-md-4">
+
+                            <div class="io-description">
+                                    <b>Parameters :</b>
+                                    <table class="params">
+                                        <thead>
+                                            <tr>
+                                                <td>Name</td>
+                                                    <td>Type</td>
+                                                <td>Optional</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                                <tr>
+                                                        <td>fn</td>
+                                                        <td>
+                                                                    <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+                                                        </td>
+                                                    
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+
+                                                </tr>
+                                        </tbody>
+                                    </table>
+                            </div>
+                            <div>
+                            </div>
+                            <div class="io-description">
+                                <b>Returns : </b>    <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
+
+                            </div>
+                                <div class="io-description">
+                                    
+                                </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <a name="registerOnValidatorChange"></a>
+                        <span class="name">
+                            <b>
+                                <span class="modifier">Optional</span>
+                            registerOnValidatorChange
+                            </b>
+                            <a href="#registerOnValidatorChange"><span class="icon ion-ios-link"></span></a>
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+<code>registerOnValidatorChange(fn: () => void)</code>
+                    </td>
+                </tr>
+
+
+                        <tr>
+                            <td class="col-md-4">
+                                    <div class="io-line">Defined in <a href="" data-line="133" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:133</a></div>
+                            </td>
+                        </tr>
+
+
+                <tr>
+                    <td class="col-md-4">
+
+                            <div class="io-description">
+                                    <b>Parameters :</b>
+                                    <table class="params">
+                                        <thead>
+                                            <tr>
+                                                <td>Name</td>
+                                                    <td>Type</td>
+                                                <td>Optional</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                                <tr>
+                                                        <td>fn</td>
+                                                        <td>
+                                                                    <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/function" target="_blank" >function</a></code>
+                                                        </td>
+                                                    
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+
+                                                </tr>
+                                        </tbody>
+                                    </table>
+                            </div>
+                            <div>
+                            </div>
+                            <div class="io-description">
+                                <b>Returns : </b>    <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
+
+                            </div>
+                                <div class="io-description">
+                                    
+                                </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <a name="validate"></a>
+                        <span class="name">
+                            <b>
+                            validate
+                            </b>
+                            <a href="#validate"><span class="icon ion-ios-link"></span></a>
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+<code>validate()</code>
+                    </td>
+                </tr>
+
+
+                        <tr>
+                            <td class="col-md-4">
+                                    <div class="io-line">Defined in <a href="" data-line="125" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:125</a></div>
+                            </td>
+                        </tr>
+
+
+                <tr>
+                    <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Returns : </b>    <code><a href="https://angular.io/api/forms/ValidationErrors" target="_blank" >ValidationErrors</a></code>
+
+                            </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <a name="writeValue"></a>
+                        <span class="name">
+                            <b>
+                            writeValue
+                            </b>
+                            <a href="#writeValue"><span class="icon ion-ios-link"></span></a>
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+<code>writeValue(value: <a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank">any</a>)</code>
+                    </td>
+                </tr>
+
+
+                        <tr>
+                            <td class="col-md-4">
+                                    <div class="io-line">Defined in <a href="" data-line="110" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:110</a></div>
+                            </td>
+                        </tr>
+
+
+                <tr>
+                    <td class="col-md-4">
+
+                            <div class="io-description">
+                                    <b>Parameters :</b>
+                                    <table class="params">
+                                        <thead>
+                                            <tr>
+                                                <td>Name</td>
+                                                    <td>Type</td>
+                                                <td>Optional</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                                <tr>
+                                                        <td>value</td>
+                                                        <td>
+                                                                    <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+                                                        </td>
+                                                    
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+
+                                                </tr>
+                                        </tbody>
+                                    </table>
+                            </div>
+                            <div>
+                            </div>
+                            <div class="io-description">
+                                <b>Returns : </b>    <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
+
+                            </div>
+                                <div class="io-description">
+                                    
+                                </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 </section>
 
     <section>
@@ -618,16 +931,9 @@
                         <a name="container"></a>
                         <span class="name">
                             <b>
-                            container
-                            </b>
+                            container</b>
                             <a href="#container"><span class="icon ion-ios-link"></span></a>
                         </span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="col-md-4">
-                        <code>container:     <code>HTMLDivElement</code>
-</code>
                     </td>
                 </tr>
                     <tr>
@@ -638,7 +944,7 @@
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="56" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:56</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="71" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:71</a></div>
                             </td>
                         </tr>
 
@@ -652,27 +958,20 @@
                         <a name="editor"></a>
                         <span class="name">
                             <b>
-                            editor
-                            </b>
+                            editor</b>
                             <a href="#editor"><span class="icon ion-ios-link"></span></a>
                         </span>
                     </td>
                 </tr>
-                <tr>
-                    <td class="col-md-4">
-                        <code>editor:     <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
-</code>
-                    </td>
-                </tr>
                     <tr>
                         <td class="col-md-4">
-                            <i>Type : </i>    <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+                            <i>Type : </i>    <code>editor.IStandaloneCodeEditor</code>
 
                         </td>
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="57" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:57</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="72" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:72</a></div>
                             </td>
                         </tr>
 
@@ -686,16 +985,9 @@
                         <a name="editorContent"></a>
                         <span class="name">
                             <b>
-                            editorContent
-                            </b>
+                            editorContent</b>
                             <a href="#editorContent"><span class="icon ion-ios-link"></span></a>
                         </span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="col-md-4">
-                        <code>editorContent:     <code><a href="https://angular.io/api/core/ElementRef" target="_blank" >ElementRef</a></code>
-</code>
                     </td>
                 </tr>
                     <tr>
@@ -706,12 +998,154 @@
                     </tr>
                     <tr>
                         <td class="col-md-4">
-                            <i>Decorators : </i><code>ViewChild</code>
+                            <b>Decorators : </b>
+                            <br />
+                            <code>
+                                @ViewChild(&#x27;editor&#x27;)<br />
+                            </code>
                         </td>
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="63" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:63</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="78" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:78</a></div>
+                            </td>
+                        </tr>
+
+
+            </tbody>
+        </table>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <a name="onErrorStatusChange"></a>
+                        <span class="name">
+                            <b>
+                                <span class="modifier">Private</span>
+                            onErrorStatusChange</b>
+                            <a href="#onErrorStatusChange"><span class="icon ion-ios-link"></span></a>
+                        </span>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                            <i>Type : </i>    <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/function" target="_blank" >function</a></code>
+
+                        </td>
+                    </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                    <div class="io-line">Defined in <a href="" data-line="82" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:82</a></div>
+                            </td>
+                        </tr>
+
+
+            </tbody>
+        </table>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <a name="onTouched"></a>
+                        <span class="name">
+                            <b>
+                                <span class="modifier">Private</span>
+                            onTouched</b>
+                            <a href="#onTouched"><span class="icon ion-ios-link"></span></a>
+                        </span>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                            <i>Type : </i>    <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/function" target="_blank" >function</a></code>
+
+                        </td>
+                    </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                    <div class="io-line">Defined in <a href="" data-line="81" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:81</a></div>
+                            </td>
+                        </tr>
+
+
+            </tbody>
+        </table>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <a name="parseError"></a>
+                        <span class="name">
+                            <b>
+                            parseError</b>
+                            <a href="#parseError"><span class="icon ion-ios-link"></span></a>
+                        </span>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                            <i>Type : </i>    <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/boolean" target="_blank" >boolean</a></code>
+
+                        </td>
+                    </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                    <div class="io-line">Defined in <a href="" data-line="75" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:75</a></div>
+                            </td>
+                        </tr>
+
+
+            </tbody>
+        </table>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <a name="propagateChange"></a>
+                        <span class="name">
+                            <b>
+                                <span class="modifier">Private</span>
+                            propagateChange</b>
+                            <a href="#propagateChange"><span class="icon ion-ios-link"></span></a>
+                        </span>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                            <i>Type : </i>    <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/function" target="_blank" >function</a></code>
+
+                        </td>
+                    </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                    <div class="io-line">Defined in <a href="" data-line="80" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:80</a></div>
+                            </td>
+                        </tr>
+
+
+            </tbody>
+        </table>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <a name="value"></a>
+                        <span class="name">
+                            <b>
+                            value</b>
+                            <a href="#value"><span class="icon ion-ios-link"></span></a>
+                        </span>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                            <i>Type : </i>    <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+
+                        </td>
+                    </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                    <div class="io-line">Defined in <a href="" data-line="74" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:74</a></div>
                             </td>
                         </tr>
 
@@ -732,12 +1166,15 @@
     OnChanges,
     OnDestroy,
     Input,
-    Output,
-    EventEmitter,
-    ChangeDetectionStrategy
+    ChangeDetectionStrategy,
+    forwardRef,
+    SimpleChanges
 } from &#x27;@angular/core&#x27;;
+import { ControlValueAccessor, NG_VALUE_ACCESSOR, Validator, NG_VALIDATORS, ValidationErrors } from &#x27;@angular/forms&#x27;;
+import { filter, take } from &#x27;rxjs/operators&#x27;;
+import { editor } from &#x27;monaco-editor&#x27;;
+
 import { MonacoEditorLoaderService } from &#x27;../../services/monaco-editor-loader.service&#x27;;
-import { MonacoOptions } from &#x27;../../interfaces/monaco-options&#x27;;
 
 declare const monaco: any;
 
@@ -776,79 +1213,120 @@ declare const monaco: any;
 	height: 100%;
 }&#x60;
     ],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() &#x3D;&gt; MonacoEditorComponent),
+            multi: true
+        },
+        {
+            provide: NG_VALIDATORS,
+            useExisting: forwardRef(() &#x3D;&gt; MonacoEditorComponent),
+            multi: true,
+        }
+    ]
 })
-export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy {
+export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor, Validator {
     container: HTMLDivElement;
-    editor: any;
+    editor: editor.IStandaloneCodeEditor;
 
-    @Input() code: string;
-    @Input() options: MonacoOptions;
-    @Output() codeChange &#x3D; new EventEmitter&lt;string&gt;();
+    value: string;
+    parseError: boolean;
 
+    @Input() options: editor.IEditorConstructionOptions;
     @ViewChild(&#x27;editor&#x27;) editorContent: ElementRef;
+
+    private propagateChange: (_: any) &#x3D;&gt; any;
+    private onTouched: () &#x3D;&gt; void;
+    private onErrorStatusChange: () &#x3D;&gt; void;
 
     constructor(private monacoLoader: MonacoEditorLoaderService) { }
 
     ngOnInit() {
         this.container &#x3D; this.editorContent.nativeElement;
-        this.codeChange.next(this.code);
-        this.monacoLoader.isMonacoLoaded.subscribe(value &#x3D;&gt; {
-            if (value) {
-                this.initMonaco();
-            }
+        this.monacoLoader.isMonacoLoaded.pipe(
+          filter(isLoaded &#x3D;&gt; isLoaded),
+          take(1),
+        ).subscribe(() &#x3D;&gt; {
+            this.initMonaco();
         });
     }
 
-    ngOnChanges(changes) {
-        if (this.editor &amp;&amp; changes.code) {
-            if (changes.code.currentValue !&#x3D;&#x3D; this.editor.getValue()) {
-                this.editor.setValue(changes.code.currentValue);
-            }
-
-            if ( ! this.options.language ) {
-                this.options.language &#x3D; &#x27;text&#x27;;
-            }
+    ngOnChanges(changes: SimpleChanges) {
+        if (this.editor &amp;&amp; changes.options &amp;&amp; ! changes.options.firstChange) {
+          if (changes.options.previousValue.language !&#x3D;&#x3D; changes.options.currentValue) {
             monaco.editor.setModelLanguage(
-                this.editor.getModel(),
-                this.options.language
+              this.editor.getModel(),
+              this.options &amp;&amp; this.options.language ? this.options.language : &#x27;text&#x27;
             );
-        }
-        if (this.editor &amp;&amp; changes.options &amp;&amp; changes.options.currentValue &amp;&amp; changes.options.currentValue.theme) {
+          }
+          if (changes.options.previousValue.theme !&#x3D;&#x3D; changes.options.currentValue) {
             monaco.editor.setTheme(changes.options.currentValue.theme);
+          }
         }
     }
 
+    writeValue(value: any): void {
+        this.value &#x3D; value;
+        if (this.editor &amp;&amp; value) {
+            this.editor.setValue(value);
+        }
+    }
+
+    registerOnChange(fn: any): void {
+        this.propagateChange &#x3D; fn;
+    }
+
+    registerOnTouched(fn: any): void {
+        this.onTouched &#x3D; fn;
+    }
+
+    validate(): ValidationErrors {
+        return (!this.parseError) ? null : {
+            parseError: {
+                valid: false,
+            }
+        };
+    }
+
+    registerOnValidatorChange?(fn: () &#x3D;&gt; void): void {
+        this.onErrorStatusChange &#x3D; fn;
+    }
+
     private initMonaco() {
-        const opts: any &#x3D; {
-            value: [this.code].join(&#x27;\n&#x27;),
-            language: &#x27;json&#x27;,
+        let opts: editor.IEditorConstructionOptions &#x3D; {
+            value: [this.value].join(&#x27;\n&#x27;),
+            language: &#x27;text&#x27;,
             automaticLayout: true,
             scrollBeyondLastLine: false
         };
-        if (this.options.minimap) {
-            opts.minimap &#x3D; this.options.minimap;
-        }
-        if (this.options.readOnly) {
-            opts[&#x27;readOnly&#x27;] &#x3D; true;
+        if (this.options) {
+            opts &#x3D; Object.assign({}, opts, this.options);
         }
         this.editor &#x3D; monaco.editor.create(this.container, opts);
         this.editor.layout();
 
-        this.editor.onDidChangeModelContent((changes) &#x3D;&gt; {
-            this.codeChange.next(this.editor.getValue());
+        this.editor.onDidChangeModelContent(() &#x3D;&gt; {
+            this.propagateChange(this.editor.getValue());
         });
-        if (this.options.theme) {
-            monaco.editor.setTheme(this.options.theme);
-        }
 
-        if ( ! this.options.language ) {
-            this.options.language &#x3D; &#x27;text&#x27;;
-        }
-        monaco.editor.setModelLanguage(
-            this.editor.getModel(),
-            this.options.language
-        );
+        this.editor.onDidChangeModelDecorations(() &#x3D;&gt; {
+            const pastParseError &#x3D; this.parseError;
+            if (monaco.editor.getModelMarkers({}).map(m &#x3D;&gt; m.message).join(&#x27;, &#x27;)) {
+                this.parseError &#x3D; true;
+            } else {
+                this.parseError &#x3D; false;
+            }
+
+            if (pastParseError !&#x3D;&#x3D; this.parseError) {
+                this.onErrorStatusChange();
+            }
+        });
+
+        this.editor.onDidBlurEditorText(() &#x3D;&gt; {
+            this.onTouched();
+        });
     }
 
     onResized(event) {
@@ -869,6 +1347,31 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy {
 </code></pre>
     </div>
 
+
+    <div class="tab-pane fade " id="c-styleData">
+            <pre class="line-numbers"><code class="language-scss">:host {
+	flex: 1;
+	box-sizing: border-box;
+	flex-direction: column;
+	display: flex;
+	overflow: hidden;
+	max-width: 100%;
+	min-wdith: 0;
+}
+.wrapper {
+	width: 0px; height: 0px;
+}
+.editor-container {
+	text-overflow: ellipsis;
+	overflow: hidden;
+	position: relative;
+	min-width: 0;
+	display: table;
+	width: 100%;
+	height: 100%;
+}
+</code></pre>
+    </div>
 
     <div class="tab-pane fade " id="c-tree">
         <div id="tree-container"></div>
@@ -937,7 +1440,9 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy {
 
        <script src="../js/libs/custom-elements.min.js"></script>
        <script src="../js/libs/lit-html.js"></script>
-       <script src="../js/menu-wc.js"></script>
+       <!-- Required to polyfill modern browsers as code is ES5 for IE... -->
+       <script src="../js/libs/custom-elements-es5-adapter.js" charset="utf-8" defer></script>
+       <script src="../js/menu-wc.js" defer></script>
 
        <script src="../js/libs/bootstrap-native.js"></script>
 

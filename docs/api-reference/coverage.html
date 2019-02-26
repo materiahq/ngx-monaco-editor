@@ -19,10 +19,7 @@
         </div>
 
         <div class="xs-menu menu" id="mobile-menu">
-                <div id="book-search-input" role="search">
-    <input type="text" placeholder="Type to search">
-</div>
-            <compodoc-menu></compodoc-menu>
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
         </div>
 
         <div class="container-fluid main">
@@ -72,15 +69,11 @@
                 <!-- miscellaneous -->
                 <a href="./components/MonacoDiffEditorComponent.html">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts</a>
             </td>
-            <td>
-                component
-            </td>
-            <td>
-                MonacoDiffEditorComponent
-            </td>
+            <td>component</td>
+            <td>MonacoDiffEditorComponent</td>
             <td align="right" data-sort="0">
                 <span class="coverage-percent">0 %</span>
-                <span class="coverage-count">(0/15)</span>
+                <span class="coverage-count">(0/13)</span>
             </td>
         </tr>
         <tr class="low">
@@ -88,12 +81,8 @@
                 <!-- miscellaneous -->
                 <a href="./miscellaneous/variables.html#monaco">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts</a>
             </td>
-            <td>
-                variable
-            </td>
-            <td>
-                monaco
-            </td>
+            <td>variable</td>
+            <td>monaco</td>
             <td align="right" data-sort="0">
                 <span class="coverage-percent">0 %</span>
                 <span class="coverage-count">(0/1)</span>
@@ -104,15 +93,11 @@
                 <!-- miscellaneous -->
                 <a href="./components/MonacoEditorComponent.html">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts</a>
             </td>
-            <td>
-                component
-            </td>
-            <td>
-                MonacoEditorComponent
-            </td>
+            <td>component</td>
+            <td>MonacoEditorComponent</td>
             <td align="right" data-sort="0">
                 <span class="coverage-percent">0 %</span>
-                <span class="coverage-count">(0/13)</span>
+                <span class="coverage-count">(0/21)</span>
             </td>
         </tr>
         <tr class="low">
@@ -120,12 +105,8 @@
                 <!-- miscellaneous -->
                 <a href="./miscellaneous/variables.html#monaco">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts</a>
             </td>
-            <td>
-                variable
-            </td>
-            <td>
-                monaco
-            </td>
+            <td>variable</td>
+            <td>monaco</td>
             <td align="right" data-sort="0">
                 <span class="coverage-percent">0 %</span>
                 <span class="coverage-count">(0/1)</span>
@@ -136,12 +117,8 @@
                 <!-- miscellaneous -->
                 <a href="./directives/MonacoEditorLoaderDirective.html">src/ngx-monaco-editor/src/lib/directives/monaco-editor-loader.directive.ts</a>
             </td>
-            <td>
-                directive
-            </td>
-            <td>
-                MonacoEditorLoaderDirective
-            </td>
+            <td>directive</td>
+            <td>MonacoEditorLoaderDirective</td>
             <td align="right" data-sort="0">
                 <span class="coverage-percent">0 %</span>
                 <span class="coverage-count">(0/3)</span>
@@ -152,12 +129,8 @@
                 <!-- miscellaneous -->
                 <a href="./directives/ResizedDirective.html">src/ngx-monaco-editor/src/lib/directives/resized-event.directive.ts</a>
             </td>
-            <td>
-                directive
-            </td>
-            <td>
-                ResizedDirective
-            </td>
+            <td>directive</td>
+            <td>ResizedDirective</td>
             <td align="right" data-sort="0">
                 <span class="coverage-percent">0 %</span>
                 <span class="coverage-count">(0/8)</span>
@@ -168,12 +141,8 @@
                 <!-- miscellaneous -->
                 <a href="./classes/ResizedEvent.html">src/ngx-monaco-editor/src/lib/directives/resized-event.directive.ts</a>
             </td>
-            <td>
-                class
-            </td>
-            <td>
-                ResizedEvent
-            </td>
+            <td>class</td>
+            <td>ResizedEvent</td>
             <td align="right" data-sort="0">
                 <span class="coverage-percent">0 %</span>
                 <span class="coverage-count">(0/2)</span>
@@ -184,12 +153,8 @@
                 <!-- miscellaneous -->
                 <a href="./interfaces/MonacoOptions.html">src/ngx-monaco-editor/src/lib/interfaces/monaco-options.ts</a>
             </td>
-            <td>
-                interface
-            </td>
-            <td>
-                MonacoOptions
-            </td>
+            <td>interface</td>
+            <td>MonacoOptions</td>
             <td align="right" data-sort="0">
                 <span class="coverage-percent">0 %</span>
                 <span class="coverage-count">(0/8)</span>
@@ -200,12 +165,8 @@
                 <!-- miscellaneous -->
                 <a href="./injectables/MonacoEditorLoaderService.html">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts</a>
             </td>
-            <td>
-                injectable
-            </td>
-            <td>
-                MonacoEditorLoaderService
-            </td>
+            <td>injectable</td>
+            <td>MonacoEditorLoaderService</td>
             <td align="right" data-sort="0">
                 <span class="coverage-percent">0 %</span>
                 <span class="coverage-count">(0/6)</span>
@@ -242,7 +203,9 @@
 
        <script src="./js/libs/custom-elements.min.js"></script>
        <script src="./js/libs/lit-html.js"></script>
-       <script src="./js/menu-wc.js"></script>
+       <!-- Required to polyfill modern browsers as code is ES5 for IE... -->
+       <script src="./js/libs/custom-elements-es5-adapter.js" charset="utf-8" defer></script>
+       <script src="./js/menu-wc.js" defer></script>
 
        <script src="./js/libs/bootstrap-native.js"></script>
 

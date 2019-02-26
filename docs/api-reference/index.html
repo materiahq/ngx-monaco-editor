@@ -19,10 +19,7 @@
         </div>
 
         <div class="xs-menu menu" id="mobile-menu">
-                <div id="book-search-input" role="search">
-    <input type="text" placeholder="Type to search">
-</div>
-            <compodoc-menu></compodoc-menu>
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
         </div>
 
         <div class="container-fluid main">
@@ -77,6 +74,7 @@ import { MonacoEditorModule } from &#39;&#64;materia-ui/ngx-monaco-editor&#39;;
   ],
   imports: [
     BrowserModule,
+    FormsModule,
     MonacoEditorModule
   ],
   providers: [],
@@ -94,9 +92,14 @@ export class AppComponent {
   editorOptions = {theme: &#39;vs-dark&#39;, language: &#39;javascript&#39;};
   code: string = &#39;function x() {\nconsole.log(&quot;Hello world!&quot;);\n}&#39;;
   originalCode: string = &#39;function x() { // TODO }&#39;;
-}</code></pre></div><p>Include editor in html with options and ngModel bindings.(eg: app.component.html)</p>
-<div><pre class="line-numbers"><code class="language-html">&lt;ngx-monaco-editor [options]=&quot;editorOptions&quot; [(code)]=&quot;code&quot;&gt;&lt;/ngx-monaco-editor&gt;</code></pre></div><p>Include dif-editor in html with options and ngModel bindings.(eg: app.component.html)</p>
-<div><pre class="line-numbers"><code class="language-html">&lt;ngx-monaco-diff-editor [options]=&quot;editorOptions&quot; [original]=&quot;originalCode&quot; [modified]=&quot;code&quot;&gt;&lt;/ngx-monaco-diff-editor&gt;</code></pre></div><h3 id="motivations">Motivations</h3>
+}</code></pre></div><p>Include editor component in your html with options input and ngModel bindings  (eg: app.component.html) or using ReactiveForm features.</p>
+<div><pre class="line-numbers"><code class="language-html">&lt;ngx-monaco-editor [options]=&quot;editorOptions&quot; [(ngModel)]=&quot;code&quot;&gt;&lt;/ngx-monaco-editor&gt;</code></pre></div><p>Include diff-editor component in your html and use the following inputs: options, original and modified (eg: app.component.html).</p>
+<div><pre class="line-numbers"><code class="language-html">&lt;ngx-monaco-diff-editor [options]=&quot;editorOptions&quot; [original]=&quot;originalCode&quot; [modified]=&quot;code&quot;&gt;&lt;/ngx-monaco-diff-editor&gt;</code></pre></div><p>Both components support all available <code>monaco-editor</code> options:</p>
+<ul>
+<li>EditorOptions: <a href="https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.ieditorconstructionoptions.html">https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.ieditorconstructionoptions.html</a>,</li>
+<li>DiffEditorOptions: <a href="https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.idiffeditorconstructionoptions.html">https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.idiffeditorconstructionoptions.html</a>.</li>
+</ul>
+<h3 id="motivations">Motivations</h3>
 <p>We wanted to use monaco-editor library with angular in our desktop application: <a href="http://getmateria.com">Materia Designer</a>.</p>
 <p>The current angular libraries did not cover all of our needs, notably:</p>
 <ul>
@@ -143,7 +146,9 @@ export class AppComponent {
 
        <script src="./js/libs/custom-elements.min.js"></script>
        <script src="./js/libs/lit-html.js"></script>
-       <script src="./js/menu-wc.js"></script>
+       <!-- Required to polyfill modern browsers as code is ES5 for IE... -->
+       <script src="./js/libs/custom-elements-es5-adapter.js" charset="utf-8" defer></script>
+       <script src="./js/menu-wc.js" defer></script>
 
        <script src="./js/libs/bootstrap-native.js"></script>
 
