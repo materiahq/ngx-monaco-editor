@@ -95,13 +95,13 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
 
     ngOnChanges(changes: SimpleChanges) {
         if (this.editor && changes.options && ! changes.options.firstChange) {
-          if (changes.options.previousValue.language !== changes.options.currentValue) {
+          if (changes.options.previousValue.language !== changes.options.currentValue.language) {
             monaco.editor.setModelLanguage(
               this.editor.getModel(),
               this.options && this.options.language ? this.options.language : 'text'
             );
           }
-          if (changes.options.previousValue.theme !== changes.options.currentValue) {
+          if (changes.options.previousValue.theme !== changes.options.currentValue.theme) {
             monaco.editor.setTheme(changes.options.currentValue.theme);
           }
         }
