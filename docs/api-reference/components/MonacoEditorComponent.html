@@ -483,7 +483,7 @@
 
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="181" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:181</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="182" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:182</a></div>
                             </td>
                         </tr>
 
@@ -559,7 +559,7 @@
 
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="172" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:172</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="173" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:173</a></div>
                             </td>
                         </tr>
 
@@ -1255,13 +1255,13 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
 
     ngOnChanges(changes: SimpleChanges) {
         if (this.editor &amp;&amp; changes.options &amp;&amp; ! changes.options.firstChange) {
-          if (changes.options.previousValue.language !&#x3D;&#x3D; changes.options.currentValue) {
+          if (changes.options.previousValue.language !&#x3D;&#x3D; changes.options.currentValue.language) {
             monaco.editor.setModelLanguage(
               this.editor.getModel(),
               this.options &amp;&amp; this.options.language ? this.options.language : &#x27;text&#x27;
             );
           }
-          if (changes.options.previousValue.theme !&#x3D;&#x3D; changes.options.currentValue) {
+          if (changes.options.previousValue.theme !&#x3D;&#x3D; changes.options.currentValue.theme) {
             monaco.editor.setTheme(changes.options.currentValue.theme);
           }
         }
@@ -1299,7 +1299,8 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
             value: [this.value].join(&#x27;\n&#x27;),
             language: &#x27;text&#x27;,
             automaticLayout: true,
-            scrollBeyondLastLine: false
+            scrollBeyondLastLine: false,
+            theme: &#x27;vc&#x27;
         };
         if (this.options) {
             opts &#x3D; Object.assign({}, opts, this.options);

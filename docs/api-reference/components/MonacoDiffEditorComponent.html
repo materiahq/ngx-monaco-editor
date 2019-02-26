@@ -484,7 +484,7 @@ height: 100%;
 
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="125" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:125</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="126" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:126</a></div>
                             </td>
                         </tr>
 
@@ -560,7 +560,7 @@ height: 100%;
 
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="116" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:116</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="117" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:117</a></div>
                             </td>
                         </tr>
 
@@ -804,7 +804,8 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
 
     private initMonaco() {
         let opts: editor.IDiffEditorConstructionOptions &#x3D; {
-            readOnly: true
+            readOnly: true,
+            theme: &#x27;vc&#x27;
         };
         if (this.options) {
           opts &#x3D; Object.assign({}, opts, this.options);
