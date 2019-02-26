@@ -96,7 +96,8 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
 
     private initMonaco() {
         let opts: editor.IDiffEditorConstructionOptions = {
-            readOnly: true
+            readOnly: true,
+            theme: 'vc'
         };
         if (this.options) {
           opts = Object.assign({}, opts, this.options);

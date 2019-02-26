@@ -139,7 +139,8 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
             value: [this.value].join('\n'),
             language: 'text',
             automaticLayout: true,
-            scrollBeyondLastLine: false
+            scrollBeyondLastLine: false,
+            theme: 'vc'
         };
         if (this.options) {
             opts = Object.assign({}, opts, this.options);
