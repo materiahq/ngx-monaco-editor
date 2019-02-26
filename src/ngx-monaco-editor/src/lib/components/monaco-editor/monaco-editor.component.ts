@@ -7,11 +7,16 @@ import {
     OnDestroy,
     Input,
     ChangeDetectionStrategy,
-    forwardRef
+    forwardRef,
+    SimpleChanges
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, Validator, NG_VALIDATORS, ValidationErrors } from '@angular/forms';
+import { filter, take } from 'rxjs/operators';
+import { editor } from 'monaco-editor';
+
 import { MonacoEditorLoaderService } from '../../services/monaco-editor-loader.service';
-import { MonacoOptions } from '../../interfaces/monaco-options';
+
+declare const monaco: any;
 
 @Component({
     selector: 'ngx-monaco-editor',
@@ -64,12 +69,12 @@ import { MonacoOptions } from '../../interfaces/monaco-options';
 })
 export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor, Validator {
     container: HTMLDivElement;
-    editor: monaco.editor.IStandaloneCodeEditor;
+    editor: editor.IStandaloneCodeEditor;
 
     value: string;
     parseError: boolean;
 
-    @Input() options: MonacoOptions;
+    @Input() options: editor.IEditorConstructionOptions;
     @ViewChild('editor') editorContent: ElementRef;
 
     private propagateChange: (_: any) => any;
@@ -80,25 +85,25 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
 
     ngOnInit() {
         this.container = this.editorContent.nativeElement;
-        this.monacoLoader.isMonacoLoaded.subscribe(value => {
-            if (value) {
-                this.initMonaco();
-            }
+        this.monacoLoader.isMonacoLoaded.pipe(
+          filter(isLoaded => isLoaded),
+          take(1),
+        ).subscribe(() => {
+            this.initMonaco();
         });
     }
 
-    ngOnChanges(changes) {
-        if (this.editor) {
-            if (!this.options.language) {
-                this.options.language = 'text';
-            }
+    ngOnChanges(changes: SimpleChanges) {
+        if (this.editor && changes.options && ! changes.options.firstChange) {
+          if (changes.options.previousValue.language !== changes.options.currentValue) {
             monaco.editor.setModelLanguage(
-                this.editor.getModel(),
-                this.options.language
+              this.editor.getModel(),
+              this.options && this.options.language ? this.options.language : 'text'
             );
-        }
-        if (this.editor && changes.options && changes.options.currentValue && changes.options.currentValue.theme) {
+          }
+          if (changes.options.previousValue.theme !== changes.options.currentValue) {
             monaco.editor.setTheme(changes.options.currentValue.theme);
+          }
         }
     }
 
@@ -130,17 +135,14 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
     }
 
     private initMonaco() {
-        const opts: monaco.editor.IEditorConstructionOptions = {
+        let opts: editor.IEditorConstructionOptions = {
             value: [this.value].join('\n'),
-            language: 'json',
+            language: 'text',
             automaticLayout: true,
             scrollBeyondLastLine: false
         };
-        if (this.options.minimap) {
-            opts.minimap = this.options.minimap;
-        }
-        if (this.options.readOnly) {
-            opts['readOnly'] = true;
+        if (this.options) {
+            opts = Object.assign({}, opts, this.options);
         }
         this.editor = monaco.editor.create(this.container, opts);
         this.editor.layout();
@@ -165,18 +167,6 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
         this.editor.onDidBlurEditorText(() => {
             this.onTouched();
         });
-
-        if (this.options.theme) {
-            monaco.editor.setTheme(this.options.theme);
-        }
-
-        if (!this.options.language) {
-            this.options.language = 'text';
-        }
-        monaco.editor.setModelLanguage(
-            this.editor.getModel(),
-            this.options.language
-        );
     }
 
     onResized(event) {

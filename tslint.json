@@ -2,7 +2,7 @@
   "rulesDirectory": [
     "node_modules/codelyzer"
   ],
-  "linterOptions": {"exclude": ["node_modules/**", "docs/**"]},
+  "linterOptions": {"exclude": ["node_modules/**", "docs/**", "dist/**"]},
   "rules": {
     "arrow-return-shorthand": true,
     "callable-types": true,

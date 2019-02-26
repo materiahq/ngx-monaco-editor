@@ -6,10 +6,15 @@ import {
     OnChanges,
     OnDestroy,
     Input,
-    ChangeDetectionStrategy
+    ChangeDetectionStrategy,
+    SimpleChanges
 } from '@angular/core';
+import { filter, take } from 'rxjs/operators';
+import { editor } from 'monaco-editor';
+
 import { MonacoEditorLoaderService } from '../../services/monaco-editor-loader.service';
-import { MonacoOptions } from '../../interfaces/monaco-options';
+
+declare const monaco: any;
 
 @Component({
     selector: 'ngx-monaco-diff-editor',
@@ -50,13 +55,11 @@ height: 100%;
 })
 export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
     container: HTMLDivElement;
-    editor: monaco.editor.IStandaloneDiffEditor;
+    editor: editor.IStandaloneDiffEditor;
 
     @Input() original: string;
     @Input() modified: string;
-    @Input() options: MonacoOptions;
-    @Input() inline = false;
-    @Input() enableSplitViewResizing = false;
+    @Input() options: editor.IDiffEditorConstructionOptions;
 
     @ViewChild('diffEditor') editorContent: ElementRef;
 
@@ -64,15 +67,16 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
 
     ngOnInit() {
         this.container = this.editorContent.nativeElement;
-        this.monacoLoader.isMonacoLoaded.subscribe((value) => {
-            if (value) {
-                this.initMonaco();
-            }
+        this.monacoLoader.isMonacoLoaded.pipe(
+          filter(isLoaded => isLoaded),
+          take(1),
+        ).subscribe(() => {
+            this.initMonaco();
         });
     }
 
-    ngOnChanges(changes) {
-        if (this.editor && (changes.code || changes.modified)) {
+    ngOnChanges(changes: SimpleChanges) {
+        if (this.editor && ((changes.code && ! changes.code.firstChange) || (changes.modified && ! changes.modified.firstChange))) {
             const modified = monaco.editor.createModel(this.modified);
             const original = monaco.editor.createModel(this.original);
             this.editor.setModel({
@@ -80,17 +84,23 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
                 modified
             });
         }
-        if (this.editor && changes.options && changes.options.currentValue && changes.options.currentValue.theme) {
+        if (
+            this.editor &&
+            changes.options &&
+            ! changes.options.firstChange &&
+            changes.options.previousValue.theme !== changes.options.currentValue.theme
+          ) {
             monaco.editor.setTheme(changes.options.currentValue.theme);
         }
     }
 
     private initMonaco() {
-        const opts: monaco.editor.IDiffEditorConstructionOptions = {
-            enableSplitViewResizing: this.enableSplitViewResizing,
-            renderSideBySide: !this.inline,
+        let opts: editor.IDiffEditorConstructionOptions = {
             readOnly: true
         };
+        if (this.options) {
+          opts = Object.assign({}, opts, this.options);
+        }
         this.editor = monaco.editor.createDiffEditor(this.container, opts);
 
         const original = monaco.editor.createModel(this.original);
@@ -101,7 +111,6 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
             modified
         });
         this.editor.layout();
-        monaco.editor.setTheme('vs-light');
     }
 
     onResized(event) {
