@@ -85,17 +85,21 @@ export class AppComponent {
 ```
 
 
-Include editor in html with options and ngModel bindings (eg: app.component.html). You can also include the ngx-monaco-editor in a form.
+Include editor component in your html with options input and ngModel bindings  (eg: app.component.html) or using ReactiveForm features.
 
 ```html
 <ngx-monaco-editor [options]="editorOptions" [(ngModel)]="code"></ngx-monaco-editor>
 ```
 
-Include dif-editor in html with options and ngModel bindings.(eg: app.component.html)
+Include diff-editor component in your html and use the following inputs: options, original and modified (eg: app.component.html).
 
 ```html
 <ngx-monaco-diff-editor [options]="editorOptions" [original]="originalCode" [modified]="code"></ngx-monaco-diff-editor>
 ```
+
+Both components support all available `monaco-editor` options:
+- EditorOptions: https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.ieditorconstructionoptions.html,
+- DiffEditorOptions: https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.idiffeditorconstructionoptions.html.
 
 ### Motivations
 
