@@ -107,10 +107,12 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
         }
     }
 
-    writeValue(value: any): void {
+    writeValue(value: string): void {
         this.value = value;
         if (this.editor && value) {
             this.editor.setValue(value);
+        } else if (this.editor) {
+            this.editor.setValue('');
         }
     }
 
