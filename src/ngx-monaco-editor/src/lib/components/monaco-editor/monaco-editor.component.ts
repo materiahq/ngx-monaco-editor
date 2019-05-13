@@ -68,18 +68,17 @@ declare const monaco: any;
     ]
 })
 export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor, Validator {
-    container: HTMLDivElement;
-    editor: editor.IStandaloneCodeEditor;
-
-    value: string;
-    parseError: boolean;
-
     @Input() options: editor.IEditorConstructionOptions;
     @ViewChild('editor') editorContent: ElementRef;
 
-    private propagateChange: (_: any) => any;
+    container: HTMLDivElement;
+    editor: editor.IStandaloneCodeEditor;
+    value: string;
+    parseError: boolean;
+
     private onTouched: () => void;
     private onErrorStatusChange: () => void;
+    private propagateChange: (_: any) => any = (_: any) => {};
 
     constructor(private monacoLoader: MonacoEditorLoaderService) { }
 
@@ -87,7 +86,7 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
         this.container = this.editorContent.nativeElement;
         this.monacoLoader.isMonacoLoaded.pipe(
           filter(isLoaded => isLoaded),
-          take(1),
+          take(1)
         ).subscribe(() => {
             this.initMonaco();
         });
