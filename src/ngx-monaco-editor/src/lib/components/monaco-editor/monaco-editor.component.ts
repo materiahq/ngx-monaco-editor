@@ -78,31 +78,34 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
 
     private onTouched: () => void;
     private onErrorStatusChange: () => void;
-    private propagateChange: (_: any) => any = (_: any) => {};
+    private propagateChange: (_: any) => any = (_: any) => { };
 
     constructor(private monacoLoader: MonacoEditorLoaderService) { }
 
     ngOnInit() {
         this.container = this.editorContent.nativeElement;
         this.monacoLoader.isMonacoLoaded.pipe(
-          filter(isLoaded => isLoaded),
-          take(1)
+            filter(isLoaded => isLoaded),
+            take(1)
         ).subscribe(() => {
             this.initMonaco();
         });
     }
 
     ngOnChanges(changes: SimpleChanges) {
-        if (this.editor && changes.options && ! changes.options.firstChange) {
-          if (changes.options.previousValue.language !== changes.options.currentValue.language) {
-            monaco.editor.setModelLanguage(
-              this.editor.getModel(),
-              this.options && this.options.language ? this.options.language : 'text'
-            );
-          }
-          if (changes.options.previousValue.theme !== changes.options.currentValue.theme) {
-            monaco.editor.setTheme(changes.options.currentValue.theme);
-          }
+        if (this.editor && changes.options && !changes.options.firstChange) {
+            if (changes.options.previousValue.language !== changes.options.currentValue.language) {
+                monaco.editor.setModelLanguage(
+                    this.editor.getModel(),
+                    this.options && this.options.language ? this.options.language : 'text'
+                );
+            }
+            if (changes.options.previousValue.theme !== changes.options.currentValue.theme) {
+                monaco.editor.setTheme(changes.options.currentValue.theme);
+            }
+            if (changes.options.previousValue.readOnly !== changes.options.currentValue.readOnly) {
+                this.editor.updateOptions({ readOnly: changes.options.currentValue.readOnly })
+            }
         }
     }
 

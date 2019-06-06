@@ -68,15 +68,15 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
     ngOnInit() {
         this.container = this.editorContent.nativeElement;
         this.monacoLoader.isMonacoLoaded.pipe(
-          filter(isLoaded => isLoaded),
-          take(1),
+            filter(isLoaded => isLoaded),
+            take(1),
         ).subscribe(() => {
             this.initMonaco();
         });
     }
 
     ngOnChanges(changes: SimpleChanges) {
-        if (this.editor && ((changes.code && ! changes.code.firstChange) || (changes.modified && ! changes.modified.firstChange))) {
+        if (this.editor && ((changes.code && !changes.code.firstChange) || (changes.modified && !changes.modified.firstChange))) {
             const modified = monaco.editor.createModel(this.modified);
             const original = monaco.editor.createModel(this.original);
             this.editor.setModel({
@@ -87,10 +87,15 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
         if (
             this.editor &&
             changes.options &&
-            ! changes.options.firstChange &&
-            changes.options.previousValue.theme !== changes.options.currentValue.theme
-          ) {
-            monaco.editor.setTheme(changes.options.currentValue.theme);
+            !changes.options.firstChange
+        ) {
+            if (changes.options.previousValue.theme !== changes.options.currentValue.theme) {
+                monaco.editor.setTheme(changes.options.currentValue.theme);
+            }
+
+            if (changes.options.previousValue.readOnly !== changes.options.currentValue.readOnly) {
+                this.editor.updateOptions({ readOnly: changes.options.currentValue.readOnly })
+            }
         }
     }
 
@@ -100,7 +105,7 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
             theme: 'vc'
         };
         if (this.options) {
-          opts = Object.assign({}, opts, this.options);
+            opts = Object.assign({}, opts, this.options);
         }
         this.editor = monaco.editor.createDiffEditor(this.container, opts);
 

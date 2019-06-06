@@ -9,7 +9,8 @@ import { FormGroup, FormBuilder } from '@angular/forms';
 export class AppComponent {
   theme = 'vs-dark';
   themes = ['vs', 'vs-dark', 'hc-black'];
-  options = { theme: 'vs-dark' };
+  readOnlys = [true, false];
+  options = { theme: 'vs-dark', readOnly: false };
 
   typescriptCode = `export class Animals {
     private name: string;
@@ -19,7 +20,7 @@ export class AppComponent {
   }`
   simpleText = "hello world!";
   sqlRequest = "SELECT * FROM user;";
-  modifiedSqlRequest =  "SELECT * FROM user\nWHERE id = 1;"
+  modifiedSqlRequest = "SELECT * FROM user\nWHERE id = 1;"
 
   public reactiveForm: FormGroup;
 
@@ -33,6 +34,17 @@ export class AppComponent {
   }
 
   setTheme(theme) {
-    this.options = Object.assign({}, { theme: theme });
+    this.options = { ...this.options, theme }
+  }
+
+  setReadOnly(readOnly) {
+    this.options = { ...this.options, readOnly }
+  }
+
+  mergeOptions(moreOptions) {
+    return {
+      ...this.options,
+      ...moreOptions
+    }
   }
 }

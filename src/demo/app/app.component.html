@@ -4,32 +4,40 @@
   </h1>
   <span fxFlex></span>
   <h2 style="font-size: 15px;">made with <span [style.color]="'red'">&#10084;</span> by Materia Team</h2>
-  <img width="20" alt="Materia Designer Logo" src="https://materiahq.github.io/materia-website-content/logo/materia.png" [style.margin.px]="10">
+  <img width="20" alt="Materia Designer Logo" src="https://materiahq.github.io/materia-website-content/logo/materia.png"
+    [style.margin.px]="10">
 </mat-toolbar>
 <div style="margin-top: 20px;" fxLayout="column" fxLayoutAlign="center center">
   <h2 class="mat-h2">Monaco Editor Theme </h2>
-  <mat-form-field>
-    <mat-select (selectionChange)="setTheme($event.value)" placeholder="Theme" value="vs-dark">
-      <mat-option *ngFor="let t of themes;" [value]="t">{{t}}</mat-option>
-    </mat-select>
-  </mat-form-field>
+  <div>
+    <mat-form-field>
+      <mat-select (selectionChange)="setTheme($event.value)" placeholder="Theme" [value]="theme">
+        <mat-option *ngFor="let t of themes;" [value]="t">{{t}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-select (selectionChange)="setReadOnly($event.value)" placeholder="readOnly" [value]="false">
+        <mat-option *ngFor="let r of readOnlys;" [value]="r">{{r}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
 </div>
 <mat-divider></mat-divider>
 <h2 class="mat-h2" [style.margin.px]="30">Basic Examples </h2>
 <div style="height: 300px; display: flex;">
   <mat-card style="flex: 1; display: flex; flex-direction: column;">
     <h3>Typescript</h3>
-    <ngx-monaco-editor [(ngModel)]="typescriptCode" [options]="{language:'typescript'}">
+    <ngx-monaco-editor [(ngModel)]="typescriptCode" [options]="mergeOptions({language:'typescript'})">
     </ngx-monaco-editor>
   </mat-card>
   <mat-card style="flex:1; display: flex; flex-direction: column;">
     <h3>Simple text</h3>
-    <ngx-monaco-editor [(ngModel)]="simpleText" [options]="options">
+    <ngx-monaco-editor [(ngModel)]="simpleText" [options]="mergeOptions()">
     </ngx-monaco-editor>
   </mat-card>
   <mat-card style="flex: 1; display: flex; flex-direction: column;">
     <h3>SQL</h3>
-    <ngx-monaco-editor language="SQL" [(ngModel)]="sqlRequest" [options]="{language:'sql'}">
+    <ngx-monaco-editor language="SQL" [(ngModel)]="sqlRequest" [options]="mergeOptions({language:'sql'})">
     </ngx-monaco-editor>
   </mat-card>
 </div>
@@ -38,7 +46,8 @@
 <div fxLayout="row" [style.height.px]="300">
   <mat-card style="flex: 1; display: flex; flex-direction: column;">
     <h3>SQL</h3>
-    <ngx-monaco-diff-editor [options]="{theme: theme,  language:'sql', renderSideBySide: false}" [original]="sqlRequest" [modified]="modifiedSqlRequest"></ngx-monaco-diff-editor>
+    <ngx-monaco-diff-editor [options]="mergeOptions({language:'sql', renderSideBySide: false})" [original]="sqlRequest"
+      [modified]="modifiedSqlRequest"></ngx-monaco-diff-editor>
   </mat-card>
 </div>
 <mat-divider></mat-divider>
@@ -48,7 +57,7 @@
     <h3>JSON</h3>
     <div style="flex:1; display: flex; flex-direction: row;">
       <form style="flex:1; display:flex; width:50%" [formGroup]="reactiveForm">
-        <ngx-monaco-editor style="flex:1;" formControlName="code" [options]="{ theme: theme, language:'json'}">
+        <ngx-monaco-editor style="flex:1;" formControlName="code" [options]="mergeOptions({language:'json'})">
         </ngx-monaco-editor>
       </form>
       <div style="flex:1; margin: 0 25px; overflow: auto;">
