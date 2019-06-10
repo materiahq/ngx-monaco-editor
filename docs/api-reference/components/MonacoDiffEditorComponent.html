@@ -377,7 +377,7 @@ height: 100%;
 
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="97" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:97</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="102" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:102</a></div>
                             </td>
                         </tr>
 
@@ -484,7 +484,7 @@ height: 100%;
 
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="126" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:126</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="131" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:131</a></div>
                             </td>
                         </tr>
 
@@ -560,7 +560,7 @@ height: 100%;
 
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="117" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:117</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="122" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:122</a></div>
                             </td>
                         </tr>
 
@@ -776,15 +776,15 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
     ngOnInit() {
         this.container &#x3D; this.editorContent.nativeElement;
         this.monacoLoader.isMonacoLoaded.pipe(
-          filter(isLoaded &#x3D;&gt; isLoaded),
-          take(1),
+            filter(isLoaded &#x3D;&gt; isLoaded),
+            take(1),
         ).subscribe(() &#x3D;&gt; {
             this.initMonaco();
         });
     }
 
     ngOnChanges(changes: SimpleChanges) {
-        if (this.editor &amp;&amp; ((changes.code &amp;&amp; ! changes.code.firstChange) || (changes.modified &amp;&amp; ! changes.modified.firstChange))) {
+        if (this.editor &amp;&amp; ((changes.code &amp;&amp; !changes.code.firstChange) || (changes.modified &amp;&amp; !changes.modified.firstChange))) {
             const modified &#x3D; monaco.editor.createModel(this.modified);
             const original &#x3D; monaco.editor.createModel(this.original);
             this.editor.setModel({
@@ -795,10 +795,15 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
         if (
             this.editor &amp;&amp;
             changes.options &amp;&amp;
-            ! changes.options.firstChange &amp;&amp;
-            changes.options.previousValue.theme !&#x3D;&#x3D; changes.options.currentValue.theme
-          ) {
-            monaco.editor.setTheme(changes.options.currentValue.theme);
+            !changes.options.firstChange
+        ) {
+            if (changes.options.previousValue.theme !&#x3D;&#x3D; changes.options.currentValue.theme) {
+                monaco.editor.setTheme(changes.options.currentValue.theme);
+            }
+
+            if (changes.options.previousValue.readOnly !&#x3D;&#x3D; changes.options.currentValue.readOnly) {
+                this.editor.updateOptions({ readOnly: changes.options.currentValue.readOnly })
+            }
         }
     }
 
@@ -808,7 +813,7 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
             theme: &#x27;vc&#x27;
         };
         if (this.options) {
-          opts &#x3D; Object.assign({}, opts, this.options);
+            opts &#x3D; Object.assign({}, opts, this.options);
         }
         this.editor &#x3D; monaco.editor.createDiffEditor(this.container, opts);
 
