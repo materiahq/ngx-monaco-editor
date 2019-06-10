@@ -41,7 +41,7 @@ export class AppComponent {
     this.options = { ...this.options, readOnly }
   }
 
-  mergeOptions(moreOptions) {
+  mergeOptions(moreOptions?) {
     return {
       ...this.options,
       ...moreOptions
