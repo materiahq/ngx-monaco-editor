@@ -104,7 +104,7 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
                 monaco.editor.setTheme(changes.options.currentValue.theme);
             }
             if (changes.options.previousValue.readOnly !== changes.options.currentValue.readOnly) {
-                this.editor.updateOptions({ readOnly: changes.options.currentValue.readOnly })
+                this.editor.updateOptions({ readOnly: changes.options.currentValue.readOnly });
             }
         }
     }
