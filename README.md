@@ -103,7 +103,7 @@ Both components support all available `monaco-editor` options:
 
 ### Motivations
 
-We wanted to use monaco-editor library with angular in our desktop application: [Materia Designer](http://getmateria.com).
+We wanted to use monaco-editor library with angular in our desktop application: [Materia Designer](https://getmateria.com).
 
 The current angular libraries did not cover all of our needs, notably:
 - Works on Browser and Electron application,
