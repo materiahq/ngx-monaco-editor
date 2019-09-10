@@ -14,7 +14,7 @@
   },
   "description": "Monaco Editor Library for Angular v6 and above",
   "keywords": [
-    "monaco-editor"
+    "angular", "monaco-editor", "materia", "code-editor", "electron", "browser"
   ],
   "homepage": "https://github.com/geoastronaute/ngx-monaco-editor#readme",
   "bugs": {
