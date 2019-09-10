@@ -201,7 +201,7 @@
 
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="54" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:54</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="61" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:61</a></div>
                             </td>
                         </tr>
 
@@ -402,6 +402,13 @@ export class MonacoEditorLoaderService {
 
     constructor(ngZone: NgZone) {
         const onGotAmdLoader &#x3D; () &#x3D;&gt; {
+            if ((&lt;any&gt;window).monacoEditorAlreadyInitialized) {
+                ngZone.run(() &#x3D;&gt; this.isMonacoLoaded.next(true));
+                return
+            }
+
+            (&lt;any&gt;window).monacoEditorAlreadyInitialized &#x3D; true;
+            
             // Load monaco
             (&lt;any&gt;window).amdRequire &#x3D;  (&lt;any&gt;window).require;
             if (this.nodeRequire) {
