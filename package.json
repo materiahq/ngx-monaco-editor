@@ -9,7 +9,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "build:monaco": "ng build --prod ngx-monaco-editor",
+    "build:monaco": "ng build --prod ngx-monaco-editor && ncp LICENSE ./dist/ngx-monaco-editor/LICENSE && ncp README.md ./dist/ngx-monaco-editor/README.MD",
     "compodoc": "./node_modules/.bin/compodoc -p src/ngx-monaco-editor/tsconfig.lib.json --theme=material"
   },
   "private": true,
@@ -50,6 +50,7 @@
     "karma-coverage-istanbul-reporter": "~2.0.0",
     "karma-jasmine": "~1.1.1",
     "karma-jasmine-html-reporter": "^0.2.2",
+    "ncp": "^2.0.0",
     "ng-packagr": "^4.7.1",
     "protractor": "~5.3.0",
     "ts-node": "~5.0.1",
