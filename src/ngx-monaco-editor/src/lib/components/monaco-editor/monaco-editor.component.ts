@@ -69,7 +69,7 @@ declare const monaco: any;
 })
 export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor, Validator {
     @Input() options: editor.IEditorConstructionOptions;
-    @ViewChild('editor', {static: false}) editorContent: ElementRef;
+    @ViewChild('editor', {static: true}) editorContent: ElementRef;
 
     container: HTMLDivElement;
     editor: editor.IStandaloneCodeEditor;
