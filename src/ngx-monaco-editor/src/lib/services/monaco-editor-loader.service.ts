@@ -39,7 +39,6 @@ export class MonacoEditorLoaderService {
         });
     };
 
-    console.log('Monaco path : ', this._monacoPath);
     let loaderScript: any = null;
     // Load AMD loader if necessary
     if (!(<any>window).require && !(<any>window).amdRequire) {
