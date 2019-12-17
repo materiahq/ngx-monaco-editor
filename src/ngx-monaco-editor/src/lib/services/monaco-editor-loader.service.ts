@@ -16,11 +16,11 @@ export class MonacoEditorLoaderService {
         const onGotAmdLoader = () => {
             if ((<any>window).monacoEditorAlreadyInitialized) {
                 ngZone.run(() => this.isMonacoLoaded.next(true));
-                return
+                return;
             }
 
             (<any>window).monacoEditorAlreadyInitialized = true;
-            
+
             // Load monaco
             (<any>window).amdRequire =  (<any>window).require;
             if (this.nodeRequire) {
