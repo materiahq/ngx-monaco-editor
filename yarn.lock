@@ -900,7 +900,7 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@compodoc/compodoc@^1.1.8":
+"@compodoc/compodoc@^1.1.11":
   version "1.1.11"
   resolved "https://registry.yarnpkg.com/@compodoc/compodoc/-/compodoc-1.1.11.tgz#44df8522479e5039911d8b2f10c24198831c5ede"
   integrity sha512-3PGTf64Eug1SIcdQole2KkVftBMFjKzecBytLHy4+MQYcblAQM0O3a4GoxuWwN7cTawVq4eqSJTtf6My1I/oHA==
