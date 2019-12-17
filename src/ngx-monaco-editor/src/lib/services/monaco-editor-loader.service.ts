@@ -21,10 +21,7 @@ export class MonacoEditorLoaderService {
       (<any>window).monacoEditorAlreadyInitialized = true;
 
       if (this.monacoPathConfig) {
-        console.log('Custom monacoPathConfig : ', this.monacoPathConfig);
         this.monacoPath = this.monacoPathConfig;
-      } else {
-        console.log('No custom monaco path config set');
       }
       this.loadMonaco();
     }
