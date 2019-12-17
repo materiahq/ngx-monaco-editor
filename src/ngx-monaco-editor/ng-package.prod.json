@@ -6,7 +6,6 @@
   },
   "whitelistedNonPeerDependencies": [
     "tslib",
-    "css-element-queries",
-    "monaco-editor"
+    "css-element-queries"
   ]
 }

@@ -17,8 +17,7 @@ export class ResizedEvent {
 })
 export class ResizedDirective implements OnInit {
 
-    @Output('resized')
-    readonly resized = new EventEmitter<ResizedEvent>();
+    @Output() resized = new EventEmitter<ResizedEvent>();
 
     private oldWidth: number;
     private oldHeight: number;

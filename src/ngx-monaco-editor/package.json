@@ -27,7 +27,6 @@
     "rxjs": "6.x"
   },
   "dependencies": {
-    "css-element-queries": "^1.0.2",
-    "monaco-editor": "^0.15.6"
+    "css-element-queries": "^1.0.2"
   }
 }
