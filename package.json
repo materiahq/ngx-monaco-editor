@@ -33,10 +33,10 @@
     "zone.js": "^0.8.26"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "~0.13.3",
-    "@angular-devkit/build-ng-packagr": "~0.13.3",
-    "@angular/cli": "~7.2.1",
-    "@angular/compiler-cli": "~7.2.1",
+    "@angular-devkit/build-angular": "^0.803.20",
+    "@angular-devkit/build-ng-packagr": "~0.803.20",
+    "@angular/cli": "^8.3.20",
+    "@angular/compiler-cli": "^8.2.14",
     "@angular/language-service": "~7.2.1",
     "@compodoc/compodoc": "^1.1.8",
     "@types/jasmine": "~2.8.6",
@@ -51,12 +51,12 @@
     "karma-jasmine": "~1.1.1",
     "karma-jasmine-html-reporter": "^0.2.2",
     "ncp": "^2.0.0",
-    "ng-packagr": "^4.7.1",
+    "ng-packagr": "^5.7.1",
     "protractor": "~5.3.0",
     "ts-node": "~5.0.1",
     "tsickle": "0.34.3",
     "tslib": "^1.9.0",
     "tslint": "~5.9.1",
-    "typescript": "~3.2.2"
+    "typescript": "^3.5.0"
   }
 }
