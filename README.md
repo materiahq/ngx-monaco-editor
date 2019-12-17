@@ -4,11 +4,11 @@ Try it out on : [live demo](https://materiahq.github.io/ngx-monaco-editor).
 
 Api reference available on : [documentation](https://materiahq.github.io/ngx-monaco-editor/api-reference).
 
-### Installation
+### Standard installation
 
 Install from npm repository:
 ```
-npm install @materia-ui/ngx-monaco-editor --save
+npm install monaco-editor @materia-ui/ngx-monaco-editor --save
  ```
  
 Add the glob to assets in angular.json (to make monaco-editor lib available to the app):
@@ -100,6 +100,44 @@ Include diff-editor component in your html and use the following inputs: options
 Both components support all available `monaco-editor` options:
 - EditorOptions: https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.ieditorconstructionoptions.html,
 - DiffEditorOptions: https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.idiffeditorconstructionoptions.html.
+
+
+### Configure default monaco-editor library path
+
+You can configure the default path used to load the monaco-editor library.
+
+It allows you to either change the localization of your local installed library or load the library from a remote resources.
+
+Example **load monaco-editor from a CDN**:
+
+`Warning: in this case you don't need to install monaco-editor locally.`
+
+```typescript
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+
+import { AppComponent } from './app.component';
+import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    FormsModule,
+    MonacoEditorModule
+  ],
+  providers: [{
+    provide: 'MONACO_PATH',
+    useValue: 'https://unpkg.com/monaco-editor@0.18.1/min/vs'
+  }],
+  bootstrap: [AppComponent]
+})
+export class AppModule {
+}
+```
 
 ### Motivations
 
