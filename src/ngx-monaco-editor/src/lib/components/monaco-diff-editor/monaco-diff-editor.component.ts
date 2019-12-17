@@ -61,7 +61,7 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
     @Input() modified: string;
     @Input() options: editor.IDiffEditorConstructionOptions;
 
-    @ViewChild('diffEditor') editorContent: ElementRef;
+    @ViewChild('diffEditor', {static: false}) editorContent: ElementRef;
 
     constructor(private monacoLoader: MonacoEditorLoaderService) { }
 
