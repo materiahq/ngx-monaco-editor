@@ -62,6 +62,7 @@
 
 
 
+
             <section>
     <h3 id="index">Index</h3>
     <table class="table table-sm table-bordered index-table">
@@ -82,6 +83,10 @@
                                 <a href="#isMonacoLoaded">isMonacoLoaded</a>
                             </li>
                             <li>
+                                    <span class="modifier">Public</span>
+                                <a href="#monacoPathConfig">monacoPathConfig</a>
+                            </li>
+                            <li>
                                 <a href="#nodeRequire">nodeRequire</a>
                             </li>
                         </ul>
@@ -98,6 +103,9 @@
                         <ul class="index-list">
                             <li>
                                 <a href="#addElectronFixScripts">addElectronFixScripts</a>
+                            </li>
+                            <li>
+                                <a href="#loadMonaco">loadMonaco</a>
                             </li>
                         </ul>
                     </td>
@@ -131,7 +139,7 @@
             <tbody>
                 <tr>
                     <td class="col-md-4">
-<code>constructor(ngZone: <a href="https://angular.io/api/core/NgZone" target="_blank">NgZone</a>)</code>
+<code>constructor(ngZone: <a href="https://angular.io/api/core/NgZone" target="_blank">NgZone</a>, monacoPathConfig: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
                     </td>
                 </tr>
                         <tr>
@@ -157,7 +165,19 @@
                                                         <td>ngZone</td>
                                                   
                                                         <td>
-                                                                    <code><a href="https://angular.io/api/core/NgZone" target="_blank" >NgZone</a></code>
+                                                                        <code><a href="https://angular.io/api/core/NgZone" target="_blank" >NgZone</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>monacoPathConfig</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
                                                         </td>
                                                   
                                                     <td>
@@ -176,49 +196,88 @@
 
             <section>
     
-        <h3 id="methods">
-            Methods
-        </h3>
-        <table class="table table-sm table-bordered">
-            <tbody>
-                <tr>
-                    <td class="col-md-4">
-                        <a name="addElectronFixScripts"></a>
-                        <span class="name">
-                            <b>
+    <h3 id="methods">
+        Methods
+    </h3>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="addElectronFixScripts"></a>
+                    <span class="name">
+                        <b>
                             addElectronFixScripts
-                            </b>
-                            <a href="#addElectronFixScripts"><span class="icon ion-ios-link"></span></a>
-                        </span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="col-md-4">
+                        </b>
+                        <a href="#addElectronFixScripts"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
 <code>addElectronFixScripts()</code>
-                    </td>
-                </tr>
+                </td>
+            </tr>
 
 
-                        <tr>
-                            <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="61" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:61</a></div>
-                            </td>
-                        </tr>
+            <tr>
+                <td class="col-md-4">
+                    <div class="io-line">Defined in <a href="" data-line="69"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:69</a></div>
+                </td>
+            </tr>
 
 
-                <tr>
-                    <td class="col-md-4">
+            <tr>
+                <td class="col-md-4">
 
-                            <div class="io-description">
-                                <b>Returns : </b>    <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
+                    <div class="io-description">
+                        <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
 
-                            </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="loadMonaco"></a>
+                    <span class="name">
+                        <b>
+                            loadMonaco
+                        </b>
+                        <a href="#loadMonaco"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>loadMonaco()</code>
+                </td>
+            </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                    <div class="io-line">Defined in <a href="" data-line="29"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:29</a></div>
+                </td>
+            </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                    <div class="io-description">
+                        <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
+
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </section>
-
             <section>
     
         <h3 id="inputs">
@@ -239,7 +298,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                            <i>Type : </i>    <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                            <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
 
                         </td>
                     </tr>
@@ -293,6 +352,43 @@
             <tbody>
                 <tr>
                     <td class="col-md-4">
+                        <a name="monacoPathConfig"></a>
+                        <span class="name">
+                            <b>
+                                <span class="modifier">Public</span>
+                            monacoPathConfig</b>
+                            <a href="#monacoPathConfig"><span class="icon ion-ios-link"></span></a>
+                        </span>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                            <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="col-md-4">
+                            <b>Decorators : </b>
+                            <br />
+                            <code>
+                                @Optional()<br />@Inject(&#x27;MONACO_PATH&#x27;)<br />
+                            </code>
+                        </td>
+                    </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                    <div class="io-line">Defined in <a href="" data-line="15" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:15</a></div>
+                            </td>
+                        </tr>
+
+
+            </tbody>
+        </table>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
                         <a name="nodeRequire"></a>
                         <span class="name">
                             <b>
@@ -303,7 +399,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                            <i>Type : </i>    <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+                            <i>Type : </i>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
 
                         </td>
                     </tr>
@@ -334,7 +430,7 @@
 
                 <tr>
                     <td class="col-md-4">
-                        <span class="accessor"><b>set</b><code>monacoPath(value: <a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank">any</a>)</code></span>
+                        <span class="accessor"><b>set</b><code>monacoPath(value: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code></span>
                     </td>
                 </tr>
                             <tr>
@@ -360,7 +456,7 @@
                                                             <td>value</td>
                                                     
                                                             <td>
-                                                                        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+                                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
                                                             </td>
                                                     
                                                         <td>
@@ -374,7 +470,7 @@
                                 <div>
                                 </div>
                                 <div class="io-description">
-                                    <b>Returns : </b>    <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
+                                    <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
 
                                 </div>
                         </td>
@@ -386,7 +482,7 @@
 
 
     <div class="tab-pane fade  tab-source-code" id="c-source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Injectable, NgZone } from &#x27;@angular/core&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Injectable, NgZone, Optional, Inject } from &#x27;@angular/core&#x27;;
 import { BehaviorSubject } from &#x27;rxjs&#x27;;
 
 @Injectable({ providedIn: &#x27;root&#x27; })
@@ -394,56 +490,64 @@ export class MonacoEditorLoaderService {
     nodeRequire: any;
     isMonacoLoaded: BehaviorSubject&lt;boolean&gt; &#x3D; new BehaviorSubject&lt;boolean&gt;(false);
     private _monacoPath &#x3D; &#x27;assets/monaco-editor/min/vs&#x27;;
-    set monacoPath(value: any) {
+    set monacoPath(value: string) {
         if (value) {
             this._monacoPath &#x3D; value;
         }
     }
 
-    constructor(ngZone: NgZone) {
-        const onGotAmdLoader &#x3D; () &#x3D;&gt; {
-            if ((&lt;any&gt;window).monacoEditorAlreadyInitialized) {
-                ngZone.run(() &#x3D;&gt; this.isMonacoLoaded.next(true));
-                return
-            }
+    constructor(private ngZone: NgZone, @Optional() @Inject(&#x27;MONACO_PATH&#x27;) public monacoPathConfig: string) {
+      if ((&lt;any&gt;window).monacoEditorAlreadyInitialized) {
+        ngZone.run(() &#x3D;&gt; this.isMonacoLoaded.next(true));
+        return;
+      }
 
-            (&lt;any&gt;window).monacoEditorAlreadyInitialized &#x3D; true;
-            
-            // Load monaco
-            (&lt;any&gt;window).amdRequire &#x3D;  (&lt;any&gt;window).require;
-            if (this.nodeRequire) {
-                (&lt;any&gt;window).require &#x3D; this.nodeRequire;
-            }
-            (&lt;any&gt;window).amdRequire.config({ paths: { &#x27;vs&#x27;: this._monacoPath } });
-            (&lt;any&gt;window).amdRequire([&#x27;vs/editor/editor.main&#x27;], () &#x3D;&gt; {
-                ngZone.run(() &#x3D;&gt; this.isMonacoLoaded.next(true));
-            });
-        };
+      (&lt;any&gt;window).monacoEditorAlreadyInitialized &#x3D; true;
 
-        let loaderScript: any &#x3D; null;
-        // Load AMD loader if necessary
-        if (!(&lt;any&gt;window).require &amp;&amp; !(&lt;any&gt;window).amdRequire) {
+      if (this.monacoPathConfig) {
+        this.monacoPath &#x3D; this.monacoPathConfig;
+      }
+      this.loadMonaco();
+    }
 
-            loaderScript &#x3D; document.createElement(&#x27;script&#x27;);
-            loaderScript.type &#x3D; &#x27;text/javascript&#x27;;
-            loaderScript.src &#x3D; &#x60;${this._monacoPath}/loader.js&#x60;;
-            loaderScript.addEventListener(&#x27;load&#x27;, onGotAmdLoader);
-            document.body.appendChild(loaderScript);
-
-        } else if (!(&lt;any&gt;window).amdRequire) {
-
-            this.addElectronFixScripts();
-
-            this.nodeRequire &#x3D;  (&lt;any&gt;window).require;
-            loaderScript &#x3D; document.createElement(&#x27;script&#x27;);
-            loaderScript.type &#x3D; &#x27;text/javascript&#x27;;
-            loaderScript.src &#x3D; &#x60;${this._monacoPath}/loader.js&#x60;;
-            loaderScript.addEventListener(&#x27;load&#x27;, onGotAmdLoader);
-            document.body.appendChild(loaderScript);
-
-        } else {
-            onGotAmdLoader();
+    loadMonaco() {
+      const onGotAmdLoader &#x3D; () &#x3D;&gt; {
+        // Load monaco
+        (&lt;any&gt;window).amdRequire &#x3D;  (&lt;any&gt;window).require;
+        if (this.nodeRequire) {
+            (&lt;any&gt;window).require &#x3D; this.nodeRequire;
         }
+        (&lt;any&gt;window).amdRequire.config({ paths: { &#x27;vs&#x27;: this._monacoPath } });
+        (&lt;any&gt;window).amdRequire([&#x27;vs/editor/editor.main&#x27;], () &#x3D;&gt; {
+            this.ngZone.run(() &#x3D;&gt; this.isMonacoLoaded.next(true));
+        });
+    };
+
+    console.log(&#x27;Monaco path : &#x27;, this._monacoPath);
+    let loaderScript: any &#x3D; null;
+    // Load AMD loader if necessary
+    if (!(&lt;any&gt;window).require &amp;&amp; !(&lt;any&gt;window).amdRequire) {
+
+        loaderScript &#x3D; document.createElement(&#x27;script&#x27;);
+        loaderScript.type &#x3D; &#x27;text/javascript&#x27;;
+        loaderScript.src &#x3D; &#x60;${this._monacoPath}/loader.js&#x60;;
+        loaderScript.addEventListener(&#x27;load&#x27;, onGotAmdLoader);
+        document.body.appendChild(loaderScript);
+
+    } else if (!(&lt;any&gt;window).amdRequire) {
+
+        this.addElectronFixScripts();
+
+        this.nodeRequire &#x3D;  (&lt;any&gt;window).require;
+        loaderScript &#x3D; document.createElement(&#x27;script&#x27;);
+        loaderScript.type &#x3D; &#x27;text/javascript&#x27;;
+        loaderScript.src &#x3D; &#x60;${this._monacoPath}/loader.js&#x60;;
+        loaderScript.addEventListener(&#x27;load&#x27;, onGotAmdLoader);
+        document.body.appendChild(loaderScript);
+
+    } else {
+        onGotAmdLoader();
+      }
     }
 
     addElectronFixScripts() {
@@ -468,6 +572,7 @@ export class MonacoEditorLoaderService {
 
 
 
+                   
 
 
 
@@ -490,6 +595,7 @@ export class MonacoEditorLoaderService {
             var COMPODOC_CURRENT_PAGE_DEPTH = 1;
             var COMPODOC_CURRENT_PAGE_CONTEXT = 'injectable';
             var COMPODOC_CURRENT_PAGE_URL = 'MonacoEditorLoaderService.html';
+            var MAX_SEARCH_RESULTS = 15;
        </script>
 
        <script src="../js/libs/custom-elements.min.js"></script>
