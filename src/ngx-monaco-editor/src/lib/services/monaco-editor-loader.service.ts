@@ -1,5 +1,6 @@
 import { Injectable, NgZone, Optional, Inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { MONACO_PATH } from '../interfaces';
 
 @Injectable({ providedIn: 'root' })
 export class MonacoEditorLoaderService {
@@ -12,7 +13,7 @@ export class MonacoEditorLoaderService {
         }
     }
 
-    constructor(private ngZone: NgZone, @Optional() @Inject('MONACO_PATH') public monacoPathConfig: string) {
+    constructor(private ngZone: NgZone, @Optional() @Inject(MONACO_PATH) public monacoPathConfig: string) {
       if ((<any>window).monacoEditorAlreadyInitialized) {
         ngZone.run(() => this.isMonacoLoaded$.next(true));
         return;
