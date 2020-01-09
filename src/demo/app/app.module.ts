@@ -12,7 +12,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
 
 import { AppComponent } from './app.component';
-import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
+import { MonacoEditorModule, MONACO_PATH } from '@materia-ui/ngx-monaco-editor';
 
 @NgModule({
   declarations: [
@@ -32,7 +32,10 @@ import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
     MatDividerModule,
     FlexLayoutModule
   ],
-  providers: [],
+  providers: [{
+    provide: MONACO_PATH,
+    useValue: 'https://unpkg.com/monaco-editor@0.18.1/min/vs'
+  }],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
