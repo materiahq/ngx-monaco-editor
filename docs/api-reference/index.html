@@ -31,12 +31,19 @@
                <div class="content getting-started">
                    <div class="content-data">
 
-<h3 id="documentation">Documentation</h3>
-<p>Try it out on : <a href="https://materiahq.github.io/ngx-monaco-editor">live demo</a>.</p>
+<ul>
+<li>Angular v6/v7: <a href="https://github.com/materiahq/ngx-monaco-editor/tree/2.0.x">v2.x</a>.</li>
+</ul>
+<h3 id="resources">Resources</h3>
+<p>Try it out on: <a href="https://stackblitz.com/edit/materia-ngx-monaco-editor-example">Stackblitz</a>.</p>
+<p>See it in action : <a href="https://materiahq.github.io/ngx-monaco-editor">live demo</a>.</p>
 <p>Api reference available on : <a href="https://materiahq.github.io/ngx-monaco-editor/api-reference">documentation</a>.</p>
-<h3 id="installation">Installation</h3>
+<h3 id="standard-installation">Standard installation</h3>
 <p>Install from npm repository:</p>
-<div><pre class="line-numbers"><code class="language-none">npm install &#64;materia-ui/ngx-monaco-editor --save</code></pre></div><p>Add the glob to assets in angular.json (to make monaco-editor lib available to the app):</p>
+<div><pre class="line-numbers"><code class="language-none">npm install monaco-editor&#64;0.18.1 &#64;materia-ui/ngx-monaco-editor --save</code></pre></div><blockquote>
+<p>⚠️ For angular v8 <code>monaco-editor v0.18.1</code> must be used, so that typescript versions are compatible.</p>
+</blockquote>
+<p>Add the glob to assets in angular.json (to make monaco-editor lib available to the app):</p>
 <div><pre class="line-numbers"><code class="language-typescript">{
     ...
     &quot;projects&quot;: {
@@ -99,7 +106,61 @@ export class AppComponent {
 <li>EditorOptions: <a href="https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.ieditorconstructionoptions.html">https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.ieditorconstructionoptions.html</a>,</li>
 <li>DiffEditorOptions: <a href="https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.idiffeditorconstructionoptions.html">https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.idiffeditorconstructionoptions.html</a>.</li>
 </ul>
-<h3 id="motivations">Motivations</h3>
+<h3 id="configure-default-monaco-editor-library-path">Configure default monaco-editor library path</h3>
+<p>You can configure the default path used to load the monaco-editor library.</p>
+<p>It allows you to either change the localization of your local installed library or load the library from a remote resource.</p>
+<p>Example <strong>load monaco-editor from a CDN</strong>:</p>
+<blockquote>
+<p>⚠️ Warning: in this case you don&#39;t need to install monaco-editor and neither modify angular.json.</p>
+</blockquote>
+<div><pre class="line-numbers"><code class="language-typescript">import { BrowserModule } from &#39;&#64;angular/platform-browser&#39;;
+import { NgModule } from &#39;&#64;angular/core&#39;;
+import { FormsModule } from &#39;&#64;angular/forms&#39;;
+
+import { AppComponent } from &#39;./app.component&#39;;
+import { MonacoEditorModule, MONACO_PATH } from &#39;&#64;materia-ui/ngx-monaco-editor&#39;;
+
+&#64;NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    FormsModule,
+    MonacoEditorModule
+  ],
+  providers: [{
+    provide: MONACO_PATH,
+    useValue: &#39;https://unpkg.com/monaco-editor&#64;0.18.1/min/vs&#39;
+  }],
+  bootstrap: [AppComponent]
+})
+export class AppModule {
+}</code></pre></div><h3 id="access-editor-instance">Access editor instance</h3>
+<p>If you need to retrieve an editor instance you can do so by using the <code>init</code> output:</p>
+<div><pre class="line-numbers"><code class="language-html">&lt;ngx-monaco-editor [options]=&quot;editorOptions&quot; [(ngModel)]=&quot;code&quot; (init)=&quot;editorInit($event)&quot;&gt;&lt;/ngx-monaco-editor&gt;</code></pre></div><div><pre class="line-numbers"><code class="language-typescript">import { Component } from &#39;&#64;angular/core&#39;;
+...
+export class AppComponent {
+  editorOptions = {theme: &#39;vs-dark&#39;, language: &#39;javascript&#39;};
+  code: string= &#39;function x() {\nconsole.log(&quot;Hello world!&quot;);\n}&#39;;
+
+  editorInit(editor) {
+    // Here you can access editor instance
+     this.editor = editor;
+    }
+}</code></pre></div><h3 id="access-monaco-instance">Access Monaco instance</h3>
+<p>If you need to retrieve <code>monaco-editor</code> instance for advance use cases (like defining a custom theme, add custom auto-complete support, etc...), you have to wait until monaco is loaded using our <code>MonacoEditorLoaderService</code>:</p>
+<div><pre class="line-numbers"><code class="language-typescript">import { MonacoEditorLoaderService } from &#39;&#64;materia-ui/ngx-monaco-editor&#39;;
+...
+constructor(private monacoLoaderService: MonacoEditorLoaderService) {
+      this.monacoLoaderService.isMonacoLoaded$.pipe(
+        filter(isLoaded =&gt; isLoaded),
+        take(1),
+      ).subscribe(() =&gt; {
+           // here, we retrieve monaco-editor instance
+           monaco.setTheme(...);
+      });
+     }</code></pre></div><h3 id="motivations">Motivations</h3>
 <p>We wanted to use monaco-editor library with angular in our desktop application: <a href="https://getmateria.com">Materia Designer</a>.</p>
 <p>The current angular libraries did not cover all of our needs, notably:</p>
 <ul>

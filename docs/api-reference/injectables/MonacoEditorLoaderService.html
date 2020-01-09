@@ -80,7 +80,7 @@
                                 <a href="#_monacoPath">_monacoPath</a>
                             </li>
                             <li>
-                                <a href="#isMonacoLoaded">isMonacoLoaded</a>
+                                <a href="#isMonacoLoaded$">isMonacoLoaded$</a>
                             </li>
                             <li>
                                     <span class="modifier">Public</span>
@@ -144,7 +144,7 @@
                 </tr>
                         <tr>
                             <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="13" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:13</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="14" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:14</a></div>
                             </td>
                         </tr>
 
@@ -221,8 +221,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="68"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:68</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="69"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:69</a></div>
                 </td>
             </tr>
 
@@ -260,8 +260,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="29"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:29</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="30"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:30</a></div>
                 </td>
             </tr>
 
@@ -309,7 +309,7 @@
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="8" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:8</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="9" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:9</a></div>
                             </td>
                         </tr>
 
@@ -320,11 +320,11 @@
             <tbody>
                 <tr>
                     <td class="col-md-4">
-                        <a name="isMonacoLoaded"></a>
+                        <a name="isMonacoLoaded$"></a>
                         <span class="name">
                             <b>
-                            isMonacoLoaded</b>
-                            <a href="#isMonacoLoaded"><span class="icon ion-ios-link"></span></a>
+                            isMonacoLoaded$</b>
+                            <a href="#isMonacoLoaded$"><span class="icon ion-ios-link"></span></a>
                         </span>
                     </td>
                 </tr>
@@ -341,7 +341,7 @@
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="7" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:7</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="8" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:8</a></div>
                             </td>
                         </tr>
 
@@ -372,13 +372,13 @@
                             <b>Decorators : </b>
                             <br />
                             <code>
-                                @Optional()<br />@Inject(&#x27;MONACO_PATH&#x27;)<br />
+                                @Optional()<br />@Inject(MONACO_PATH)<br />
                             </code>
                         </td>
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="15" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:15</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="16" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:16</a></div>
                             </td>
                         </tr>
 
@@ -405,7 +405,7 @@
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="6" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:6</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="7" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:7</a></div>
                             </td>
                         </tr>
 
@@ -435,7 +435,7 @@
                 </tr>
                             <tr>
                                 <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="9" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:9</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="10" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:10</a></div>
                                 </td>
                             </tr>
                     <tr>
@@ -484,11 +484,12 @@
     <div class="tab-pane fade  tab-source-code" id="c-source">
         <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Injectable, NgZone, Optional, Inject } from &#x27;@angular/core&#x27;;
 import { BehaviorSubject } from &#x27;rxjs&#x27;;
+import { MONACO_PATH } from &#x27;../interfaces&#x27;;
 
 @Injectable({ providedIn: &#x27;root&#x27; })
 export class MonacoEditorLoaderService {
     nodeRequire: any;
-    isMonacoLoaded: BehaviorSubject&lt;boolean&gt; &#x3D; new BehaviorSubject&lt;boolean&gt;(false);
+    isMonacoLoaded$: BehaviorSubject&lt;boolean&gt; &#x3D; new BehaviorSubject&lt;boolean&gt;(false);
     private _monacoPath &#x3D; &#x27;assets/monaco-editor/min/vs&#x27;;
     set monacoPath(value: string) {
         if (value) {
@@ -496,9 +497,9 @@ export class MonacoEditorLoaderService {
         }
     }
 
-    constructor(private ngZone: NgZone, @Optional() @Inject(&#x27;MONACO_PATH&#x27;) public monacoPathConfig: string) {
+    constructor(private ngZone: NgZone, @Optional() @Inject(MONACO_PATH) public monacoPathConfig: string) {
       if ((&lt;any&gt;window).monacoEditorAlreadyInitialized) {
-        ngZone.run(() &#x3D;&gt; this.isMonacoLoaded.next(true));
+        ngZone.run(() &#x3D;&gt; this.isMonacoLoaded$.next(true));
         return;
       }
 
@@ -519,7 +520,7 @@ export class MonacoEditorLoaderService {
         }
         (&lt;any&gt;window).amdRequire.config({ paths: { &#x27;vs&#x27;: this._monacoPath } });
         (&lt;any&gt;window).amdRequire([&#x27;vs/editor/editor.main&#x27;], () &#x3D;&gt; {
-            this.ngZone.run(() &#x3D;&gt; this.isMonacoLoaded.next(true));
+            this.ngZone.run(() &#x3D;&gt; this.isMonacoLoaded$.next(true));
         });
     };
 

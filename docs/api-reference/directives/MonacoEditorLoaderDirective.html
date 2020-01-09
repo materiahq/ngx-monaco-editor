@@ -337,7 +337,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                            <i>Default value : </i><code>this.monacoEditorLoaderService.isMonacoLoaded.asObservable()</code>
+                            <i>Default value : </i><code>this.monacoEditorLoaderService.isMonacoLoaded$.asObservable()</code>
                         </td>
                     </tr>
                         <tr>
@@ -363,7 +363,7 @@ import { Subject } from &#x27;rxjs&#x27;;
 
 @Directive({ selector: &#x27;[ngxLoadMonacoEditor]&#x27; })
 export class MonacoEditorLoaderDirective implements OnInit, OnDestroy {
-  isMonacoLoaded$ &#x3D; this.monacoEditorLoaderService.isMonacoLoaded.asObservable();
+  isMonacoLoaded$ &#x3D; this.monacoEditorLoaderService.isMonacoLoaded$.asObservable();
   destroyed$ &#x3D; new Subject&lt;void&gt;();
 
   constructor(
