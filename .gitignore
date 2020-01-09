@@ -43,3 +43,4 @@ Thumbs.db
 src/ngx-monaco-editor/node_modules/.yarn-integrity
 src/ngx-monaco-editor/node_modules/.yarn-integrity
 src/ngx-monaco-editor/node_modules/css-element-queries/.idea/encodings.xml
+src/ngx-monaco-editor/src/lib/interfaces/monaco.d.ts

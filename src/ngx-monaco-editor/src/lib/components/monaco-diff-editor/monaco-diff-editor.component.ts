@@ -12,11 +12,9 @@ import {
     SimpleChanges
 } from '@angular/core';
 import { filter, take } from 'rxjs/operators';
-import { editor } from 'monaco-editor';
 
 import { MonacoEditorLoaderService } from '../../services/monaco-editor-loader.service';
-
-declare const monaco: any;
+import { MonacoDiffEditorConstructionOptions, MonacoStandaloneDiffEditor } from '../../interfaces';
 
 @Component({
     selector: 'ngx-monaco-diff-editor',
@@ -57,12 +55,12 @@ height: 100%;
 })
 export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
     container: HTMLDivElement;
-    editor: editor.IStandaloneDiffEditor;
+    editor: MonacoStandaloneDiffEditor;
 
     @Input() original: string;
     @Input() modified: string;
-    @Input() options: editor.IDiffEditorConstructionOptions;
-    @Output() init: EventEmitter<editor.IStandaloneDiffEditor> = new EventEmitter();
+    @Input() options: MonacoDiffEditorConstructionOptions;
+    @Output() init: EventEmitter< MonacoStandaloneDiffEditor> = new EventEmitter();
 
     @ViewChild('diffEditor', {static: true}) editorContent: ElementRef;
 
@@ -97,13 +95,13 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
             }
 
             if (changes.options.previousValue.readOnly !== changes.options.currentValue.readOnly) {
-                this.editor.updateOptions({ readOnly: changes.options.currentValue.readOnly })
+                this.editor.updateOptions({ readOnly: changes.options.currentValue.readOnly });
             }
         }
     }
 
     private initMonaco() {
-        let opts: editor.IDiffEditorConstructionOptions = {
+        let opts: MonacoDiffEditorConstructionOptions = {
             readOnly: true,
             theme: 'vc'
         };

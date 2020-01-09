@@ -14,11 +14,9 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, Validator, NG_VALIDATORS, ValidationErrors } from '@angular/forms';
 import { filter, take } from 'rxjs/operators';
-import { editor } from 'monaco-editor';
 
 import { MonacoEditorLoaderService } from '../../services/monaco-editor-loader.service';
-
-declare const monaco: any;
+import { MonacoEditorConstructionOptions, MonacoStandaloneCodeEditor } from '../../interfaces';
 
 @Component({
     selector: 'ngx-monaco-editor',
@@ -70,12 +68,12 @@ declare const monaco: any;
     ]
 })
 export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor, Validator {
-    @Input() options: editor.IEditorConstructionOptions;
-    @Output() init: EventEmitter<editor.IStandaloneCodeEditor> = new EventEmitter();
+    @Input() options: MonacoEditorConstructionOptions;
+    @Output() init: EventEmitter<MonacoStandaloneCodeEditor> = new EventEmitter();
     @ViewChild('editor', {static: true}) editorContent: ElementRef;
 
     container: HTMLDivElement;
-    editor: editor.IStandaloneCodeEditor;
+    editor: MonacoStandaloneCodeEditor;
     value: string;
     parseError: boolean;
 
@@ -142,7 +140,7 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
     }
 
     private initMonaco() {
-        let opts: editor.IEditorConstructionOptions = {
+        let opts: MonacoEditorConstructionOptions = {
             value: [this.value].join('\n'),
             language: 'text',
             automaticLayout: true,

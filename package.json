@@ -9,7 +9,9 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "build:monaco": "ng build --prod ngx-monaco-editor && ncp LICENSE ./dist/ngx-monaco-editor/LICENSE && ncp README.md ./dist/ngx-monaco-editor/README.MD",
+    "build:monaco": "npm run copy-src:types && ng build --prod ngx-monaco-editor && npm run copy-dist:types && ncp LICENSE ./dist/ngx-monaco-editor/LICENSE && ncp README.md ./dist/ngx-monaco-editor/README.MD",
+    "copy-src:types": "cp node_modules/monaco-editor/monaco.d.ts src/ngx-monaco-editor/src/lib/interfaces",
+    "copy-dist:types": "cp node_modules/monaco-editor/monaco.d.ts dist/ngx-monaco-editor",
     "compodoc": "./node_modules/.bin/compodoc -p src/ngx-monaco-editor/tsconfig.lib.json --theme=material"
   },
   "private": true,
