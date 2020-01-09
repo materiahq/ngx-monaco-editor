@@ -94,9 +94,7 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
                 monaco.editor.setTheme(changes.options.currentValue.theme);
             }
 
-            if (changes.options.previousValue.readOnly !== changes.options.currentValue.readOnly) {
-                this.editor.updateOptions({ readOnly: changes.options.currentValue.readOnly });
-            }
+            this.editor.updateOptions(changes.options.currentValue);
         }
     }
 
