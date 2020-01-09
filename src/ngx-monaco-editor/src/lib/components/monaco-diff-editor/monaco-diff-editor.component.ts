@@ -2,9 +2,11 @@ import {
     Component,
     ViewChild,
     ElementRef,
+    EventEmitter,
     OnInit,
     OnChanges,
     OnDestroy,
+    Output,
     Input,
     ChangeDetectionStrategy,
     SimpleChanges
@@ -60,6 +62,7 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
     @Input() original: string;
     @Input() modified: string;
     @Input() options: editor.IDiffEditorConstructionOptions;
+    @Output() init: EventEmitter<editor.IStandaloneDiffEditor> = new EventEmitter();
 
     @ViewChild('diffEditor', {static: true}) editorContent: ElementRef;
 
@@ -117,6 +120,7 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
             modified
         });
         this.editor.layout();
+        this.init.emit(this.editor);
     }
 
     onResized(event) {

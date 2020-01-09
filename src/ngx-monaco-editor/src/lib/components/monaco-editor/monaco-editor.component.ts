@@ -2,13 +2,15 @@ import {
     Component,
     ViewChild,
     ElementRef,
+    EventEmitter,
     OnInit,
     OnChanges,
     OnDestroy,
     Input,
     ChangeDetectionStrategy,
     forwardRef,
-    SimpleChanges
+    SimpleChanges,
+    Output
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, Validator, NG_VALIDATORS, ValidationErrors } from '@angular/forms';
 import { filter, take } from 'rxjs/operators';
@@ -69,6 +71,7 @@ declare const monaco: any;
 })
 export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor, Validator {
     @Input() options: editor.IEditorConstructionOptions;
+    @Output() init: EventEmitter<editor.IStandaloneCodeEditor> = new EventEmitter();
     @ViewChild('editor', {static: true}) editorContent: ElementRef;
 
     container: HTMLDivElement;
@@ -172,6 +175,8 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
         this.editor.onDidBlurEditorText(() => {
             this.onTouched();
         });
+
+        this.init.emit(this.editor);
     }
 
     onResized(event) {
