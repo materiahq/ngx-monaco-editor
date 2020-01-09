@@ -4,7 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class MonacoEditorLoaderService {
     nodeRequire: any;
-    isMonacoLoaded: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+    isMonacoLoaded$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
     private _monacoPath = 'assets/monaco-editor/min/vs';
     set monacoPath(value: string) {
         if (value) {
@@ -14,7 +14,7 @@ export class MonacoEditorLoaderService {
 
     constructor(private ngZone: NgZone, @Optional() @Inject('MONACO_PATH') public monacoPathConfig: string) {
       if ((<any>window).monacoEditorAlreadyInitialized) {
-        ngZone.run(() => this.isMonacoLoaded.next(true));
+        ngZone.run(() => this.isMonacoLoaded$.next(true));
         return;
       }
 
@@ -35,7 +35,7 @@ export class MonacoEditorLoaderService {
         }
         (<any>window).amdRequire.config({ paths: { 'vs': this._monacoPath } });
         (<any>window).amdRequire(['vs/editor/editor.main'], () => {
-            this.ngZone.run(() => this.isMonacoLoaded.next(true));
+            this.ngZone.run(() => this.isMonacoLoaded$.next(true));
         });
     };
 

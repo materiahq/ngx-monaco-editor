@@ -85,7 +85,7 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
 
     ngOnInit() {
         this.container = this.editorContent.nativeElement;
-        this.monacoLoader.isMonacoLoaded.pipe(
+        this.monacoLoader.isMonacoLoaded$.pipe(
             filter(isLoaded => isLoaded),
             take(1)
         ).subscribe(() => {

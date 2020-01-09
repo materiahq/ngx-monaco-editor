@@ -5,7 +5,7 @@ import { Subject } from 'rxjs';
 
 @Directive({ selector: '[ngxLoadMonacoEditor]' })
 export class MonacoEditorLoaderDirective implements OnInit, OnDestroy {
-  isMonacoLoaded$ = this.monacoEditorLoaderService.isMonacoLoaded.asObservable();
+  isMonacoLoaded$ = this.monacoEditorLoaderService.isMonacoLoaded$.asObservable();
   destroyed$ = new Subject<void>();
 
   constructor(
