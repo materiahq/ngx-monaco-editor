@@ -12,10 +12,8 @@ Api reference available on : [documentation](https://materiahq.github.io/ngx-mon
 
 Install from npm repository:
 ```
-npm install monaco-editor@0.18.1 @materia-ui/ngx-monaco-editor --save
+npm install monaco-editor @materia-ui/ngx-monaco-editor --save
  ```
-
-> ⚠️ For angular v8 `monaco-editor v0.18.1` must be used, so that typescript versions are compatible.
  
 Add the glob to assets in angular.json (to make monaco-editor lib available to the app):
 ```typescript
