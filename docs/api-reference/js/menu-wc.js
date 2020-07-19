@@ -60,13 +60,13 @@ customElements.define('compodoc-menu', class extends HTMLElement {
                                 <a href="modules/MonacoEditorModule.html" data-type="entity-link">MonacoEditorModule</a>
                                     <li class="chapter inner">
                                         <div class="simple menu-toggler" data-toggle="collapse" ${ isNormalMode ?
-                                            'data-target="#components-links-module-MonacoEditorModule-fd714ede9d8eec02e4daeb16fa7f76be"' : 'data-target="#xs-components-links-module-MonacoEditorModule-fd714ede9d8eec02e4daeb16fa7f76be"' }>
+                                            'data-target="#components-links-module-MonacoEditorModule-47e2d96e054dab72ddcb367376b5ffc1"' : 'data-target="#xs-components-links-module-MonacoEditorModule-47e2d96e054dab72ddcb367376b5ffc1"' }>
                                             <span class="icon ion-md-cog"></span>
                                             <span>Components</span>
                                             <span class="icon ion-ios-arrow-down"></span>
                                         </div>
-                                        <ul class="links collapse" ${ isNormalMode ? 'id="components-links-module-MonacoEditorModule-fd714ede9d8eec02e4daeb16fa7f76be"' :
-                                            'id="xs-components-links-module-MonacoEditorModule-fd714ede9d8eec02e4daeb16fa7f76be"' }>
+                                        <ul class="links collapse" ${ isNormalMode ? 'id="components-links-module-MonacoEditorModule-47e2d96e054dab72ddcb367376b5ffc1"' :
+                                            'id="xs-components-links-module-MonacoEditorModule-47e2d96e054dab72ddcb367376b5ffc1"' }>
                                             <li class="link">
                                                 <a href="components/MonacoDiffEditorComponent.html"
                                                     data-type="entity-link" data-context="sub-entity" data-context-id="modules">MonacoDiffEditorComponent</a>
@@ -79,13 +79,13 @@ customElements.define('compodoc-menu', class extends HTMLElement {
                                     </li>
                                 <li class="chapter inner">
                                     <div class="simple menu-toggler" data-toggle="collapse" ${ isNormalMode ?
-                                        'data-target="#directives-links-module-MonacoEditorModule-fd714ede9d8eec02e4daeb16fa7f76be"' : 'data-target="#xs-directives-links-module-MonacoEditorModule-fd714ede9d8eec02e4daeb16fa7f76be"' }>
+                                        'data-target="#directives-links-module-MonacoEditorModule-47e2d96e054dab72ddcb367376b5ffc1"' : 'data-target="#xs-directives-links-module-MonacoEditorModule-47e2d96e054dab72ddcb367376b5ffc1"' }>
                                         <span class="icon ion-md-code-working"></span>
                                         <span>Directives</span>
                                         <span class="icon ion-ios-arrow-down"></span>
                                     </div>
-                                    <ul class="links collapse" ${ isNormalMode ? 'id="directives-links-module-MonacoEditorModule-fd714ede9d8eec02e4daeb16fa7f76be"' :
-                                        'id="xs-directives-links-module-MonacoEditorModule-fd714ede9d8eec02e4daeb16fa7f76be"' }>
+                                    <ul class="links collapse" ${ isNormalMode ? 'id="directives-links-module-MonacoEditorModule-47e2d96e054dab72ddcb367376b5ffc1"' :
+                                        'id="xs-directives-links-module-MonacoEditorModule-47e2d96e054dab72ddcb367376b5ffc1"' }>
                                         <li class="link">
                                             <a href="directives/MonacoEditorLoaderDirective.html"
                                                 data-type="entity-link" data-context="sub-entity" data-context-id="modules">MonacoEditorLoaderDirective</a>
