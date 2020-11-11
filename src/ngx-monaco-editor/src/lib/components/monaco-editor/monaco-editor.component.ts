@@ -69,11 +69,13 @@ import { MonacoEditorConstructionOptions, MonacoStandaloneCodeEditor } from '../
 })
 export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor, Validator {
     @Input() options: MonacoEditorConstructionOptions;
+    @Input() modelUri?: monaco.Uri;
     @Output() init: EventEmitter<MonacoStandaloneCodeEditor> = new EventEmitter();
     @ViewChild('editor', {static: true}) editorContent: ElementRef;
 
     container: HTMLDivElement;
     editor: MonacoStandaloneCodeEditor;
+    modelUriInstance: monaco.editor.ITextModel;
     value: string;
     parseError: boolean;
 
@@ -95,16 +97,34 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
 
     ngOnChanges(changes: SimpleChanges) {
         if (this.editor && changes.options && !changes.options.firstChange) {
-            if (changes.options.previousValue.language !== changes.options.currentValue.language) {
+          const { language: toLanguage, theme: toTheme, ...options } = changes.options.currentValue;
+          const { language: fromLanguage, theme: fromTheme, modelUri: fromModelUri } = changes.options.previousValue;
+            if (fromLanguage !== toLanguage) {
                 monaco.editor.setModelLanguage(
                     this.editor.getModel(),
                     this.options && this.options.language ? this.options.language : 'text'
                 );
             }
-            if (changes.options.previousValue.theme !== changes.options.currentValue.theme) {
-                monaco.editor.setTheme(changes.options.currentValue.theme);
+            if (fromTheme !== toTheme) {
+                monaco.editor.setTheme(toTheme);
             }
-            this.editor.updateOptions(changes.options.currentValue);
+            this.editor.updateOptions(options);
+        }
+        if (this.editor && changes.modelUri) {
+          const toUri = changes.modelUri.currentValue;
+          const fromUri = changes.modelUri.previousValue;
+          if (fromUri && !toUri || !fromUri && toUri || toUri && fromUri && toUri.path !== fromUri.path) {
+            const value = this.editor.getValue();
+            if (this.modelUriInstance) {
+              this.modelUriInstance.dispose();
+            }
+            let existingModel;
+            if (toUri) {
+              existingModel = monaco.editor.getModels().find((model) => model.uri.path === toUri.path);
+            }
+            this.modelUriInstance = existingModel ? existingModel : monaco.editor.createModel(value, this.options.language || 'text', this.modelUri);
+            this.editor.setModel(this.modelUriInstance);
+          }
         }
     }
 
