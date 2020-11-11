@@ -55,9 +55,14 @@
 <div fxLayout="row" [style.height.px]="300">
   <mat-card style="flex: 1; display: flex; flex-direction: column;">
     <h3>JSON</h3>
-    <div style="flex:1; display: flex; flex-direction: row;">
-      <form style="flex:1; display:flex; width:50%" [formGroup]="reactiveForm">
-        <ngx-monaco-editor style="flex:1;" formControlName="code" [options]="mergeOptions({language:'json'})">
+    <div fxFlex fxFlexLayout="row">
+      <form fxFlex [formGroup]="reactiveForm">
+        <ngx-monaco-editor
+          fxFlex
+          formControlName="code"
+          [options]="mergeOptions({language:'json'})"
+          [modelUri]="modelUri"
+        >
         </ngx-monaco-editor>
       </form>
       <div style="flex:1; margin: 0 25px; overflow: auto;">

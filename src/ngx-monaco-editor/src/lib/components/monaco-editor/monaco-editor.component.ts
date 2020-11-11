@@ -16,7 +16,9 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, Validator, NG_VALIDATORS, Vali
 import { filter, take } from 'rxjs/operators';
 
 import { MonacoEditorLoaderService } from '../../services/monaco-editor-loader.service';
-import { MonacoEditorConstructionOptions, MonacoStandaloneCodeEditor } from '../../interfaces';
+import { MonacoEditorConstructionOptions, MonacoEditorUri, MonacoStandaloneCodeEditor } from '../../interfaces';
+
+declare var monaco: any;
 
 @Component({
     selector: 'ngx-monaco-editor',
@@ -69,7 +71,7 @@ import { MonacoEditorConstructionOptions, MonacoStandaloneCodeEditor } from '../
 })
 export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor, Validator {
     @Input() options: MonacoEditorConstructionOptions;
-    @Input() modelUri?: monaco.Uri;
+    @Input() modelUri?: MonacoEditorUri;
     @Output() init: EventEmitter<MonacoStandaloneCodeEditor> = new EventEmitter();
     @ViewChild('editor', {static: true}) editorContent: ElementRef;
 
