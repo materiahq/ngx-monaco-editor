@@ -32,10 +32,12 @@ import { MonacoEditorModule, MONACO_PATH } from '@materia-ui/ngx-monaco-editor';
     MatDividerModule,
     FlexLayoutModule
   ],
-  providers: [{
-    provide: MONACO_PATH,
-    useValue: 'https://unpkg.com/monaco-editor@0.18.1/min/vs'
-  }],
+  providers: [
+    {
+      provide: MONACO_PATH,
+      useValue: 'https://unpkg.com/monaco-editor@0.21.2/min/vs'
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

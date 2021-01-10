@@ -1,71 +1,147 @@
-<mat-toolbar fxLayout="row" fxLayoutAlign="start center" color="primary">
+<mat-toolbar fxLayout="row" fxLayoutAlign="start center" color="primary" class="mat-elevation-z8">
   <h1>
-    Angular Monaco Editor library Demo
+    Angular Monaco Editor library demo
   </h1>
   <span fxFlex></span>
-  <h2 style="font-size: 15px;">made with <span [style.color]="'red'">&#10084;</span> by Materia Team</h2>
-  <img width="20" alt="Materia Designer Logo" src="https://materiahq.github.io/materia-website-content/logo/materia.png"
-    [style.margin.px]="10">
+  <h2 fxHide.xs="true">
+    Made with <span [style.color]="'red'">&#10084;</span> by Materia Team
+  </h2>
+  <img
+    width="20"
+    alt="Materia Designer Logo"
+    src="https://materiahq.github.io/materia-website-content/logo/materia.png"
+    [style.margin.px]="10"
+  >
 </mat-toolbar>
-<div style="margin-top: 20px;" fxLayout="column" fxLayoutAlign="center center">
-  <h2 class="mat-h2">Monaco Editor Options</h2>
-  <div>
-    <mat-form-field>
-      <mat-select (selectionChange)="setTheme($event.value)" placeholder="Theme" [value]="theme">
-        <mat-option *ngFor="let t of themes;" [value]="t">{{t}}</mat-option>
-      </mat-select>
-    </mat-form-field>
-    <mat-form-field>
-      <mat-select (selectionChange)="setReadOnly($event.value)" placeholder="readOnly" [value]="false">
-        <mat-option *ngFor="let r of readOnlys;" [value]="r">{{r}}</mat-option>
-      </mat-select>
-    </mat-form-field>
+<div class="examples">
+  <div fxLayout="column" fxLayoutAlign="center center">
+    <h2 class="mat-headline">Monaco Editor Options</h2>
+    <div fxLayout="row wrap" fxLayoutAlign="center center">
+      <mat-form-field>
+        <mat-select (selectionChange)="setOptions({ theme: $event.value })" placeholder="Theme" [value]="theme">
+          <mat-option *ngFor="let t of themes;" [value]="t">{{t}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-select (selectionChange)="setOptions({ readOnly: $event.value })" placeholder="Read only" [value]="false">
+          <mat-option *ngFor="let r of readOnlys;" [value]="r">{{r}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-select (selectionChange)="setOptions({ minimap: { enabled: $event.value } })" placeholder="Minimap" [value]="true">
+          <mat-option *ngFor="let a of [true, false];" [value]="a">{{a}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
   </div>
-</div>
-<mat-divider></mat-divider>
-<h2 class="mat-h2" [style.margin.px]="30">Basic Examples </h2>
-<div style="height: 300px; display: flex;">
-  <mat-card style="flex: 1; display: flex; flex-direction: column;">
-    <h3>Typescript</h3>
-    <ngx-monaco-editor [(ngModel)]="typescriptCode" [options]="mergeOptions({language:'typescript'})">
-    </ngx-monaco-editor>
+  <mat-divider></mat-divider>
+  <h2 class="mat-headline">Basic Examples </h2>
+  <div fxLayout="row wrap" class="basic-examples">
+    <div class="basic-example" fxFlex fxLayout="column">
+      <h3 class="mat-title">Typescript</h3>
+      <mat-card fxFlex>
+        <ngx-monaco-editor
+          [(ngModel)]="typescriptCode"
+          [options]="mergeOptions({language:'typescript'})"
+        >
+        </ngx-monaco-editor>
+      </mat-card>
+    </div>
+    <div class="basic-example" fxFlex fxLayout="column">
+      <h3 class="mat-title">Simple text</h3>
+      <mat-card fxFlex>
+        <ngx-monaco-editor
+          [(ngModel)]="simpleText"
+          [options]="mergeOptions()"
+        >
+        </ngx-monaco-editor>
+      </mat-card>
+    </div>
+    <div class="basic-example" fxFlex fxLayout="column">
+      <h3 class="mat-title">SQL</h3>
+      <mat-card fxFlex>
+        <ngx-monaco-editor
+          [(ngModel)]="sqlRequest"
+          [options]="mergeOptions({ language:'sql' })">
+        </ngx-monaco-editor>
+      </mat-card>
+    </div>
+  </div>
+  <mat-divider></mat-divider>
+  <h2 class="mat-headline">Diffs Editor Example</h2>
+  <h3 class="mat-title">SQL</h3>
+  <mat-card style="height: 300px">
+    <ngx-monaco-diff-editor
+      fxFlex
+      [options]="mergeOptions({ language:'sql', renderSideBySide: false })"
+      [original]="sqlRequest"
+      [modified]="modifiedSqlRequest"
+    >
+    </ngx-monaco-diff-editor>
   </mat-card>
-  <mat-card style="flex:1; display: flex; flex-direction: column;">
-    <h3>Simple text</h3>
-    <ngx-monaco-editor [(ngModel)]="simpleText" [options]="mergeOptions()">
-    </ngx-monaco-editor>
-  </mat-card>
-  <mat-card style="flex: 1; display: flex; flex-direction: column;">
-    <h3>SQL</h3>
-    <ngx-monaco-editor language="SQL" [(ngModel)]="sqlRequest" [options]="mergeOptions({language:'sql'})">
-    </ngx-monaco-editor>
-  </mat-card>
-</div>
-<mat-divider></mat-divider>
-<h2 class="mat-h2" [style.margin.px]="30">Diffs Editor Example</h2>
-<div fxLayout="row" [style.height.px]="300">
-  <mat-card style="flex: 1; display: flex; flex-direction: column;">
-    <h3>SQL</h3>
-    <ngx-monaco-diff-editor [options]="mergeOptions({language:'sql', renderSideBySide: false})" [original]="sqlRequest"
-      [modified]="modifiedSqlRequest"></ngx-monaco-diff-editor>
-  </mat-card>
-</div>
-<mat-divider></mat-divider>
-<h2 class="mat-h2" [style.margin.px]="30">Reactive Form Example</h2>
-<div fxLayout="row" [style.height.px]="300">
-  <mat-card style="flex: 1; display: flex; flex-direction: column;">
-    <h3>JSON</h3>
-    <div style="flex:1; display: flex; flex-direction: row;">
-      <form style="flex:1; display:flex; width:50%" [formGroup]="reactiveForm">
-        <ngx-monaco-editor style="flex:1;" formControlName="code" [options]="mergeOptions({language:'json'})">
+  <mat-divider></mat-divider>
+  <h2 class="mat-headline">Reactive Form Example</h2>
+  <div fxLayout="column">
+    <h3 class="mat-title">JSON</h3>
+    <mat-card fxFlex fxLayout="row">
+      <form fxFlex [formGroup]="reactiveForm">
+        <ngx-monaco-editor
+          formControlName="json"
+          [options]="mergeOptions({ language: 'json' })"
+        >
         </ngx-monaco-editor>
       </form>
-      <div style="flex:1; margin: 0 25px; overflow: auto;">
-        <p>form control is valid: {{ reactiveForm['controls']?.code?.valid }}</p>
-        <p>form control is touched: {{ reactiveForm['controls']?.code?.touched }}</p>
-        <p>form control value:</p>
-        <pre>{{ reactiveForm.value?.code }}</pre>
+      <div fxFlex="30" fxLayout="column" class="form-infos">
+        <h4 class="mat-title">Form control</h4>
+        <div class="form-info">
+          <span >Valid:</span>
+          <span [style.color]="reactiveForm['controls']?.json?.valid ? 'green' : 'red'"
+          >&nbsp;{{ reactiveForm['controls']?.json?.valid }}</span>
+        </div>
+        <div class="form-info">
+          <span>Touched:</span>
+          <span [style.color]="reactiveForm['controls']?.json?.touched ? 'green' : 'red'"
+          >&nbsp;{{ reactiveForm['controls']?.json?.touched }}</span>
+        </div>
+        <div class="form-info">
+          <span>Value:</span>
+          <pre>{{ reactiveForm.value?.code }}</pre>
+        </div>
       </div>
-    </div>
-  </mat-card>
+    </mat-card>
+  </div>
+  <div fxLayout="column">
+    <h3 class="mat-title">JSON with validation schema</h3>
+    <mat-card fxFlex fxLayout="row">
+      <div fxFlex="30" fxLayout="column" class="form-infos">
+        <h4 class="mat-title">Form control</h4>
+        <div class="form-info">
+          <span >Valid:</span>
+          <span [style.color]="reactiveForm['controls']?.code?.valid ? 'green' : 'red'"
+          >&nbsp;{{ reactiveForm['controls']?.code?.valid }}</span>
+        </div>
+        <div class="form-info">
+          <span>Touched:</span>
+          <span [style.color]="reactiveForm['controls']?.code?.touched ? 'green' : 'red'"
+          >&nbsp;{{ reactiveForm['controls']?.code?.touched }}</span>
+        </div>
+        <div class="form-info">
+          <span>Value</span>
+          <pre>{{ reactiveForm.value?.code }}</pre>
+        </div>
+        <div class="form-info">
+          <span>Errors</span>
+          <pre>{{ reactiveForm['controls']?.code?.errors  | json }}</pre>
+        </div>
+      </div>
+      <form fxFlex [formGroup]="reactiveForm">
+        <ngx-monaco-editor
+          formControlName="code"
+          [options]="mergeOptions({ language:'json' })"
+          [uri]="modelUri"
+        >
+        </ngx-monaco-editor>
+      </form>
+    </mat-card>
+  </div>
 </div>
