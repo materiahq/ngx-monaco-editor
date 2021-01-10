@@ -221,8 +221,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="69"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:69</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="73"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:73</a></div>
                 </td>
             </tr>
 
@@ -260,8 +260,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="30"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:30</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="31"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:31</a></div>
                 </td>
             </tr>
 
@@ -508,46 +508,50 @@ export class MonacoEditorLoaderService {
       if (this.monacoPathConfig) {
         this.monacoPath &#x3D; this.monacoPathConfig;
       }
+
       this.loadMonaco();
     }
 
     loadMonaco() {
       const onGotAmdLoader &#x3D; () &#x3D;&gt; {
-        // Load monaco
-        (&lt;any&gt;window).amdRequire &#x3D;  (&lt;any&gt;window).require;
-        if (this.nodeRequire) {
+
+        let vsPath &#x3D; this._monacoPath;
+        (&lt;any&gt;window).amdRequire &#x3D; (&lt;any&gt;window).require;
+
+        const isElectron &#x3D; !!this.nodeRequire;
+        if (isElectron) {
+            // Restore node require in window
             (&lt;any&gt;window).require &#x3D; this.nodeRequire;
+
+            const path &#x3D; (&lt;any&gt;window).require(&#x27;path&#x27;);
+            vsPath &#x3D; path.resolve((&lt;any&gt;window).__dirname, this._monacoPath);
         }
-        (&lt;any&gt;window).amdRequire.config({ paths: { &#x27;vs&#x27;: this._monacoPath } });
+
+        (&lt;any&gt;window).amdRequire.config({ paths: { vs: vsPath } });
+
+        // Load monaco
         (&lt;any&gt;window).amdRequire([&#x27;vs/editor/editor.main&#x27;], () &#x3D;&gt; {
             this.ngZone.run(() &#x3D;&gt; this.isMonacoLoaded$.next(true));
         });
     };
 
-    let loaderScript: any &#x3D; null;
-    // Load AMD loader if necessary
-    if (!(&lt;any&gt;window).require &amp;&amp; !(&lt;any&gt;window).amdRequire) {
+    // Check if AMD loader already available
+    const isAmdLoaderAvailable &#x3D; !!(&lt;any&gt;window).amdRequire;
+    if (isAmdLoaderAvailable) {
+      return onGotAmdLoader();
+    }
 
-        loaderScript &#x3D; document.createElement(&#x27;script&#x27;);
-        loaderScript.type &#x3D; &#x27;text/javascript&#x27;;
-        loaderScript.src &#x3D; &#x60;${this._monacoPath}/loader.js&#x60;;
-        loaderScript.addEventListener(&#x27;load&#x27;, onGotAmdLoader);
-        document.body.appendChild(loaderScript);
-
-    } else if (!(&lt;any&gt;window).amdRequire) {
-
+    const isElectron &#x3D; !!(&lt;any&gt;window).require;
+      if (isElectron) {
         this.addElectronFixScripts();
-
-        this.nodeRequire &#x3D;  (&lt;any&gt;window).require;
-        loaderScript &#x3D; document.createElement(&#x27;script&#x27;);
-        loaderScript.type &#x3D; &#x27;text/javascript&#x27;;
-        loaderScript.src &#x3D; &#x60;${this._monacoPath}/loader.js&#x60;;
-        loaderScript.addEventListener(&#x27;load&#x27;, onGotAmdLoader);
-        document.body.appendChild(loaderScript);
-
-    } else {
-        onGotAmdLoader();
+        this.nodeRequire &#x3D; (&lt;any&gt;window).require;
       }
+
+      const loaderScript: HTMLScriptElement &#x3D; document.createElement(&#x27;script&#x27;);
+      loaderScript.type &#x3D; &#x27;text/javascript&#x27;;
+      loaderScript.src &#x3D; &#x60;${this._monacoPath}/loader.js&#x60;;
+      loaderScript.addEventListener(&#x27;load&#x27;, onGotAmdLoader);
+      document.body.appendChild(loaderScript);
     }
 
     addElectronFixScripts() {

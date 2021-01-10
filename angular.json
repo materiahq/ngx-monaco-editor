@@ -13,6 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
+            "aot": true,
             "outputPath": "dist/demo",
             "index": "src/demo/index.html",
             "main": "src/demo/main.ts",
@@ -29,6 +30,12 @@
           },
           "configurations": {
             "production": {
+              "budgets": [
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kb"
+                }
+              ],
               "fileReplacements": [
                 {
                   "replace": "src/demo/environments/environment.ts",
@@ -137,7 +144,8 @@
           "configurations": {
             "production": {
               "project": "src/ngx-monaco-editor/ng-package.prod.json"
-            }
+            ,              "tsConfig": "src/ngx-monaco-editor/tsconfig.lib.prod.json"
+}
           }
         },
         "test": {
@@ -166,7 +174,7 @@
   "defaultProject": "demo",
   "schematics": {
     "@schematics/angular:component": {
-      "styleext": "scss"
+      "style": "scss"
     }
   }
 }

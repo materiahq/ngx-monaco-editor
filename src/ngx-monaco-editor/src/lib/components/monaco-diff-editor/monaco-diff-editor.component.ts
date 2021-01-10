@@ -18,37 +18,29 @@ import { MonacoDiffEditorConstructionOptions, MonacoStandaloneDiffEditor } from 
 
 @Component({
     selector: 'ngx-monaco-diff-editor',
-    template: `<div #container materiaResized (resized)="onResized($event)" class="editor-container" fxFlex>
-<div class="wrapper">
-  <div
-    #diffEditor
-    class="monaco-editor"
-    [style.width.px]="container.offsetWidth"
-    [style.height.px]="container.offsetHeight" style="min-width: 0;"
-  ></div>
-</div>
+    template: `<div #container class="editor-container" fxFlex>
+		<div
+			#diffEditor
+			class="monaco-editor"
+		></div>
 </div>`,
     styles: [
-        `:host {
-flex: 1;
-box-sizing: border-box;
-flex-direction: column;
-display: flex;
-overflow: hidden;
-max-width: 100%;
-min-wdith: 0;
-}
-.wrapper {
-width: 0px; height: 0px;
+        `
+.monaco-editor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
 }
 .editor-container {
-text-overflow: ellipsis;
-overflow: hidden;
-position: relative;
-min-width: 0;
-display: table;
-width: 100%;
-height: 100%;
+	overflow: hidden;
+	position: relative;
+	display: table;
+	width: 100%;
+  height: 100%;
+  min-width: 0;
 }`
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -101,6 +93,7 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
     private initMonaco() {
         let opts: MonacoDiffEditorConstructionOptions = {
             readOnly: true,
+            automaticLayout: true,
             theme: 'vc'
         };
         if (this.options) {
@@ -117,15 +110,6 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
         });
         this.editor.layout();
         this.init.emit(this.editor);
-    }
-
-    onResized(event) {
-        if (this.editor) {
-            this.editor.layout({
-                width: event.newWidth,
-                height: event.newHeight
-            });
-        }
     }
 
     ngOnDestroy() {

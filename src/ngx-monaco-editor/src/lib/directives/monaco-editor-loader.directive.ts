@@ -16,7 +16,7 @@ export class MonacoEditorLoaderDirective implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.isMonacoLoaded$.pipe(takeUntil(this.destroyed$)).subscribe((loaded) => {
-      if (! loaded) {
+      if (!loaded) {
         return this.viewContainer.clear();
       }
       this.viewContainer.createEmbeddedView(this.templateRef);

@@ -24,46 +24,50 @@ export class MonacoEditorLoaderService {
       if (this.monacoPathConfig) {
         this.monacoPath = this.monacoPathConfig;
       }
+
       this.loadMonaco();
     }
 
     loadMonaco() {
       const onGotAmdLoader = () => {
-        // Load monaco
-        (<any>window).amdRequire =  (<any>window).require;
-        if (this.nodeRequire) {
+
+        let vsPath = this._monacoPath;
+        (<any>window).amdRequire = (<any>window).require;
+
+        const isElectron = !!this.nodeRequire;
+        if (isElectron) {
+            // Restore node require in window
             (<any>window).require = this.nodeRequire;
+
+            const path = (<any>window).require('path');
+            vsPath = path.resolve((<any>window).__dirname, this._monacoPath);
         }
-        (<any>window).amdRequire.config({ paths: { 'vs': this._monacoPath } });
+
+        (<any>window).amdRequire.config({ paths: { vs: vsPath } });
+
+        // Load monaco
         (<any>window).amdRequire(['vs/editor/editor.main'], () => {
             this.ngZone.run(() => this.isMonacoLoaded$.next(true));
         });
     };
 
-    let loaderScript: any = null;
-    // Load AMD loader if necessary
-    if (!(<any>window).require && !(<any>window).amdRequire) {
+    // Check if AMD loader already available
+    const isAmdLoaderAvailable = !!(<any>window).amdRequire;
+    if (isAmdLoaderAvailable) {
+      return onGotAmdLoader();
+    }
 
-        loaderScript = document.createElement('script');
-        loaderScript.type = 'text/javascript';
-        loaderScript.src = `${this._monacoPath}/loader.js`;
-        loaderScript.addEventListener('load', onGotAmdLoader);
-        document.body.appendChild(loaderScript);
-
-    } else if (!(<any>window).amdRequire) {
-
+    const isElectron = !!(<any>window).require;
+      if (isElectron) {
         this.addElectronFixScripts();
-
-        this.nodeRequire =  (<any>window).require;
-        loaderScript = document.createElement('script');
-        loaderScript.type = 'text/javascript';
-        loaderScript.src = `${this._monacoPath}/loader.js`;
-        loaderScript.addEventListener('load', onGotAmdLoader);
-        document.body.appendChild(loaderScript);
-
-    } else {
-        onGotAmdLoader();
+        this.nodeRequire = (<any>window).require;
       }
+
+      const loaderScript: HTMLScriptElement = document.createElement('script');
+      loaderScript.type = 'text/javascript';
+      loaderScript.src = `${this._monacoPath}/loader.js`;
+      loaderScript.addEventListener('load', onGotAmdLoader);
+      document.body.appendChild(loaderScript);
     }
 
     addElectronFixScripts() {

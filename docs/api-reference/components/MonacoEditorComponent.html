@@ -114,39 +114,31 @@
 
             <tr>
                 <td class="col-md-3">styles</td>
-                <td class="col-md-9"><code>:host {
-	flex: 1;
-	box-sizing: border-box;
-	flex-direction: column;
-	display: flex;
-	overflow: hidden;
-	max-width: 100%;
-	min-wdith: 0;
-}
-.wrapper {
-	width: 0px; height: 0px;
+                <td class="col-md-9"><code>
+.monaco-editor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
 }
 .editor-container {
-	text-overflow: ellipsis;
 	overflow: hidden;
 	position: relative;
-	min-width: 0;
 	display: table;
 	width: 100%;
-	height: 100%;
+  height: 100%;
+  min-width: 0;
 }</code></td>
             </tr>
 
             <tr>
                 <td class="col-md-3">template</td>
-                <td class="col-md-9"><pre class="line-numbers"><code class="language-html">&lt;div #container materiaResized (resized)&#x3D;&quot;onResized($event)&quot; class&#x3D;&quot;editor-container&quot; fxFlex&gt;	&lt;div class&#x3D;&quot;wrapper&quot;&gt;
-		&lt;div
+                <td class="col-md-9"><pre class="line-numbers"><code class="language-html">&lt;div #container class&#x3D;&quot;editor-container&quot; fxFlex&gt;		&lt;div
 			#editor
 			class&#x3D;&quot;monaco-editor&quot;
-			[style.width.px]&#x3D;&quot;container.offsetWidth&quot;
-			[style.height.px]&#x3D;&quot;container.offsetHeight&quot; style&#x3D;&quot;min-width: 0;&quot;
 		&gt;&lt;/div&gt;
-	&lt;/div&gt;
 &lt;/div&gt;</code></pre></td>
             </tr>
 
@@ -175,13 +167,13 @@
                     <td class="col-md-4">
                         <ul class="index-list">
                             <li>
-                                <a href="#container">container</a>
-                            </li>
-                            <li>
                                 <a href="#editor">editor</a>
                             </li>
                             <li>
                                 <a href="#editorContent">editorContent</a>
+                            </li>
+                            <li>
+                                <a href="#modelUriInstance">modelUriInstance</a>
                             </li>
                             <li>
                                     <span class="modifier">Private</span>
@@ -192,7 +184,7 @@
                                 <a href="#onTouched">onTouched</a>
                             </li>
                             <li>
-                                <a href="#parseError">parseError</a>
+                                <a href="#parsedError">parsedError</a>
                             </li>
                             <li>
                                     <span class="modifier">Private</span>
@@ -215,7 +207,7 @@
                         <ul class="index-list">
                             <li>
                                     <span class="modifier">Private</span>
-                                <a href="#initMonaco">initMonaco</a>
+                                <a href="#initEditor">initEditor</a>
                             </li>
                             <li>
                                 <a href="#ngOnChanges">ngOnChanges</a>
@@ -227,7 +219,7 @@
                                 <a href="#ngOnInit">ngOnInit</a>
                             </li>
                             <li>
-                                <a href="#onResized">onResized</a>
+                                <a href="#registerEditorListeners">registerEditorListeners</a>
                             </li>
                             <li>
                                 <a href="#registerOnChange">registerOnChange</a>
@@ -260,6 +252,9 @@
                             <li>
                                 <a href="#options">options</a>
                             </li>
+                            <li>
+                                <a href="#uri">uri</a>
+                            </li>
                         </ul>
                     </td>
                 </tr>
@@ -281,6 +276,23 @@
 
 
 
+                    <tr>
+                        <td class="col-md-4">
+                            <h6><b>Accessors</b></h6>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="col-md-4">
+                            <ul class="index-list">
+                                <li>
+                                    <a href="#model">model</a>
+                                </li>
+                                <li>
+                                    <a href="#modelMarkers">modelMarkers</a>
+                                </li>
+                            </ul>
+                        </td>
+                    </tr>
         </tbody>
     </table>
 </section>
@@ -296,7 +308,7 @@
                 </tr>
                         <tr>
                             <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="82" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:82</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="85" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:85</a></div>
                             </td>
                         </tr>
 
@@ -352,7 +364,28 @@
                 </tr>
                         <tr>
                             <td class="col-md-2" colspan="2">
-                                    <div class="io-line">Defined in <a href="" data-line="71" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:71</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="63" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:63</a></div>
+                            </td>
+                        </tr>
+            </tbody>
+        </table>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <a name="uri"></a>
+                        <b>uri</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="../miscellaneous/typealiases.html#MonacoEditorUri" target="_self" >MonacoEditorUri</a></code>
+
+                    </td>
+                </tr>
+                        <tr>
+                            <td class="col-md-2" colspan="2">
+                                    <div class="io-line">Defined in <a href="" data-line="64" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:64</a></div>
                             </td>
                         </tr>
             </tbody>
@@ -376,7 +409,7 @@
                 </tr>
                         <tr>
                             <td class="col-md-2" colspan="2">
-                                    <div class="io-line">Defined in <a href="" data-line="72" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:72</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="65" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:65</a></div>
                             </td>
                         </tr>
             </tbody>
@@ -393,28 +426,28 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
-                    <a name="initMonaco"></a>
+                    <a name="initEditor"></a>
                     <span class="name">
                         <b>
                             <span class="modifier">Private</span>
-                            initMonaco
+                            initEditor
                         </b>
-                        <a href="#initMonaco"><span class="icon ion-ios-link"></span></a>
+                        <a href="#initEditor"><span class="icon ion-ios-link"></span></a>
                     </span>
                 </td>
             </tr>
             <tr>
                 <td class="col-md-4">
                     <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>initMonaco()</code>
+                    <code>initEditor()</code>
                 </td>
             </tr>
 
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="140"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:140</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="160"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:160</a></div>
                 </td>
             </tr>
 
@@ -452,8 +485,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="96"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:96</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="98"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:98</a></div>
                 </td>
             </tr>
 
@@ -522,8 +555,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="187"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:187</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="198"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:198</a></div>
                 </td>
             </tr>
 
@@ -561,8 +594,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="86"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:86</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="89"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:89</a></div>
                 </td>
             </tr>
 
@@ -582,18 +615,18 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
-                    <a name="onResized"></a>
+                    <a name="registerEditorListeners"></a>
                     <span class="name">
                         <b>
-                            onResized
+                            registerEditorListeners
                         </b>
-                        <a href="#onResized"><span class="icon ion-ios-link"></span></a>
+                        <a href="#registerEditorListeners"><span class="icon ion-ios-link"></span></a>
                     </span>
                 </td>
             </tr>
             <tr>
                 <td class="col-md-4">
-<code>onResized(event)</code>
+<code>registerEditorListeners()</code>
                 </td>
             </tr>
 
@@ -610,35 +643,8 @@
                 <td class="col-md-4">
 
                     <div class="io-description">
-                        <b>Parameters :</b>
-                        <table class="params">
-                            <thead>
-                                <tr>
-                                    <td>Name</td>
-                                    <td>Optional</td>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>event</td>
-
-                                    <td>
-                                        No
-                                    </td>
-
-
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div>
-                    </div>
-                    <div class="io-description">
                         <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
 
-                    </div>
-                    <div class="io-description">
-                        
                     </div>
                 </td>
             </tr>
@@ -666,8 +672,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="120"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:120</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="140"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:140</a></div>
                 </td>
             </tr>
 
@@ -736,8 +742,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="124"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:124</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="144"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:144</a></div>
                 </td>
             </tr>
 
@@ -807,8 +813,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="136"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:136</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="156"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:156</a></div>
                 </td>
             </tr>
 
@@ -877,8 +883,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="128"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:128</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="148"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:148</a></div>
                 </td>
             </tr>
 
@@ -916,8 +922,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="111"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:111</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="131"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:131</a></div>
                 </td>
             </tr>
 
@@ -974,33 +980,6 @@
             <tbody>
                 <tr>
                     <td class="col-md-4">
-                        <a name="container"></a>
-                        <span class="name">
-                            <b>
-                            container</b>
-                            <a href="#container"><span class="icon ion-ios-link"></span></a>
-                        </span>
-                    </td>
-                </tr>
-                    <tr>
-                        <td class="col-md-4">
-                            <i>Type : </i>    <code>HTMLDivElement</code>
-
-                        </td>
-                    </tr>
-                        <tr>
-                            <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="75" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:75</a></div>
-                            </td>
-                        </tr>
-
-
-            </tbody>
-        </table>
-        <table class="table table-sm table-bordered">
-            <tbody>
-                <tr>
-                    <td class="col-md-4">
                         <a name="editor"></a>
                         <span class="name">
                             <b>
@@ -1017,7 +996,7 @@
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="76" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:76</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="68" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:68</a></div>
                             </td>
                         </tr>
 
@@ -1053,7 +1032,34 @@
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="73" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:73</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="66" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:66</a></div>
+                            </td>
+                        </tr>
+
+
+            </tbody>
+        </table>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <a name="modelUriInstance"></a>
+                        <span class="name">
+                            <b>
+                            modelUriInstance</b>
+                            <a href="#modelUriInstance"><span class="icon ion-ios-link"></span></a>
+                        </span>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                            <i>Type : </i>        <code><a href="../miscellaneous/variables.html#monaco" target="_self" >monaco.editor.ITextModel</a></code>
+
+                        </td>
+                    </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                    <div class="io-line">Defined in <a href="" data-line="69" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:69</a></div>
                             </td>
                         </tr>
 
@@ -1081,7 +1087,7 @@
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="81" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:81</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="74" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:74</a></div>
                             </td>
                         </tr>
 
@@ -1109,7 +1115,7 @@
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="80" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:80</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="73" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:73</a></div>
                             </td>
                         </tr>
 
@@ -1120,23 +1126,23 @@
             <tbody>
                 <tr>
                     <td class="col-md-4">
-                        <a name="parseError"></a>
+                        <a name="parsedError"></a>
                         <span class="name">
                             <b>
-                            parseError</b>
-                            <a href="#parseError"><span class="icon ion-ios-link"></span></a>
+                            parsedError</b>
+                            <a href="#parsedError"><span class="icon ion-ios-link"></span></a>
                         </span>
                     </td>
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                            <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/boolean" target="_blank" >boolean</a></code>
+                            <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
 
                         </td>
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="78" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:78</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="71" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:71</a></div>
                             </td>
                         </tr>
 
@@ -1169,7 +1175,7 @@
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="82" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:82</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="75" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:75</a></div>
                             </td>
                         </tr>
 
@@ -1196,7 +1202,7 @@
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="77" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:77</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="70" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:70</a></div>
                             </td>
                         </tr>
 
@@ -1205,6 +1211,55 @@
         </table>
 </section>
 
+    <section>
+    <h3 id="accessors">
+        Accessors
+    </h3>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <a name="model"></a>
+                        <span class="name"><b>model</b><a href="#model"><span class="icon ion-ios-link"></span></a></span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="col-md-4">
+                        <span class="accessor"><b>get</b><code>model()</code></span>
+                    </td>
+                </tr>
+                            <tr>
+                                <td class="col-md-4">
+                                    <div class="io-line">Defined in <a href="" data-line="77" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:77</a></div>
+                                </td>
+                            </tr>
+
+            </tbody>
+        </table>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <a name="modelMarkers"></a>
+                        <span class="name"><b>modelMarkers</b><a href="#modelMarkers"><span class="icon ion-ios-link"></span></a></span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="col-md-4">
+                        <span class="accessor"><b>get</b><code>modelMarkers()</code></span>
+                    </td>
+                </tr>
+                            <tr>
+                                <td class="col-md-4">
+                                    <div class="io-line">Defined in <a href="" data-line="81" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-editor/monaco-editor.component.ts:81</a></div>
+                                </td>
+                            </tr>
+
+            </tbody>
+        </table>
+</section>
 </div>
 
 
@@ -1227,41 +1282,33 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, Validator, NG_VALIDATORS, Vali
 import { filter, take } from &#x27;rxjs/operators&#x27;;
 
 import { MonacoEditorLoaderService } from &#x27;../../services/monaco-editor-loader.service&#x27;;
-import { MonacoEditorConstructionOptions, MonacoStandaloneCodeEditor } from &#x27;../../interfaces&#x27;;
+import { MonacoEditorConstructionOptions, MonacoEditorUri, MonacoStandaloneCodeEditor } from &#x27;../../interfaces&#x27;;
 
 @Component({
     selector: &#x27;ngx-monaco-editor&#x27;,
-    template: &#x60;&lt;div #container materiaResized (resized)&#x3D;&quot;onResized($event)&quot; class&#x3D;&quot;editor-container&quot; fxFlex&gt;
-	&lt;div class&#x3D;&quot;wrapper&quot;&gt;
+    template: &#x60;&lt;div #container class&#x3D;&quot;editor-container&quot; fxFlex&gt;
 		&lt;div
 			#editor
 			class&#x3D;&quot;monaco-editor&quot;
-			[style.width.px]&#x3D;&quot;container.offsetWidth&quot;
-			[style.height.px]&#x3D;&quot;container.offsetHeight&quot; style&#x3D;&quot;min-width: 0;&quot;
 		&gt;&lt;/div&gt;
-	&lt;/div&gt;
 &lt;/div&gt;&#x60;,
     styles: [
-        &#x60;:host {
-	flex: 1;
-	box-sizing: border-box;
-	flex-direction: column;
-	display: flex;
-	overflow: hidden;
-	max-width: 100%;
-	min-wdith: 0;
-}
-.wrapper {
-	width: 0px; height: 0px;
+        &#x60;
+.monaco-editor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
 }
 .editor-container {
-	text-overflow: ellipsis;
 	overflow: hidden;
 	position: relative;
-	min-width: 0;
 	display: table;
 	width: 100%;
-	height: 100%;
+  height: 100%;
+  min-width: 0;
 }&#x60;
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -1280,42 +1327,70 @@ import { MonacoEditorConstructionOptions, MonacoStandaloneCodeEditor } from &#x2
 })
 export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, ControlValueAccessor, Validator {
     @Input() options: MonacoEditorConstructionOptions;
+    @Input() uri?: MonacoEditorUri;
     @Output() init: EventEmitter&lt;MonacoStandaloneCodeEditor&gt; &#x3D; new EventEmitter();
     @ViewChild(&#x27;editor&#x27;, {static: true}) editorContent: ElementRef;
 
-    container: HTMLDivElement;
     editor: MonacoStandaloneCodeEditor;
+    modelUriInstance: monaco.editor.ITextModel;
     value: string;
-    parseError: boolean;
+    parsedError: string;
 
     private onTouched: () &#x3D;&gt; void;
     private onErrorStatusChange: () &#x3D;&gt; void;
     private propagateChange: (_: any) &#x3D;&gt; any &#x3D; (_: any) &#x3D;&gt; { };
 
+    get model() {
+      return this.editor &amp;&amp; this.editor.getModel();
+    }
+
+    get modelMarkers() {
+      return this.model &amp;&amp; monaco.editor.getModelMarkers({
+        resource: this.model.uri
+      });
+    }
+
     constructor(private monacoLoader: MonacoEditorLoaderService) { }
 
     ngOnInit() {
-        this.container &#x3D; this.editorContent.nativeElement;
         this.monacoLoader.isMonacoLoaded$.pipe(
             filter(isLoaded &#x3D;&gt; isLoaded),
             take(1)
         ).subscribe(() &#x3D;&gt; {
-            this.initMonaco();
+            this.initEditor();
         });
     }
 
     ngOnChanges(changes: SimpleChanges) {
         if (this.editor &amp;&amp; changes.options &amp;&amp; !changes.options.firstChange) {
-            if (changes.options.previousValue.language !&#x3D;&#x3D; changes.options.currentValue.language) {
+          const { language: toLanguage, theme: toTheme, ...options } &#x3D; changes.options.currentValue;
+          const { language: fromLanguage, theme: fromTheme } &#x3D; changes.options.previousValue;
+            if (fromLanguage !&#x3D;&#x3D; toLanguage) {
                 monaco.editor.setModelLanguage(
                     this.editor.getModel(),
                     this.options &amp;&amp; this.options.language ? this.options.language : &#x27;text&#x27;
                 );
             }
-            if (changes.options.previousValue.theme !&#x3D;&#x3D; changes.options.currentValue.theme) {
-                monaco.editor.setTheme(changes.options.currentValue.theme);
+            if (fromTheme !&#x3D;&#x3D; toTheme) {
+                monaco.editor.setTheme(toTheme);
             }
-            this.editor.updateOptions(changes.options.currentValue);
+            this.editor.updateOptions(options);
+        }
+        if (this.editor &amp;&amp; changes.uri) {
+          const toUri &#x3D; changes.uri.currentValue;
+          const fromUri &#x3D; changes.uri.previousValue;
+          if (fromUri &amp;&amp; !toUri || !fromUri &amp;&amp; toUri || toUri &amp;&amp; fromUri &amp;&amp; toUri.path !&#x3D;&#x3D; fromUri.path) {
+            const value &#x3D; this.editor.getValue();
+            if (this.modelUriInstance) {
+              this.modelUriInstance.dispose();
+            }
+            let existingModel;
+            if (toUri) {
+              existingModel &#x3D; monaco.editor.getModels().find((model) &#x3D;&gt; model.uri.path &#x3D;&#x3D;&#x3D; toUri.path);
+            }
+            this.modelUriInstance &#x3D; existingModel ? existingModel : monaco.editor.createModel(value, this.options.language || &#x27;text&#x27;, this.uri);
+            this.editor.setModel(this.modelUriInstance);
+          }
         }
     }
 
@@ -1337,9 +1412,9 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
     }
 
     validate(): ValidationErrors {
-        return (!this.parseError) ? null : {
-            parseError: {
-                valid: false,
+        return !this.parsedError ? null : {
+            monaco: {
+                value: this.parsedError.split(&#x27;|&#x27;),
             }
         };
     }
@@ -1348,51 +1423,42 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
         this.onErrorStatusChange &#x3D; fn;
     }
 
-    private initMonaco() {
-        let opts: MonacoEditorConstructionOptions &#x3D; {
+    private initEditor() {
+        const options: MonacoEditorConstructionOptions &#x3D; {
             value: [this.value].join(&#x27;\n&#x27;),
             language: &#x27;text&#x27;,
             automaticLayout: true,
             scrollBeyondLastLine: false,
             theme: &#x27;vc&#x27;
         };
-        if (this.options) {
-            opts &#x3D; Object.assign({}, opts, this.options);
-        }
-        this.editor &#x3D; monaco.editor.create(this.container, opts);
-        this.editor.layout();
 
-        this.editor.onDidChangeModelContent(() &#x3D;&gt; {
-            this.propagateChange(this.editor.getValue());
-        });
+        this.editor &#x3D; monaco.editor.create(
+          this.editorContent.nativeElement,
+          this.options ? { ...options, ...this.options } : options
+        );
 
-        this.editor.onDidChangeModelDecorations(() &#x3D;&gt; {
-            const pastParseError &#x3D; this.parseError;
-            if (monaco.editor.getModelMarkers({}).map(m &#x3D;&gt; m.message).join(&#x27;, &#x27;)) {
-                this.parseError &#x3D; true;
-            } else {
-                this.parseError &#x3D; false;
-            }
-
-            if (pastParseError !&#x3D;&#x3D; this.parseError) {
-                this.onErrorStatusChange();
-            }
-        });
-
-        this.editor.onDidBlurEditorText(() &#x3D;&gt; {
-            this.onTouched();
-        });
-
+        this.registerEditorListeners();
         this.init.emit(this.editor);
     }
 
-    onResized(event) {
-        if (this.editor) {
-            this.editor.layout({
-                width: event.newWidth,
-                height: event.newHeight
-            });
-        }
+    registerEditorListeners() {
+      this.editor.onDidChangeModelContent(() &#x3D;&gt; {
+        this.propagateChange(this.editor.getValue());
+      });
+
+      this.editor.onDidChangeModelDecorations(() &#x3D;&gt; {
+          const currentParsedError &#x3D; this.modelMarkers.map(({ message }) &#x3D;&gt; message).join(&#x27;|&#x27;);
+          const hasValidationStatusChanged &#x3D; this.parsedError !&#x3D;&#x3D; currentParsedError;
+
+          if (hasValidationStatusChanged) {
+              this.parsedError &#x3D; currentParsedError;
+              this.onErrorStatusChange();
+          }
+      });
+
+      this.editor.onDidBlurEditorText(() &#x3D;&gt; {
+          this.onTouched();
+      });
     }
 
     ngOnDestroy() {
@@ -1406,26 +1472,22 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
 
 
     <div class="tab-pane fade " id="c-styleData">
-            <pre class="line-numbers"><code class="language-scss">:host {
-	flex: 1;
-	box-sizing: border-box;
-	flex-direction: column;
-	display: flex;
-	overflow: hidden;
-	max-width: 100%;
-	min-wdith: 0;
-}
-.wrapper {
-	width: 0px; height: 0px;
+            <pre class="line-numbers"><code class="language-scss">
+.monaco-editor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
 }
 .editor-container {
-	text-overflow: ellipsis;
 	overflow: hidden;
 	position: relative;
-	min-width: 0;
 	display: table;
 	width: 100%;
-	height: 100%;
+  height: 100%;
+  min-width: 0;
 }
 </code></pre>
     </div>
@@ -1455,9 +1517,9 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
 <script src="../js/libs/htmlparser.js"></script>
 <script src="../js/libs/deep-iterator.js"></script>
 <script>
-        var COMPONENT_TEMPLATE = '<div><div #container materiaResized (resized)="onResized($event)" class="editor-container" fxFlex>	<div class="wrapper">		<div			#editor			class="monaco-editor"			[style.width.px]="container.offsetWidth"			[style.height.px]="container.offsetHeight" style="min-width: 0;"		></div>	</div></div></div>'
+        var COMPONENT_TEMPLATE = '<div><div #container class="editor-container" fxFlex>		<div			#editor			class="monaco-editor"		></div></div></div>'
     var COMPONENTS = [{'name': 'MonacoDiffEditorComponent', 'selector': 'ngx-monaco-diff-editor'},{'name': 'MonacoEditorComponent', 'selector': 'ngx-monaco-editor'}];
-    var DIRECTIVES = [{'name': 'MonacoEditorLoaderDirective', 'selector': '[ngxLoadMonacoEditor]'},{'name': 'ResizedDirective', 'selector': '[materiaResized]'}];
+    var DIRECTIVES = [{'name': 'MonacoEditorLoaderDirective', 'selector': '[ngxLoadMonacoEditor]'}];
     var ACTUAL_COMPONENT = {'name': 'MonacoEditorComponent'};
 </script>
 <script src="../js/tree.js"></script>

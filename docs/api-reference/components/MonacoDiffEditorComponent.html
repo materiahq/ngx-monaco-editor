@@ -101,39 +101,31 @@
 
             <tr>
                 <td class="col-md-3">styles</td>
-                <td class="col-md-9"><code>:host {
-flex: 1;
-box-sizing: border-box;
-flex-direction: column;
-display: flex;
-overflow: hidden;
-max-width: 100%;
-min-wdith: 0;
-}
-.wrapper {
-width: 0px; height: 0px;
+                <td class="col-md-9"><code>
+.monaco-editor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
 }
 .editor-container {
-text-overflow: ellipsis;
-overflow: hidden;
-position: relative;
-min-width: 0;
-display: table;
-width: 100%;
-height: 100%;
+	overflow: hidden;
+	position: relative;
+	display: table;
+	width: 100%;
+  height: 100%;
+  min-width: 0;
 }</code></td>
             </tr>
 
             <tr>
                 <td class="col-md-3">template</td>
-                <td class="col-md-9"><pre class="line-numbers"><code class="language-html">&lt;div #container materiaResized (resized)&#x3D;&quot;onResized($event)&quot; class&#x3D;&quot;editor-container&quot; fxFlex&gt;&lt;div class&#x3D;&quot;wrapper&quot;&gt;
-  &lt;div
-    #diffEditor
-    class&#x3D;&quot;monaco-editor&quot;
-    [style.width.px]&#x3D;&quot;container.offsetWidth&quot;
-    [style.height.px]&#x3D;&quot;container.offsetHeight&quot; style&#x3D;&quot;min-width: 0;&quot;
-  &gt;&lt;/div&gt;
-&lt;/div&gt;
+                <td class="col-md-9"><pre class="line-numbers"><code class="language-html">&lt;div #container class&#x3D;&quot;editor-container&quot; fxFlex&gt;		&lt;div
+			#diffEditor
+			class&#x3D;&quot;monaco-editor&quot;
+		&gt;&lt;/div&gt;
 &lt;/div&gt;</code></pre></td>
             </tr>
 
@@ -195,9 +187,6 @@ height: 100%;
                             <li>
                                 <a href="#ngOnInit">ngOnInit</a>
                             </li>
-                            <li>
-                                <a href="#onResized">onResized</a>
-                            </li>
                         </ul>
                     </td>
                 </tr>
@@ -255,7 +244,7 @@ height: 100%;
                 </tr>
                         <tr>
                             <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="65" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:65</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="57" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:57</a></div>
                             </td>
                         </tr>
 
@@ -311,7 +300,7 @@ height: 100%;
                 </tr>
                         <tr>
                             <td class="col-md-2" colspan="2">
-                                    <div class="io-line">Defined in <a href="" data-line="61" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:61</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="53" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:53</a></div>
                             </td>
                         </tr>
             </tbody>
@@ -332,7 +321,7 @@ height: 100%;
                 </tr>
                         <tr>
                             <td class="col-md-2" colspan="2">
-                                    <div class="io-line">Defined in <a href="" data-line="62" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:62</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="54" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:54</a></div>
                             </td>
                         </tr>
             </tbody>
@@ -353,7 +342,7 @@ height: 100%;
                 </tr>
                         <tr>
                             <td class="col-md-2" colspan="2">
-                                    <div class="io-line">Defined in <a href="" data-line="60" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:60</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="52" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:52</a></div>
                             </td>
                         </tr>
             </tbody>
@@ -377,7 +366,7 @@ height: 100%;
                 </tr>
                         <tr>
                             <td class="col-md-2" colspan="2">
-                                    <div class="io-line">Defined in <a href="" data-line="63" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:63</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="55" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:55</a></div>
                             </td>
                         </tr>
             </tbody>
@@ -414,8 +403,8 @@ height: 100%;
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="101"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:101</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="93"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:93</a></div>
                 </td>
             </tr>
 
@@ -453,8 +442,8 @@ height: 100%;
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="79"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:79</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="71"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:71</a></div>
                 </td>
             </tr>
 
@@ -523,8 +512,8 @@ height: 100%;
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="131"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:131</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="115"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:115</a></div>
                 </td>
             </tr>
 
@@ -562,8 +551,8 @@ height: 100%;
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="69"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:69</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="61"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:61</a></div>
                 </td>
             </tr>
 
@@ -574,72 +563,6 @@ height: 100%;
                     <div class="io-description">
                         <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
 
-                    </div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <table class="table table-sm table-bordered">
-        <tbody>
-            <tr>
-                <td class="col-md-4">
-                    <a name="onResized"></a>
-                    <span class="name">
-                        <b>
-                            onResized
-                        </b>
-                        <a href="#onResized"><span class="icon ion-ios-link"></span></a>
-                    </span>
-                </td>
-            </tr>
-            <tr>
-                <td class="col-md-4">
-<code>onResized(event)</code>
-                </td>
-            </tr>
-
-
-            <tr>
-                <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="122"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:122</a></div>
-                </td>
-            </tr>
-
-
-            <tr>
-                <td class="col-md-4">
-
-                    <div class="io-description">
-                        <b>Parameters :</b>
-                        <table class="params">
-                            <thead>
-                                <tr>
-                                    <td>Name</td>
-                                    <td>Optional</td>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>event</td>
-
-                                    <td>
-                                        No
-                                    </td>
-
-
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div>
-                    </div>
-                    <div class="io-description">
-                        <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
-
-                    </div>
-                    <div class="io-description">
-                        
                     </div>
                 </td>
             </tr>
@@ -671,7 +594,7 @@ height: 100%;
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="57" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:57</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="49" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:49</a></div>
                             </td>
                         </tr>
 
@@ -698,7 +621,7 @@ height: 100%;
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="58" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:58</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="50" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:50</a></div>
                             </td>
                         </tr>
 
@@ -734,7 +657,7 @@ height: 100%;
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="65" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:65</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="57" class="link-to-prism">src/ngx-monaco-editor/src/lib/components/monaco-diff-editor/monaco-diff-editor.component.ts:57</a></div>
                             </td>
                         </tr>
 
@@ -767,37 +690,29 @@ import { MonacoDiffEditorConstructionOptions, MonacoStandaloneDiffEditor } from 
 
 @Component({
     selector: &#x27;ngx-monaco-diff-editor&#x27;,
-    template: &#x60;&lt;div #container materiaResized (resized)&#x3D;&quot;onResized($event)&quot; class&#x3D;&quot;editor-container&quot; fxFlex&gt;
-&lt;div class&#x3D;&quot;wrapper&quot;&gt;
-  &lt;div
-    #diffEditor
-    class&#x3D;&quot;monaco-editor&quot;
-    [style.width.px]&#x3D;&quot;container.offsetWidth&quot;
-    [style.height.px]&#x3D;&quot;container.offsetHeight&quot; style&#x3D;&quot;min-width: 0;&quot;
-  &gt;&lt;/div&gt;
-&lt;/div&gt;
+    template: &#x60;&lt;div #container class&#x3D;&quot;editor-container&quot; fxFlex&gt;
+		&lt;div
+			#diffEditor
+			class&#x3D;&quot;monaco-editor&quot;
+		&gt;&lt;/div&gt;
 &lt;/div&gt;&#x60;,
     styles: [
-        &#x60;:host {
-flex: 1;
-box-sizing: border-box;
-flex-direction: column;
-display: flex;
-overflow: hidden;
-max-width: 100%;
-min-wdith: 0;
-}
-.wrapper {
-width: 0px; height: 0px;
+        &#x60;
+.monaco-editor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
 }
 .editor-container {
-text-overflow: ellipsis;
-overflow: hidden;
-position: relative;
-min-width: 0;
-display: table;
-width: 100%;
-height: 100%;
+	overflow: hidden;
+	position: relative;
+	display: table;
+	width: 100%;
+  height: 100%;
+  min-width: 0;
 }&#x60;
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -850,6 +765,7 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
     private initMonaco() {
         let opts: MonacoDiffEditorConstructionOptions &#x3D; {
             readOnly: true,
+            automaticLayout: true,
             theme: &#x27;vc&#x27;
         };
         if (this.options) {
@@ -868,15 +784,6 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
         this.init.emit(this.editor);
     }
 
-    onResized(event) {
-        if (this.editor) {
-            this.editor.layout({
-                width: event.newWidth,
-                height: event.newHeight
-            });
-        }
-    }
-
     ngOnDestroy() {
         if (this.editor) {
             this.editor.dispose();
@@ -888,26 +795,22 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
 
 
     <div class="tab-pane fade " id="c-styleData">
-            <pre class="line-numbers"><code class="language-scss">:host {
-flex: 1;
-box-sizing: border-box;
-flex-direction: column;
-display: flex;
-overflow: hidden;
-max-width: 100%;
-min-wdith: 0;
-}
-.wrapper {
-width: 0px; height: 0px;
+            <pre class="line-numbers"><code class="language-scss">
+.monaco-editor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
 }
 .editor-container {
-text-overflow: ellipsis;
-overflow: hidden;
-position: relative;
-min-width: 0;
-display: table;
-width: 100%;
-height: 100%;
+	overflow: hidden;
+	position: relative;
+	display: table;
+	width: 100%;
+  height: 100%;
+  min-width: 0;
 }
 </code></pre>
     </div>
@@ -937,9 +840,9 @@ height: 100%;
 <script src="../js/libs/htmlparser.js"></script>
 <script src="../js/libs/deep-iterator.js"></script>
 <script>
-        var COMPONENT_TEMPLATE = '<div><div #container materiaResized (resized)="onResized($event)" class="editor-container" fxFlex><div class="wrapper">  <div    #diffEditor    class="monaco-editor"    [style.width.px]="container.offsetWidth"    [style.height.px]="container.offsetHeight" style="min-width: 0;"  ></div></div></div></div>'
+        var COMPONENT_TEMPLATE = '<div><div #container class="editor-container" fxFlex>		<div			#diffEditor			class="monaco-editor"		></div></div></div>'
     var COMPONENTS = [{'name': 'MonacoDiffEditorComponent', 'selector': 'ngx-monaco-diff-editor'},{'name': 'MonacoEditorComponent', 'selector': 'ngx-monaco-editor'}];
-    var DIRECTIVES = [{'name': 'MonacoEditorLoaderDirective', 'selector': '[ngxLoadMonacoEditor]'},{'name': 'ResizedDirective', 'selector': '[materiaResized]'}];
+    var DIRECTIVES = [{'name': 'MonacoEditorLoaderDirective', 'selector': '[ngxLoadMonacoEditor]'}];
     var ACTUAL_COMPONENT = {'name': 'MonacoDiffEditorComponent'};
 </script>
 <script src="../js/tree.js"></script>
