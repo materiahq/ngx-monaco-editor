@@ -7,6 +7,7 @@ export class MonacoEditorLoaderService {
     nodeRequire: any;
     isMonacoLoaded$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
     private _monacoPath = 'assets/monaco-editor/min/vs';
+
     set monacoPath(value: string) {
         if (value) {
             this._monacoPath = value;
@@ -35,12 +36,16 @@ export class MonacoEditorLoaderService {
         (<any>window).amdRequire = (<any>window).require;
 
         const isElectron = !!this.nodeRequire;
-        if (isElectron) {
-            // Restore node require in window
-            (<any>window).require = this.nodeRequire;
+        const isPathUrl = vsPath.includes('http');
 
+        if (isElectron) {
+          // Restore node require in window
+          (<any>window).require = this.nodeRequire;
+
+          if (!isPathUrl) {
             const path = (<any>window).require('path');
             vsPath = path.resolve((<any>window).__dirname, this._monacoPath);
+          }
         }
 
         (<any>window).amdRequire.config({ paths: { vs: vsPath } });
@@ -48,16 +53,17 @@ export class MonacoEditorLoaderService {
         // Load monaco
         (<any>window).amdRequire(['vs/editor/editor.main'], () => {
             this.ngZone.run(() => this.isMonacoLoaded$.next(true));
-        });
-    };
+        }, (error) => console.error('Error loading monaco-editor: ', error));
+      };
 
-    // Check if AMD loader already available
-    const isAmdLoaderAvailable = !!(<any>window).amdRequire;
-    if (isAmdLoaderAvailable) {
-      return onGotAmdLoader();
-    }
+      // Check if AMD loader already available
+      const isAmdLoaderAvailable = !!(<any>window).amdRequire;
+      if (isAmdLoaderAvailable) {
+        return onGotAmdLoader();
+      }
 
-    const isElectron = !!(<any>window).require;
+      const isElectron = !!(<any>window).require;
+
       if (isElectron) {
         this.addElectronFixScripts();
         this.nodeRequire = (<any>window).require;
