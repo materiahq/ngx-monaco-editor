@@ -30,7 +30,7 @@
     "@angular/platform-browser": "~9.1.12",
     "@angular/platform-browser-dynamic": "~9.1.12",
     "@angular/router": "~9.1.12",
-    "monaco-editor": "^0.21.2",
+    "monaco-editor": "^0.24.0",
     "rxjs": "6.5.3",
     "tslib": "^1.10.0",
     "zone.js": "~0.10.2"

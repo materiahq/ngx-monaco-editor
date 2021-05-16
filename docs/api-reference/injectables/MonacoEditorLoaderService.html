@@ -144,7 +144,7 @@
                 </tr>
                         <tr>
                             <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="14" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:14</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="15" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:15</a></div>
                             </td>
                         </tr>
 
@@ -221,8 +221,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="73"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:73</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="79"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:79</a></div>
                 </td>
             </tr>
 
@@ -260,8 +260,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="31"
-                            class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:31</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="32"
+                            class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:32</a></div>
                 </td>
             </tr>
 
@@ -378,7 +378,7 @@
                     </tr>
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="16" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:16</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="17" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:17</a></div>
                             </td>
                         </tr>
 
@@ -435,7 +435,7 @@
                 </tr>
                             <tr>
                                 <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="10" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:10</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="11" class="link-to-prism">src/ngx-monaco-editor/src/lib/services/monaco-editor-loader.service.ts:11</a></div>
                                 </td>
                             </tr>
                     <tr>
@@ -491,6 +491,7 @@ export class MonacoEditorLoaderService {
     nodeRequire: any;
     isMonacoLoaded$: BehaviorSubject&lt;boolean&gt; &#x3D; new BehaviorSubject&lt;boolean&gt;(false);
     private _monacoPath &#x3D; &#x27;assets/monaco-editor/min/vs&#x27;;
+
     set monacoPath(value: string) {
         if (value) {
             this._monacoPath &#x3D; value;
@@ -519,12 +520,16 @@ export class MonacoEditorLoaderService {
         (&lt;any&gt;window).amdRequire &#x3D; (&lt;any&gt;window).require;
 
         const isElectron &#x3D; !!this.nodeRequire;
-        if (isElectron) {
-            // Restore node require in window
-            (&lt;any&gt;window).require &#x3D; this.nodeRequire;
+        const isPathUrl &#x3D; vsPath.includes(&#x27;http&#x27;);
 
+        if (isElectron) {
+          // Restore node require in window
+          (&lt;any&gt;window).require &#x3D; this.nodeRequire;
+
+          if (!isPathUrl) {
             const path &#x3D; (&lt;any&gt;window).require(&#x27;path&#x27;);
             vsPath &#x3D; path.resolve((&lt;any&gt;window).__dirname, this._monacoPath);
+          }
         }
 
         (&lt;any&gt;window).amdRequire.config({ paths: { vs: vsPath } });
@@ -532,16 +537,17 @@ export class MonacoEditorLoaderService {
         // Load monaco
         (&lt;any&gt;window).amdRequire([&#x27;vs/editor/editor.main&#x27;], () &#x3D;&gt; {
             this.ngZone.run(() &#x3D;&gt; this.isMonacoLoaded$.next(true));
-        });
-    };
+        }, (error) &#x3D;&gt; console.error(&#x27;Error loading monaco-editor: &#x27;, error));
+      };
 
-    // Check if AMD loader already available
-    const isAmdLoaderAvailable &#x3D; !!(&lt;any&gt;window).amdRequire;
-    if (isAmdLoaderAvailable) {
-      return onGotAmdLoader();
-    }
+      // Check if AMD loader already available
+      const isAmdLoaderAvailable &#x3D; !!(&lt;any&gt;window).amdRequire;
+      if (isAmdLoaderAvailable) {
+        return onGotAmdLoader();
+      }
 
-    const isElectron &#x3D; !!(&lt;any&gt;window).require;
+      const isElectron &#x3D; !!(&lt;any&gt;window).require;
+
       if (isElectron) {
         this.addElectronFixScripts();
         this.nodeRequire &#x3D; (&lt;any&gt;window).require;
