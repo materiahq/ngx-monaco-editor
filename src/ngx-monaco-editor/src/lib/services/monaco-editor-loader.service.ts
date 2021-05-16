@@ -7,6 +7,7 @@ export class MonacoEditorLoaderService {
     nodeRequire: any;
     isMonacoLoaded$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
     private _monacoPath = 'assets/monaco-editor/min/vs';
+
     set monacoPath(value: string) {
         if (value) {
             this._monacoPath = value;
@@ -55,13 +56,14 @@ export class MonacoEditorLoaderService {
         });
     };
 
-    // Check if AMD loader already available
-    const isAmdLoaderAvailable = !!(<any>window).amdRequire;
-    if (isAmdLoaderAvailable) {
-      return onGotAmdLoader();
-    }
+      // Check if AMD loader already available
+      const isAmdLoaderAvailable = !!(<any>window).amdRequire;
+      if (isAmdLoaderAvailable) {
+        return onGotAmdLoader();
+      }
 
-    const isElectron = !!(<any>window).require;
+      const isElectron = !!(<any>window).require;
+
       if (isElectron) {
         this.addElectronFixScripts();
         this.nodeRequire = (<any>window).require;
