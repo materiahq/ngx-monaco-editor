@@ -53,8 +53,8 @@ export class MonacoEditorLoaderService {
         // Load monaco
         (<any>window).amdRequire(['vs/editor/editor.main'], () => {
             this.ngZone.run(() => this.isMonacoLoaded$.next(true));
-        });
-    };
+        }, (error) => console.error('Error loading monaco-editor: ', error));
+      };
 
       // Check if AMD loader already available
       const isAmdLoaderAvailable = !!(<any>window).amdRequire;
