@@ -35,12 +35,16 @@ export class MonacoEditorLoaderService {
         (<any>window).amdRequire = (<any>window).require;
 
         const isElectron = !!this.nodeRequire;
-        if (isElectron) {
-            // Restore node require in window
-            (<any>window).require = this.nodeRequire;
+        const isPathUrl = vsPath.includes('http');
 
+        if (isElectron) {
+          // Restore node require in window
+          (<any>window).require = this.nodeRequire;
+
+          if (!isPathUrl) {
             const path = (<any>window).require('path');
             vsPath = path.resolve((<any>window).__dirname, this._monacoPath);
+          }
         }
 
         (<any>window).amdRequire.config({ paths: { vs: vsPath } });
