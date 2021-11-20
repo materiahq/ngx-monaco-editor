@@ -1,6 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
-@use '~@angular/material' as mat;
-@import '~@angular/material/prebuilt-themes/deeppurple-amber.css';
+@use '@angular/material' as mat;
+@import '@angular/material/prebuilt-themes/deeppurple-amber.css';
 // Plus imports for other components in your app.
 
 // Include the common styles for Angular Material. We include this here so that you only
