@@ -24,5 +24,10 @@
         "dist/ngx-monaco-editor/*"
       ]
     }
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictTemplates": true
   }
 }

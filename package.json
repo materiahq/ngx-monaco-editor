@@ -13,7 +13,7 @@
     "build:doc": "rimraf ./docs/* && npm run build && npm run compodoc && ncp ./documentation ./docs/api-reference && ncp ./dist/demo ./docs && node ./scripts/docs-postbuild.js",
     "copy:readme": "ncp README.md ./dist/ngx-monaco-editor/README.MD",
     "copy:license": "ncp LICENSE ./dist/ngx-monaco-editor/LICENSE",
-    "copy-src:types": "cp node_modules/monaco-editor/monaco.d.ts src/ngx-monaco-editor/src/lib/interfaces",
+    "copy-src:types": "cp node_modules/monaco-editor/monaco.d.ts src/ngx-monaco-editor/src/lib/interfaces/monaco.ts",
     "copy-dist:types": "cp node_modules/monaco-editor/monaco.d.ts dist/ngx-monaco-editor",
     "compodoc": "./node_modules/.bin/compodoc -p src/ngx-monaco-editor/tsconfig.lib.json --theme=material"
   },
