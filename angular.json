@@ -90,6 +90,15 @@
               "src/demo/assets"
             ]
           }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
+            ]
+          }
         }
       }
     },
@@ -125,9 +134,9 @@
           },
           "configurations": {
             "production": {
-              "project": "src/ngx-monaco-editor/ng-package.prod.json"
-            ,              "tsConfig": "src/ngx-monaco-editor/tsconfig.lib.prod.json"
-}
+              "project": "src/ngx-monaco-editor/ng-package.prod.json",
+              "tsConfig": "src/ngx-monaco-editor/tsconfig.lib.prod.json"
+            }
           }
         },
         "test": {
@@ -136,6 +145,15 @@
             "main": "src/ngx-monaco-editor/src/test.ts",
             "tsConfig": "src/ngx-monaco-editor/tsconfig.spec.json",
             "karmaConfig": "src/ngx-monaco-editor/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "src/ngx-monaco-editor/**/*.ts",
+              "src/ngx-monaco-editor/**/*.html"
+            ]
           }
         }
       }
@@ -146,5 +164,8 @@
     "@schematics/angular:component": {
       "style": "scss"
     }
+  },
+  "cli": {
+    "defaultCollection": "@angular-eslint/schematics"
   }
 }
