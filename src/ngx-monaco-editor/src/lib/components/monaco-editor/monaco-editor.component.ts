@@ -84,7 +84,11 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
       });
     }
 
-    constructor(private monacoLoader: MonacoEditorLoaderService) { }
+    constructor(private monacoLoader: MonacoEditorLoaderService) {
+      this.onTouched = () => { };
+      this.onErrorStatusChange = () => { };
+      this.propagateChange = (_: any) => { };
+    }
 
     ngOnInit() {
         this.monacoLoader.isMonacoLoaded$.pipe(
