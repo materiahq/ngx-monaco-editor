@@ -2,12 +2,11 @@
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
-    "module": "esnext",
+    "module": "es2020",
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "node",
-    "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "target": "es5",
     "typeRoots": [
@@ -25,5 +24,10 @@
         "dist/ngx-monaco-editor/*"
       ]
     }
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictTemplates": true
   }
 }

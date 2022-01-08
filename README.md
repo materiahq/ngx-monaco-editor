@@ -1,12 +1,19 @@
-- Angular v6/v7: [v2.x](https://github.com/materiahq/ngx-monaco-editor/tree/2.0.x).
-
 ### Resources
 
-Try it out on: [Stackblitz](https://stackblitz.com/edit/materia-ngx-monaco-editor-example).
+- 🚀 Try it out on [Stackblitz](https://stackblitz.com/edit/materia-ngx-monaco-editor-example)
 
-See it in action : [live demo](https://materiahq.github.io/ngx-monaco-editor).
+- 👉 See it in action with our [live demo](https://materiahq.github.io/ngx-monaco-editor)
 
-Api reference available on : [documentation](https://materiahq.github.io/ngx-monaco-editor/api-reference).
+- 📖 Api reference available [here](https://materiahq.github.io/ngx-monaco-editor/api-reference)
+
+### Angular versions
+
+The library is currently supported by Angular v13.
+
+Check older versions support:
+- Angular v6/v7: [v2.x](https://github.com/materiahq/ngx-monaco-editor/tree/2.0.x)
+- Angular v8: [v4.x](https://github.com/materiahq/ngx-monaco-editor/tree/4.0.x)
+- Angular v9 to v12: [5.x](https://github.com/materiahq/ngx-monaco-editor/tree/5.1.x)
 
 ### Standard installation
 
@@ -135,7 +142,7 @@ import { MonacoEditorModule, MONACO_PATH } from '@materia-ui/ngx-monaco-editor';
   ],
   providers: [{
     provide: MONACO_PATH,
-    useValue: 'https://unpkg.com/monaco-editor@0.18.1/min/vs'
+    useValue: 'https://unpkg.com/monaco-editor@0.24.0/min/vs'
   }],
   bootstrap: [AppComponent]
 })

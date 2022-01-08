@@ -13,7 +13,6 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "aot": true,
             "outputPath": "dist/demo",
             "index": "src/demo/index.html",
             "main": "src/demo/main.ts",
@@ -26,7 +25,13 @@
             "styles": [
               "src/demo/styles.scss"
             ],
-            "scripts": []
+            "scripts": [],
+            "vendorChunk": true,
+            "extractLicenses": false,
+            "buildOptimizer": false,
+            "sourceMap": true,
+            "optimization": false,
+            "namedChunks": true
           },
           "configurations": {
             "production": {
@@ -45,9 +50,7 @@
               "optimization": true,
               "outputHashing": "all",
               "sourceMap": false,
-              "extractCss": true,
               "namedChunks": false,
-              "aot": true,
               "extractLicenses": true,
               "vendorChunk": false,
               "buildOptimizer": true
@@ -89,14 +92,11 @@
           }
         },
         "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
+          "builder": "@angular-eslint/builder:lint",
           "options": {
-            "tsConfig": [
-              "src/demo/tsconfig.app.json",
-              "src/demo/tsconfig.spec.json"
-            ],
-            "exclude": [
-              "**/node_modules/**"
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
             ]
           }
         }
@@ -117,15 +117,6 @@
               "devServerTarget": "demo:serve:production"
             }
           }
-        },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": "e2e/tsconfig.e2e.json",
-            "exclude": [
-              "**/node_modules/**"
-            ]
-          }
         }
       }
     },
@@ -136,16 +127,16 @@
       "prefix": "ngx",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-ng-packagr:build",
+          "builder": "@angular-devkit/build-angular:ng-packagr",
           "options": {
             "tsConfig": "src/ngx-monaco-editor/tsconfig.lib.json",
             "project": "src/ngx-monaco-editor/ng-package.json"
           },
           "configurations": {
             "production": {
-              "project": "src/ngx-monaco-editor/ng-package.prod.json"
-            ,              "tsConfig": "src/ngx-monaco-editor/tsconfig.lib.prod.json"
-}
+              "project": "src/ngx-monaco-editor/ng-package.prod.json",
+              "tsConfig": "src/ngx-monaco-editor/tsconfig.lib.prod.json"
+            }
           }
         },
         "test": {
@@ -157,14 +148,11 @@
           }
         },
         "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
+          "builder": "@angular-eslint/builder:lint",
           "options": {
-            "tsConfig": [
-              "src/ngx-monaco-editor/tsconfig.lib.json",
-              "src/ngx-monaco-editor/tsconfig.spec.json"
-            ],
-            "exclude": [
-              "**/node_modules/**"
+            "lintFilePatterns": [
+              "src/ngx-monaco-editor/**/*.ts",
+              "src/ngx-monaco-editor/**/*.html"
             ]
           }
         }
@@ -176,5 +164,8 @@
     "@schematics/angular:component": {
       "style": "scss"
     }
+  },
+  "cli": {
+    "defaultCollection": "@angular-eslint/schematics"
   }
 }
