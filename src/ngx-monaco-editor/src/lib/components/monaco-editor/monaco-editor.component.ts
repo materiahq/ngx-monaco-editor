@@ -70,9 +70,9 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
     value: string;
     parsedError: string;
 
-    private onTouched: () => void;
-    private onErrorStatusChange: () => void;
-    private propagateChange: (_: any) => any = (_: any) => { };
+    private onTouched: () => void = () => {};
+    private onErrorStatusChange: () => void = () => {};
+    private propagateChange: (_: any) => any = () => {};
 
     get model() {
       return this.editor && this.editor.getModel();
