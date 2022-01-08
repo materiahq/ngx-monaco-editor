@@ -30,8 +30,7 @@
     "tslib": "^2.0.0"
   },
   "peerDependencies": {
-    "@angular/common": "13.x",
-    "@angular/core": "13.x",
-    "rxjs": "6.x || 7.x"
+    "@angular/core": ">=13.0.0",
+    "rxjs": ">=6.0.0"
   }
 }

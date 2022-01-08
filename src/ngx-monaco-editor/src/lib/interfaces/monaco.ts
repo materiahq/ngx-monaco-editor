@@ -808,6 +808,10 @@ declare namespace monaco {
          */
         getPosition(): Position;
         /**
+         * Get the position at the start of the selection.
+        */
+        getSelectionStart(): Position;
+        /**
          * Create a new selection with a different `selectionStartLineNumber` and `selectionStartColumn`.
          */
         setStartPosition(startLineNumber: number, startColumn: number): Selection;
@@ -815,6 +819,10 @@ declare namespace monaco {
          * Create a `Selection` from one or two positions
          */
         static fromPositions(start: IPosition, end?: IPosition): Selection;
+        /**
+         * Creates a `Selection` from a range, given a direction.
+         */
+        static fromRange(range: Range, direction: SelectionDirection): Selection;
         /**
          * Create a `Selection` from an `ISelection`.
          */
@@ -1804,7 +1812,7 @@ declare namespace monaco.editor {
          */
         getLineLastNonWhitespaceColumn(lineNumber: number): number;
         /**
-         * Create a valid position,
+         * Create a valid position.
          */
         validatePosition(position: IPosition): Position;
         /**
@@ -1839,7 +1847,7 @@ declare namespace monaco.editor {
          */
         getPositionAt(offset: number): Position;
         /**
-         * Get a range covering the entire model
+         * Get a range covering the entire model.
          */
         getFullModelRange(): Range;
         /**
@@ -2954,12 +2962,10 @@ declare namespace monaco.editor {
         wrappingStrategy?: 'simple' | 'advanced';
         /**
          * Configure word wrapping characters. A break will be introduced before these characters.
-         * Defaults to '([{‘“〈《「『【〔（［｛｢£¥＄￡￥+＋'.
          */
         wordWrapBreakBeforeCharacters?: string;
         /**
          * Configure word wrapping characters. A break will be introduced after these characters.
-         * Defaults to ' \t})]?|/&.,;¢°′″‰℃、。｡､￠，．：；？！％・･ゝゞヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖㇰㇱㇲㇳㇴㇵㇶㇷㇸㇹㇺㇻㇼㇽㇾㇿ々〻ｧｨｩｪｫｬｭｮｯｰ”〉》」』】〕）］｝｣'.
          */
         wordWrapBreakAfterCharacters?: string;
         /**
@@ -3298,6 +3304,7 @@ declare namespace monaco.editor {
          * Controls the behavior of editor guides.
         */
         guides?: IGuidesOptions;
+        unicodeHighlight?: IUnicodeHighlightOptions;
     }
 
     export interface IDiffEditorBaseOptions {
@@ -3376,6 +3383,16 @@ declare namespace monaco.editor {
         readonly id: K1;
         readonly name: string;
         defaultValue: V;
+        /**
+         * Might modify `value`.
+        */
+        applyUpdate(value: V, update: V): ApplyUpdateResult<V>;
+    }
+
+    export class ApplyUpdateResult<T> {
+        readonly newValue: T;
+        readonly didChange: boolean;
+        constructor(newValue: T, didChange: boolean);
     }
 
     /**
@@ -3861,6 +3878,22 @@ declare namespace monaco.editor {
         readonly scrollByPage: boolean;
     }
 
+    export type InUntrustedWorkspace = 'inUntrustedWorkspace';
+
+    /**
+     * Configuration options for unicode highlighting.
+     */
+    export interface IUnicodeHighlightOptions {
+        nonBasicASCII?: boolean | InUntrustedWorkspace;
+        invisibleCharacters?: boolean;
+        ambiguousCharacters?: boolean;
+        includeComments?: boolean | InUntrustedWorkspace;
+        /**
+         * A map of allowed characters (true: allowed).
+        */
+        allowedCharacters?: Record<string, true>;
+    }
+
     export interface IInlineSuggestOptions {
         /**
          * Enable or disable the rendering of automatic inline completions.
@@ -4215,25 +4248,26 @@ declare namespace monaco.editor {
         suggestSelection = 109,
         tabCompletion = 110,
         tabIndex = 111,
-        unusualLineTerminators = 112,
-        useShadowDOM = 113,
-        useTabStops = 114,
-        wordSeparators = 115,
-        wordWrap = 116,
-        wordWrapBreakAfterCharacters = 117,
-        wordWrapBreakBeforeCharacters = 118,
-        wordWrapColumn = 119,
-        wordWrapOverride1 = 120,
-        wordWrapOverride2 = 121,
-        wrappingIndent = 122,
-        wrappingStrategy = 123,
-        showDeprecated = 124,
-        inlayHints = 125,
-        editorClassName = 126,
-        pixelRatio = 127,
-        tabFocusMode = 128,
-        layoutInfo = 129,
-        wrappingInfo = 130
+        unicodeHighlighting = 112,
+        unusualLineTerminators = 113,
+        useShadowDOM = 114,
+        useTabStops = 115,
+        wordSeparators = 116,
+        wordWrap = 117,
+        wordWrapBreakAfterCharacters = 118,
+        wordWrapBreakBeforeCharacters = 119,
+        wordWrapColumn = 120,
+        wordWrapOverride1 = 121,
+        wordWrapOverride2 = 122,
+        wrappingIndent = 123,
+        wrappingStrategy = 124,
+        showDeprecated = 125,
+        inlayHints = 126,
+        editorClassName = 127,
+        pixelRatio = 128,
+        tabFocusMode = 129,
+        layoutInfo = 130,
+        wrappingInfo = 131
     }
 
     export const EditorOptions: {
@@ -4351,6 +4385,7 @@ declare namespace monaco.editor {
         suggestSelection: IEditorOption<EditorOption.suggestSelection, 'first' | 'recentlyUsed' | 'recentlyUsedByPrefix'>;
         tabCompletion: IEditorOption<EditorOption.tabCompletion, 'on' | 'off' | 'onlySnippets'>;
         tabIndex: IEditorOption<EditorOption.tabIndex, number>;
+        unicodeHighlight: IEditorOption<EditorOption.unicodeHighlighting, Required<Readonly<IUnicodeHighlightOptions>>>;
         unusualLineTerminators: IEditorOption<EditorOption.unusualLineTerminators, 'auto' | 'off' | 'prompt'>;
         useShadowDOM: IEditorOption<EditorOption.useShadowDOM, boolean>;
         useTabStops: IEditorOption<EditorOption.useTabStops, boolean>;
@@ -5097,6 +5132,7 @@ declare namespace monaco.editor {
          * Apply the same font settings as the editor to `target`.
          */
         applyFontInfo(target: HTMLElement): void;
+        setBanner(bannerDomNode: HTMLElement | null, height: number): void;
     }
 
     /**
@@ -5822,6 +5858,11 @@ declare namespace monaco.languages {
         InsertAsSnippet = 4
     }
 
+    export interface CompletionItemRanges {
+        insert: IRange;
+        replace: IRange;
+    }
+
     /**
      * A completion item represents a text snippet that is
      * proposed to complete text that is being typed.
@@ -5873,11 +5914,10 @@ declare namespace monaco.languages {
         /**
          * A string or snippet that should be inserted in a document when selecting
          * this completion.
-         * is used.
          */
         insertText: string;
         /**
-         * Addition rules (as bitmask) that should be applied when inserting
+         * Additional rules (as bitmask) that should be applied when inserting
          * this completion.
          */
         insertTextRules?: CompletionItemInsertTextRule;
@@ -5890,10 +5930,7 @@ declare namespace monaco.languages {
          * *Note:* The range must be a {@link Range.isSingleLine single line} and it must
          * {@link Range.contains contain} the position at which completion has been {@link CompletionItemProvider.provideCompletionItems requested}.
          */
-        range: IRange | {
-            insert: IRange;
-            replace: IRange;
-        };
+        range: IRange | CompletionItemRanges;
         /**
          * An optional set of characters that when pressed while this completion is active will accept it first and
          * then type that character. *Note* that all commit characters should have `length=1` and that superfluous
@@ -5997,6 +6034,8 @@ declare namespace monaco.languages {
     export interface SelectedSuggestionInfo {
         range: IRange;
         text: string;
+        isSnippetText: boolean;
+        completionKind: CompletionItemKind;
     }
 
     export interface InlineCompletion {
@@ -6910,7 +6949,6 @@ declare namespace monaco.worker {
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-
 declare namespace monaco.languages.typescript {
     export enum ModuleKind {
         None = 0,
@@ -6953,15 +6991,7 @@ declare namespace monaco.languages.typescript {
     interface MapLike<T> {
         [index: string]: T;
     }
-    type CompilerOptionsValue =
-        | string
-        | number
-        | boolean
-        | (string | number)[]
-        | string[]
-        | MapLike<string[]>
-        | null
-        | undefined;
+    type CompilerOptionsValue = string | number | boolean | (string | number)[] | string[] | MapLike<string[]> | null | undefined;
     interface CompilerOptions {
         allowJs?: boolean;
         allowSyntheticDefaultImports?: boolean;
@@ -7099,11 +7129,9 @@ declare namespace monaco.languages.typescript {
         category: 0 | 1 | 2 | 3;
         code: number;
         /** TypeScriptWorker removes all but the `fileName` property to avoid serializing circular JSON structures. */
-        file:
-            | {
-                    fileName: string;
-              }
-            | undefined;
+        file: {
+            fileName: string;
+        } | undefined;
         start: number | undefined;
         length: number | undefined;
         messageText: string | DiagnosticMessageChain;
@@ -7149,12 +7177,10 @@ declare namespace monaco.languages.typescript {
          * files that won't be loaded as editor documents, like `jquery.d.ts`.
          * @param libs An array of entries to register.
          */
-        setExtraLibs(
-            libs: {
-                content: string;
-                filePath?: string;
-            }[]
-        ): void;
+        setExtraLibs(libs: {
+            content: string;
+            filePath?: string;
+        }[]): void;
         /**
          * Get current TypeScript compiler options for the language service.
          */
@@ -7226,20 +7252,12 @@ declare namespace monaco.languages.typescript {
          * Get code completion details for the given file, position, and entry.
          * @returns `Promise<typescript.CompletionEntryDetails | undefined>`
          */
-        getCompletionEntryDetails(
-            fileName: string,
-            position: number,
-            entry: string
-        ): Promise<any | undefined>;
+        getCompletionEntryDetails(fileName: string, position: number, entry: string): Promise<any | undefined>;
         /**
          * Get signature help items for the item at the given file and position.
          * @returns `Promise<typescript.SignatureHelpItems | undefined>`
          */
-        getSignatureHelpItems(
-            fileName: string,
-            position: number,
-            options: any
-        ): Promise<any | undefined>;
+        getSignatureHelpItems(fileName: string, position: number, options: any): Promise<any | undefined>;
         /**
          * Get quick info for the item at the given position in the file.
          * @returns `Promise<typescript.QuickInfo | undefined>`
@@ -7249,18 +7267,12 @@ declare namespace monaco.languages.typescript {
          * Get other ranges which are related to the item at the given position in the file (often used for highlighting).
          * @returns `Promise<ReadonlyArray<typescript.ReferenceEntry> | undefined>`
          */
-        getOccurrencesAtPosition(
-            fileName: string,
-            position: number
-        ): Promise<ReadonlyArray<any> | undefined>;
+        getOccurrencesAtPosition(fileName: string, position: number): Promise<ReadonlyArray<any> | undefined>;
         /**
          * Get the definition of the item at the given position in the file.
          * @returns `Promise<ReadonlyArray<typescript.DefinitionInfo> | undefined>`
          */
-        getDefinitionAtPosition(
-            fileName: string,
-            position: number
-        ): Promise<ReadonlyArray<any> | undefined>;
+        getDefinitionAtPosition(fileName: string, position: number): Promise<ReadonlyArray<any> | undefined>;
         /**
          * Get references to the item at the given position in the file.
          * @returns `Promise<typescript.ReferenceEntry[] | undefined>`
@@ -7282,34 +7294,18 @@ declare namespace monaco.languages.typescript {
          * @param options `typescript.FormatCodeOptions`
          * @returns `Promise<typescript.TextChange[]>`
          */
-        getFormattingEditsForRange(
-            fileName: string,
-            start: number,
-            end: number,
-            options: any
-        ): Promise<any[]>;
+        getFormattingEditsForRange(fileName: string, start: number, end: number, options: any): Promise<any[]>;
         /**
          * Get formatting changes which should be applied after the given keystroke.
          * @param options `typescript.FormatCodeOptions`
          * @returns `Promise<typescript.TextChange[]>`
          */
-        getFormattingEditsAfterKeystroke(
-            fileName: string,
-            postion: number,
-            ch: string,
-            options: any
-        ): Promise<any[]>;
+        getFormattingEditsAfterKeystroke(fileName: string, postion: number, ch: string, options: any): Promise<any[]>;
         /**
          * Get other occurrences which should be updated when renaming the item at the given file and position.
          * @returns `Promise<readonly typescript.RenameLocation[] | undefined>`
          */
-        findRenameLocations(
-            fileName: string,
-            positon: number,
-            findInStrings: boolean,
-            findInComments: boolean,
-            providePrefixAndSuffixTextForRename: boolean
-        ): Promise<readonly any[] | undefined>;
+        findRenameLocations(fileName: string, positon: number, findInStrings: boolean, findInComments: boolean, providePrefixAndSuffixTextForRename: boolean): Promise<readonly any[] | undefined>;
         /**
          * Get edits which should be applied to rename the item at the given file and position (or a failure reason).
          * @param options `typescript.RenameInfoOptions`
@@ -7326,13 +7322,7 @@ declare namespace monaco.languages.typescript {
          * @param formatOptions `typescript.FormatCodeOptions`
          * @returns `Promise<ReadonlyArray<typescript.CodeFixAction>>`
          */
-        getCodeFixesAtPosition(
-            fileName: string,
-            start: number,
-            end: number,
-            errorCodes: number[],
-            formatOptions: any
-        ): Promise<ReadonlyArray<any>>;
+        getCodeFixesAtPosition(fileName: string, start: number, end: number, errorCodes: number[], formatOptions: any): Promise<ReadonlyArray<any>>;
         /**
          * Get inlay hints in the range of the file.
          * @param fileName
@@ -7351,7 +7341,6 @@ declare namespace monaco.languages.typescript {
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-
 
 declare namespace monaco.languages.css {
     export interface Options {
@@ -7523,7 +7512,6 @@ declare namespace monaco.languages.css {
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-
 declare namespace monaco.languages.json {
     export interface DiagnosticsOptions {
         /**
@@ -7636,7 +7624,6 @@ declare namespace monaco.languages.json {
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-
 declare namespace monaco.languages.html {
     export interface HTMLFormatConfiguration {
         readonly tabSize: number;
@@ -7646,7 +7633,7 @@ declare namespace monaco.languages.html {
         readonly contentUnformatted: string;
         readonly indentInnerHtml: boolean;
         readonly preserveNewLines: boolean;
-        readonly maxPreserveNewLines: number;
+        readonly maxPreserveNewLines: number | undefined;
         readonly indentHandlebars: boolean;
         readonly endWithNewline: boolean;
         readonly extraLiners: string;
@@ -7743,11 +7730,7 @@ declare namespace monaco.languages.html {
      * Use this method to register additional language ids with a HTML service.
      * The language server has to be registered before an editor model is opened.
      */
-    export function registerHTMLLanguageService(
-        languageId: string,
-        options?: Options,
-        modeConfiguration?: ModeConfiguration
-    ): LanguageServiceRegistration;
+    export function registerHTMLLanguageService(languageId: string, options?: Options, modeConfiguration?: ModeConfiguration): LanguageServiceRegistration;
     export interface HTMLDataConfiguration {
         /**
          * Defines whether the standard HTML tags and attributes are shown
