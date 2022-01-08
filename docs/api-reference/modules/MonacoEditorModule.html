@@ -8,7 +8,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
-	      <link rel="stylesheet" href="../styles/style.css">
+	   <link rel="stylesheet" href="../styles/style.css">
+        <link rel="stylesheet" href="../styles/dark.css">
         <link rel="stylesheet" href="../styles/material.css">
     </head>
     <body>
@@ -35,7 +36,7 @@
 
 <ol class="breadcrumb">
     <li>Modules</li>
-    <li>MonacoEditorModule</li>
+    <li >MonacoEditorModule</li>
 </ol>
 
 <div class="text-center module-graph-container">
@@ -66,13 +67,13 @@
 <title>cluster_MonacoEditorModule</title>
 <polygon fill="none" stroke="black" stroke-dasharray="1,5" points="8,-70 8,-268 623,-268 623,-70 8,-70"/>
 </g>
-<g id="clust7" class="cluster">
-<title>cluster_MonacoEditorModule_exports</title>
-<polygon fill="none" stroke="black" points="16,-208 16,-260 615,-260 615,-208 16,-208"/>
-</g>
 <g id="clust2" class="cluster">
 <title>cluster_MonacoEditorModule_declarations</title>
 <polygon fill="none" stroke="black" points="22,-78 22,-130 610,-130 610,-78 22,-78"/>
+</g>
+<g id="clust7" class="cluster">
+<title>cluster_MonacoEditorModule_exports</title>
+<polygon fill="none" stroke="black" points="16,-208 16,-260 615,-260 615,-208 16,-208"/>
 </g>
 <!-- MonacoDiffEditorComponent -->
 <g id="node1" class="node">
@@ -157,7 +158,7 @@
 
     </div>
     <i id="fullscreen" class="icon ion-ios-resize module-graph-fullscreen-btn" aria-hidden="true"></i>
-    <div class="btn-group">
+    <div class="btn-group size-buttons">
         <button id="zoom-in" class="btn btn-default btn-sm">Zoom in</button>
         <button id="reset" class="btn btn-default btn-sm">Reset</button>
         <button id="zoom-out" class="btn btn-default btn-sm">Zoom out</button>
@@ -188,6 +189,7 @@
 
 
 
+
         <div class="container-fluid module">
             <div class="row">
                 <div class="col-sm-3">
@@ -202,18 +204,6 @@
                         </li>
                         <li class="list-group-item">
                             <a href="../directives/MonacoEditorLoaderDirective.html">MonacoEditorLoaderDirective</a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-sm-3">
-                    <h3>EntryComponents<a href="https://angular.io/api/core/NgModule#entryComponents" target="_blank"
-                            title="Official documentation about module entryComponents"><span class="icon ion-ios-information-circle-outline"></span></a></h3>
-                    <ul class="list-group">
-                        <li class="list-group-item">
-                            <a href="../components/MonacoDiffEditorComponent.html">MonacoDiffEditorComponent</a>
-                        </li>
-                        <li class="list-group-item">
-                            <a href="../components/MonacoEditorComponent.html">MonacoEditorComponent</a>
                         </li>
                     </ul>
                 </div>
@@ -246,18 +236,17 @@ import { MonacoEditorComponent } from &#x27;./components/monaco-editor/monaco-ed
 import { MonacoDiffEditorComponent } from &#x27;./components/monaco-diff-editor/monaco-diff-editor.component&#x27;;
 
 @NgModule({
-  imports: [],
-  declarations: [
-    MonacoEditorLoaderDirective,
-    MonacoEditorComponent,
-    MonacoDiffEditorComponent
-  ],
-  exports: [
-    MonacoEditorLoaderDirective,
-    MonacoEditorComponent,
-    MonacoDiffEditorComponent
-  ],
-  entryComponents: [MonacoEditorComponent, MonacoDiffEditorComponent]
+    imports: [],
+    declarations: [
+        MonacoEditorLoaderDirective,
+        MonacoEditorComponent,
+        MonacoDiffEditorComponent
+    ],
+    exports: [
+        MonacoEditorLoaderDirective,
+        MonacoEditorComponent,
+        MonacoDiffEditorComponent
+    ]
 })
 export class MonacoEditorModule { }
 </code></pre>
@@ -273,14 +262,14 @@ export class MonacoEditorModule { }
 
 
 
-                   
+
 
 
 
 
                    </div><div class="search-results">
     <div class="has-results">
-        <h1 class="search-results-title"><span class='search-results-count'></span> result-matching "<span class='search-query'></span>"</h1>
+        <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
         <ul class="search-results-list"></ul>
     </div>
     <div class="no-results">
@@ -292,6 +281,15 @@ export class MonacoEditorModule { }
            </div>
        </div>
 
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
+
        <script>
             var COMPODOC_CURRENT_PAGE_DEPTH = 1;
             var COMPODOC_CURRENT_PAGE_CONTEXT = 'module';
@@ -301,9 +299,9 @@ export class MonacoEditorModule { }
 
        <script src="../js/libs/custom-elements.min.js"></script>
        <script src="../js/libs/lit-html.js"></script>
-       <!-- Required to polyfill modern browsers as code is ES5 for IE... -->
-       <script src="../js/libs/custom-elements-es5-adapter.js" charset="utf-8" defer></script>
+
        <script src="../js/menu-wc.js" defer></script>
+       <script nomodule src="../js/menu-wc_es5.js" defer></script>
 
        <script src="../js/libs/bootstrap-native.js"></script>
 
