@@ -1,6 +1,6 @@
 {
   "name": "@materia-ui/ngx-monaco-editor",
-  "version": "5.1.0",
+  "version": "6.0.0",
   "author": {
     "name": "Jean-Marc Roy",
     "email": "jeanmarc.royy@gmail.com"
@@ -26,9 +26,11 @@
     "url": "https://github.com/geoastronaute/ngx-monaco-editor/issues"
   },
   "license": "MIT",
+  "dependencies": {
+    "tslib": "^2.0.0"
+  },
   "peerDependencies": {
-    "@angular/common": "9.x || 10.x || 11.x || 12.x",
-    "@angular/core": "9.x || 10.x || 11.x || 12.x",
-    "rxjs": "6.x"
+    "@angular/core": ">=13.0.0",
+    "rxjs": ">=6.0.0"
   }
 }

@@ -8,11 +8,12 @@
 
 ### Angular versions
 
-The library is currently supported by Angular v9 to v12.
+The library is currently supported by Angular v13.
 
 Check older versions support:
-- Angular v6/v7: [v2.x](https://github.com/materiahq/ngx-monaco-editor/tree/2.0.x).
+- Angular v6/v7: [v2.x](https://github.com/materiahq/ngx-monaco-editor/tree/2.0.x)
 - Angular v8: [v4.x](https://github.com/materiahq/ngx-monaco-editor/tree/4.0.x)
+- Angular v9 to v12: [5.x](https://github.com/materiahq/ngx-monaco-editor/tree/5.1.x)
 
 ### Standard installation
 

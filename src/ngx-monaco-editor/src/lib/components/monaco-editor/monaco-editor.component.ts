@@ -63,16 +63,16 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
     @Input() options: MonacoEditorConstructionOptions;
     @Input() uri?: MonacoEditorUri;
     @Output() init: EventEmitter<MonacoStandaloneCodeEditor> = new EventEmitter();
-    @ViewChild('editor', {static: true}) editorContent: ElementRef;
+    @ViewChild('editor', { static: true }) editorContent: ElementRef;
 
     editor: MonacoStandaloneCodeEditor;
     modelUriInstance: monaco.editor.ITextModel;
     value: string;
     parsedError: string;
 
-    private onTouched: () => void;
-    private onErrorStatusChange: () => void;
-    private propagateChange: (_: any) => any = (_: any) => { };
+    private onTouched: () => void = () => {};
+    private onErrorStatusChange: () => void = () => {};
+    private propagateChange: (_: any) => any = () => {};
 
     get model() {
       return this.editor && this.editor.getModel();
@@ -99,29 +99,38 @@ export class MonacoEditorComponent implements OnInit, OnChanges, OnDestroy, Cont
         if (this.editor && changes.options && !changes.options.firstChange) {
           const { language: toLanguage, theme: toTheme, ...options } = changes.options.currentValue;
           const { language: fromLanguage, theme: fromTheme } = changes.options.previousValue;
-            if (fromLanguage !== toLanguage) {
-                monaco.editor.setModelLanguage(
-                    this.editor.getModel(),
-                    this.options && this.options.language ? this.options.language : 'text'
-                );
-            }
-            if (fromTheme !== toTheme) {
-                monaco.editor.setTheme(toTheme);
-            }
-            this.editor.updateOptions(options);
+
+          if (fromLanguage !== toLanguage) {
+              monaco.editor.setModelLanguage(
+                  this.editor.getModel(),
+                  this.options && this.options.language ? this.options.language : 'text'
+              );
+          }
+
+          if (fromTheme !== toTheme) {
+              monaco.editor.setTheme(toTheme);
+          }
+
+          this.editor.updateOptions(options);
         }
+
         if (this.editor && changes.uri) {
           const toUri = changes.uri.currentValue;
           const fromUri = changes.uri.previousValue;
+
           if (fromUri && !toUri || !fromUri && toUri || toUri && fromUri && toUri.path !== fromUri.path) {
             const value = this.editor.getValue();
+
             if (this.modelUriInstance) {
               this.modelUriInstance.dispose();
             }
+
             let existingModel;
+
             if (toUri) {
               existingModel = monaco.editor.getModels().find((model) => model.uri.path === toUri.path);
             }
+
             this.modelUriInstance = existingModel ? existingModel : monaco.editor.createModel(value, this.options.language || 'text', this.uri);
             this.editor.setModel(this.modelUriInstance);
           }

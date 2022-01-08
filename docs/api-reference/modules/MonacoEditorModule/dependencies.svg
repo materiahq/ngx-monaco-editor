@@ -24,13 +24,13 @@
 <title>cluster_MonacoEditorModule</title>
 <polygon fill="none" stroke="black" stroke-dasharray="1,5" points="8,-70 8,-268 623,-268 623,-70 8,-70"/>
 </g>
-<g id="clust7" class="cluster">
-<title>cluster_MonacoEditorModule_exports</title>
-<polygon fill="none" stroke="black" points="16,-208 16,-260 615,-260 615,-208 16,-208"/>
-</g>
 <g id="clust2" class="cluster">
 <title>cluster_MonacoEditorModule_declarations</title>
 <polygon fill="none" stroke="black" points="22,-78 22,-130 610,-130 610,-78 22,-78"/>
+</g>
+<g id="clust7" class="cluster">
+<title>cluster_MonacoEditorModule_exports</title>
+<polygon fill="none" stroke="black" points="16,-208 16,-260 615,-260 615,-208 16,-208"/>
 </g>
 <!-- MonacoDiffEditorComponent -->
 <g id="node1" class="node">
