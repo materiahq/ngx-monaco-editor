@@ -14,7 +14,7 @@ import {
 import { filter, take } from 'rxjs/operators';
 
 import { MonacoEditorLoaderService } from '../../services/monaco-editor-loader.service';
-import { MonacoDiffEditorConstructionOptions, MonacoStandaloneDiffEditor } from '../../interfaces';
+import { MonacoDiffEditorConstructionOptions, MonacoEditorUri, MonacoStandaloneDiffEditor } from '../../interfaces';
 
 @Component({
     selector: 'ngx-monaco-diff-editor',
@@ -51,10 +51,15 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
 
     @Input() original: string;
     @Input() modified: string;
+    @Input() originalUri?: MonacoEditorUri;
+    @Input() modifiedUri?: MonacoEditorUri;
     @Input() options: MonacoDiffEditorConstructionOptions;
     @Output() init: EventEmitter< MonacoStandaloneDiffEditor> = new EventEmitter();
 
     @ViewChild('diffEditor', {static: true}) editorContent: ElementRef;
+
+    originalModelUriInstance: monaco.editor.ITextModel;
+    modifiedModelUriInstance: monaco.editor.ITextModel;
 
     constructor(private monacoLoader: MonacoEditorLoaderService) { }
 
@@ -69,12 +74,57 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnChanges(changes: SimpleChanges) {
-        if (this.editor && ((changes.code && !changes.code.firstChange) || (changes.modified && !changes.modified.firstChange))) {
-            const modified = monaco.editor.createModel(this.modified);
-            const original = monaco.editor.createModel(this.original);
+        if (
+            this.editor &&
+            (
+                (changes.original && !changes.original.firstChange) ||
+                (changes.modified && !changes.modified.firstChange) ||
+                (changes.originalUri && !changes.originalUri.firstChange) ||
+                (changes.modifiedUri && !changes.modifiedUri.firstChange)
+            )
+        ) {
+            if (this.originalModelUriInstance) {
+                this.originalModelUriInstance.dispose();
+            }
+            if (this.modifiedModelUriInstance) {
+                this.modifiedModelUriInstance.dispose();
+            }
+
+            let existingOriginalModel: monaco.editor.ITextModel;
+            let existingModifiedModel: monaco.editor.ITextModel;
+
+            if (this.originalUri) {
+                existingOriginalModel = monaco.editor.getModels().find((model) => model.uri.path === this.originalUri.path);
+            }
+            if (this.modifiedUri) {
+                existingModifiedModel = monaco.editor.getModels().find((model) => model.uri.path === this.modifiedUri.path);
+            }
+
+            this.originalModelUriInstance = existingOriginalModel
+                ? existingOriginalModel
+                : monaco.editor.createModel(
+                    changes.original.currentValue || this.editor.getOriginalEditor().getValue(),
+                    undefined,
+                    this.originalUri
+                );
+            this.modifiedModelUriInstance = existingModifiedModel
+                ? existingModifiedModel
+                : monaco.editor.createModel(
+                    changes.modified.currentValue || this.editor.getModifiedEditor().getValue(),
+                    undefined,
+                    this.modifiedUri
+                );
+
+            if (changes.original) {
+                this.originalModelUriInstance.setValue(this.original);
+            }
+            if (changes.modified) {
+                this.modifiedModelUriInstance.setValue(this.modified);
+            }
+
             this.editor.setModel({
-                original,
-                modified
+                original: this.originalModelUriInstance,
+                modified: this.modifiedModelUriInstance
             });
         }
         if (
@@ -101,12 +151,12 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
         }
         this.editor = monaco.editor.createDiffEditor(this.container, opts);
 
-        const original = monaco.editor.createModel(this.original);
-        const modified = monaco.editor.createModel(this.modified);
+        this.originalModelUriInstance = monaco.editor.createModel(this.original, undefined, this.originalUri);
+        this.modifiedModelUriInstance = monaco.editor.createModel(this.modified, undefined, this.modifiedUri);
 
         this.editor.setModel({
-            original,
-            modified
+            original: this.originalModelUriInstance,
+            modified: this.modifiedModelUriInstance
         });
         this.editor.layout();
         this.init.emit(this.editor);
