@@ -109,8 +109,8 @@ Include diff-editor component in your html and use the following inputs: options
 ```
 
 Both components support all available `monaco-editor` options:
-- EditorOptions: https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.ieditorconstructionoptions.html,
-- DiffEditorOptions: https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.idiffeditorconstructionoptions.html.
+- EditorOptions: https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.IEditorOptions.html,
+- DiffEditorOptions: https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.IDiffEditorOptions.html.
 
 
 ### Configure default monaco-editor library path
