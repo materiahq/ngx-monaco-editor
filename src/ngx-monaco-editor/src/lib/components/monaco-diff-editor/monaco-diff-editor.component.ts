@@ -69,7 +69,7 @@ export class MonacoDiffEditorComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnChanges(changes: SimpleChanges) {
-        if (this.editor && ((changes.code && !changes.code.firstChange) || (changes.modified && !changes.modified.firstChange))) {
+        if (this.editor && ((changes.original && !changes.original.firstChange) || (changes.modified && !changes.modified.firstChange))) {
             const modified = monaco.editor.createModel(this.modified);
             const original = monaco.editor.createModel(this.original);
             this.editor.setModel({
