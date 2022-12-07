@@ -13,9 +13,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - run: npm install --force
-      - run: npm audit fix --force
-      - run: npm install --force
+      - run: npm install
       - run: npm ci
       - run: npm test
 
