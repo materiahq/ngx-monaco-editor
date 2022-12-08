@@ -1,69 +1,33 @@
 {
-  "name": "ngx-monaco-editor-demo",
+  "name": "@arthurhauer/ngx-monaco-editor",
   "version": "1.0.0",
+  "author": {
+    "name": "Arthur Hauer"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arthurhauer/ngx-monaco-editor"
+  },
+  "description": "Monaco Editor Library for Angular v6 and above",
+  "keywords": [
+    "angular",
+    "monaco-editor",
+    "code-editor",
+    "browser"
+  ],
+  "homepage": "https://github.com/arthurhauer/ngx-monaco-editor#readme",
+  "bugs": {
+    "url": "https://github.com/arthurhauer/ngx-monaco-editor/issues"
+  },
   "license": "MIT",
-  "scripts": {
-    "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build --configuration production",
-    "test": "ng test",
-    "lint": "ng lint",
-    "e2e": "ng e2e",
-    "build:monaco": "npm run copy-src:types && ng build --configuration production ngx-monaco-editor && npm run copy-dist:types && npm run copy:license && npm run copy:readme",
-    "build:doc": "rimraf ./docs/* && npm run build && npm run compodoc && ncp ./documentation ./docs/api-reference && ncp ./dist/demo ./docs && node ./scripts/docs-postbuild.js",
-    "copy:readme": "ncp README.md ./dist/ngx-monaco-editor/README.MD",
-    "copy:license": "ncp LICENSE ./dist/ngx-monaco-editor/LICENSE",
-    "copy-src:types": "cp node_modules/monaco-editor/monaco.d.ts src/ngx-monaco-editor/src/lib/interfaces/monaco.ts",
-    "copy-dist:types": "cp node_modules/monaco-editor/monaco.d.ts dist/ngx-monaco-editor",
-    "compodoc": "./node_modules/.bin/compodoc -p src/ngx-monaco-editor/tsconfig.lib.json --theme=material"
-  },
-  "private": true,
   "dependencies": {
-    "@angular/animations": "~13.0.2",
-    "@angular/cdk": "^13.0.2",
-    "@angular/common": "~13.0.2",
-    "@angular/compiler": "~13.0.2",
-    "@angular/core": "~13.0.2",
-    "@angular/flex-layout": "13.0.0-beta.36",
-    "@angular/forms": "~13.0.2",
-    "@angular/material": "^13.0.2",
-    "@angular/platform-browser": "~13.0.2",
-    "@angular/platform-browser-dynamic": "~13.0.2",
-    "@angular/router": "~13.0.2",
-    "monaco-editor": "^0.31.1",
-    "rxjs": "6.5.3",
-    "tslib": "^2.3.1",
-    "zone.js": "~0.11.4"
+    "tslib": "^2.0.0"
   },
-  "devDependencies": {
-    "@angular-devkit/build-angular": "~13.0.3",
-    "@angular-eslint/builder": "13.0.1",
-    "@angular-eslint/eslint-plugin": "13.0.1",
-    "@angular-eslint/eslint-plugin-template": "13.0.1",
-    "@angular-eslint/schematics": "13.0.1",
-    "@angular-eslint/template-parser": "13.0.1",
-    "@angular/cli": "^13.0.3",
-    "@angular/compiler-cli": "^13.0.2",
-    "@angular/language-service": "~13.0.2",
-    "@compodoc/compodoc": "^1.1.16",
-    "@types/jasmine": "~3.6.0",
-    "@types/jasminewd2": "~2.0.3",
-    "@types/node": "^12.11.1",
-    "@typescript-eslint/eslint-plugin": "5.3.0",
-    "@typescript-eslint/parser": "5.3.0",
-    "eslint": "^8.2.0",
-    "jasmine-core": "~3.6.0",
-    "jasmine-spec-reporter": "~5.0.0",
-    "karma": "~6.3.9",
-    "karma-chrome-launcher": "~3.1.0",
-    "karma-coverage-istanbul-reporter": "~3.0.2",
-    "karma-jasmine": "~4.0.0",
-    "karma-jasmine-html-reporter": "^1.5.0",
-    "ncp": "^2.0.0",
-    "ng-packagr": "^13.0.6",
-    "protractor": "~7.0.0",
-    "rimraf": "^3.0.0",
-    "ts-node": "~7.0.0",
-    "typescript": "~4.4.4"
+  "peerDependencies": {
+    "@angular/core": ">=13.0.0",
+    "rxjs": ">=6.0.0"
   }
 }

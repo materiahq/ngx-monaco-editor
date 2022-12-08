@@ -1,7 +1,7 @@
 {
-  "root": true,
+  "extends": "../../.eslintrc.json",
   "ignorePatterns": [
-    "projects/**/*"
+    "!**/*"
   ],
   "overrides": [
     {
@@ -10,30 +10,26 @@
       ],
       "parserOptions": {
         "project": [
-          "tsconfig.json",
-          "e2e/tsconfig.json"
+          "src/ngx-monaco-editor/tsconfig.lib.json",
+          "src/ngx-monaco-editor/tsconfig.spec.json"
         ],
         "createDefaultProgram": true
       },
-      "extends": [
-        "plugin:@angular-eslint/recommended",
-        "plugin:@angular-eslint/template/process-inline-templates"
-      ],
       "rules": {
-        "@angular-eslint/component-selector": [
-          "error",
-          {
-            "prefix": "ngx",
-            "style": "kebab-case",
-            "type": "element"
-          }
-        ],
         "@angular-eslint/directive-selector": [
           "error",
           {
+            "type": "attribute",
             "prefix": "ngx",
-            "style": "camelCase",
-            "type": "attribute"
+            "style": "camelCase"
+          }
+        ],
+        "@angular-eslint/component-selector": [
+          "error",
+          {
+            "type": "element",
+            "prefix": "ngx",
+            "style": "kebab-case"
           }
         ]
       }
@@ -41,9 +37,6 @@
     {
       "files": [
         "*.html"
-      ],
-      "extends": [
-        "plugin:@angular-eslint/template/recommended"
       ],
       "rules": {}
     }
