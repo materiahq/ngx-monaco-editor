@@ -1,29 +1,26 @@
 {
-  "name": "@materia-ui/ngx-monaco-editor",
-  "version": "6.0.0",
+  "name": "@arthurhauer/ngx-monaco-editor",
+  "version": "1.0.0",
   "author": {
-    "name": "Jean-Marc Roy",
-    "email": "jeanmarc.royy@gmail.com"
+    "name": "Arthur Hauer"
   },
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/geoastronaute/ngx-monaco-editor"
+    "url": "https://github.com/arthurhauer/ngx-monaco-editor"
   },
   "description": "Monaco Editor Library for Angular v6 and above",
   "keywords": [
     "angular",
     "monaco-editor",
-    "materia",
     "code-editor",
-    "electron",
     "browser"
   ],
-  "homepage": "https://github.com/geoastronaute/ngx-monaco-editor#readme",
+  "homepage": "https://github.com/arthurhauer/ngx-monaco-editor#readme",
   "bugs": {
-    "url": "https://github.com/geoastronaute/ngx-monaco-editor/issues"
+    "url": "https://github.com/arthurhauer/ngx-monaco-editor/issues"
   },
   "license": "MIT",
   "dependencies": {
